@@ -12,21 +12,18 @@
 - full album and track discographies
 - top tracks, similar artists, similar songs, decades
 - top 100 charts (current and historic back to 1952)
-- can use queries or track matching with last.fm tag database (so files don't need to be tagged in any special way to identify tracks of specific genres, mood or artist locale)
 #### Auto DJ:
 - auto DJ option with automated weighting algorithmn that can use last.fm or own data to help select better tracks
-#### Other features:
-- operates on a minimum number of playlists, so there's no awkward playlist management
-- nowplaying pane that provides feedback or displays configurable info on current track
 ### USAGE
 To load & play music:
 - click items in album & tracks pane or use context menu.
 - click the +  in album & tracks pane for multiple items.
 - choose 'Auto DJ...' or 'Find tracks in library...' on context menu. Loads a new selection in a chosen style.
+- nowplaying pane that provides feedback or displays configurable info on current track
 
 ### REQUIREMENTS:
 - [foobar2000](https://www.foobar2000.org)
-- [Spider Monkey Panel 1.4.1+](https://www.foobar2000.org/components)
+- [Spider Monkey Panel 1.6.1+](https://www.foobar2000.org/components)
 - IE9 or later
 - [FontAwesome](https://github.com/FortAwesome/Font-Awesome/blob/fa-4/fonts/fontawesome-webfont.ttf?raw=true)
 ##### Optional
