@@ -19,7 +19,7 @@ To load & play music:
 - click items in album & tracks pane or use context menu.
 - click the +  in album & tracks pane for multiple items.
 - choose 'Auto DJ...' or 'Find tracks in library...' on context menu. Loads a new selection in a chosen style.
-- nowplaying pane that provides feedback or displays configurable info on current track
+- nowplaying pane provides feedback or displays configurable info on current track
 
 ### REQUIREMENTS:
 - [foobar2000](https://www.foobar2000.org)
@@ -30,28 +30,15 @@ To load & play music:
 [foo_youtube: ](https://www.foobar2000.org/components)required for use of youtube functionality.
 
 ### INSTALLATION
-This version has to be installed as package.
-1) Add a spider monkey panel to foobar2000.
-1) Right click the spider monkey panel while pressing the windows key + shift. Choose configure panel.
-2) On the script tab choose package.
-3) Click the import button and import the library tree package.
+Install as package.
 
-##### Troubleshooting
-Please note that the package manager is a new feature of spider monkey panel. If you experience issues with the spider monkey panel installer follow the guide below.
+New install or update:
+1) Add a spider monkey panel to foobar2000 if required
+2) Close any instances of windows explorer using foobar2000 folders or subfolders
+3) Right click the spider monkey panel while pressing the windows key + shift
+4) Choose configure panel
+5) On the script tab ensure package is selected
+6) Open package manager if it doesn't open automatically
+7) Import the package
 
-<i>Portable foobar2000 installs</i>
-
-1) Create a new package first. Call it, e.g. test, & delete it afterwards. This should create a missing folder which then allows Find & Play to be installed.
-2) Try using the development build of spider monkey panel which has the required bug fix.
-
-<i>Standard foobar2000 installs</i>
-
-You'll need to install the package manually or wait for fixed spider monkey panel release. For completeness the below covers portable installs as well.
-To do a manual install, create the following path in YOUR_FOOBAR_PROFILE_PATH: foo_spider_monkey_panel\packages\\{F5E9D9EB-42AD-4A47-B8EE-C9877A8E7851}.
-You need to end up with the following master folder:
-- For standard installations of any version of foobar2000: .\foobar2000\foo_spider_monkey_panel\packages\\{F5E9D9EB-42AD-4A47-B8EE-C9877A8E7851}
-- For portable installations of foobar2000 v1.6 or later: .\foobar2000\profile\foo_spider_monkey_panel\packages\\{F5E9D9EB-42AD-4A47-B8EE-C9877A8E7851}
-- For portable installations of foobar2000 1.5 or earlier: .\foobar2000\foo_spider_monkey_panel\packages\\{F5E9D9EB-42AD-4A47-B8EE-C9877A8E7851}
-
-Extract the Find & Play.zip. Copy the content, ie. the assets folder, the scripts folder and the two files, main.js and package.json, into the above folder.
 
