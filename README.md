@@ -50,7 +50,11 @@ To load & play music:
 
 Screenshot: album & tracks pane with context menu:
 
-<img src="https://user-images.githubusercontent.com/35600752/155885627-6af2c5bd-e64e-4d9c-9e8a-d382253ba424.png" width=67%>
+<!-- <img src="https://user-images.githubusercontent.com/35600752/155896269-e0885ef2-575c-409c-8e90-10b998f452cb.png" width=67%> -->
+<img src="https://user-images.githubusercontent.com/35600752/155896289-03891e9e-6efe-4bfb-9fcd-6d0c0a873958.png" width=67%>
+
+
+<!-- <img src="https://user-images.githubusercontent.com/35600752/155885627-6af2c5bd-e64e-4d9c-9e8a-d382253ba424.png" width=67%> -->
 <!-- <img src="https://user-images.githubusercontent.com/35600752/155885734-cb8445b8-3e18-4ced-b761-7490ae86e2c5.png" width=67%> -->
 
 ### REQUIREMENTS:
