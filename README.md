@@ -77,8 +77,6 @@ New install or update:
 6) Open package manager if it doesn't open automatically
 7) Import the package
 
-Screenshot: top tracks & context menu:
-
 <!-- <img src="https://user-images.githubusercontent.com/35600752/155885734-cb8445b8-3e18-4ced-b761-7490ae86e2c5.png" width=63%> -->
 
 <!-- <img src="https://user-images.githubusercontent.com/35600752/155885191-097c786c-a622-45a9-b11b-fb7e59cf6148.png" width=70%> -->
