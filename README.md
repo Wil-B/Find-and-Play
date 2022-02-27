@@ -5,7 +5,31 @@
  Feature rich plug-in for foobar2000 that finds and plays music.
  Works great with youtube and your own media library.
  
+ <!-- ![logoOlive](https://user-images.githubusercontent.com/35600752/155885620-75874e3d-d86d-4f1c-9a7d-e2bc0bff316c.png) -->
+ 
+ ![logo_olive](https://user-images.githubusercontent.com/35600752/155885873-d8916e93-a989-4bfa-9c04-0c3a100939f9.png)
+![toptracks_olive_large](https://user-images.githubusercontent.com/35600752/155886077-d3cec29b-af37-4b22-8a41-403fa3d127cd.png)
+
+
+![toptracks_menu](https://user-images.githubusercontent.com/35600752/155885627-6af2c5bd-e64e-4d9c-9e8a-d382253ba424.png)
+
+![logo](https://user-images.githubusercontent.com/35600752/155884838-f4a01540-67df-475a-aa27-e97d03d4aff8.png)
+![toptracks_gray_large](https://user-images.githubusercontent.com/35600752/155886089-780eb2b7-421a-4957-9e7b-947592b1cf2d.png)
+
+![toptracks_gray](https://user-images.githubusercontent.com/35600752/155885734-cb8445b8-3e18-4ced-b761-7490ae86e2c5.png)
+
+ 
 <img src="https://user-images.githubusercontent.com/35600752/118047701-09164f00-b373-11eb-986b-05db56d6fe22.png" width=70% height=48%>
+
+
+
+![toptracks](https://user-images.githubusercontent.com/35600752/155884826-e1d15261-f9d1-49b8-9332-d3bf9746e361.png)
+
+![top tracks](https://user-images.githubusercontent.com/35600752/155885191-097c786c-a622-45a9-b11b-fb7e59cf6148.png)
+
+![top_tracks](https://user-images.githubusercontent.com/35600752/155885198-0fedafe1-f33b-47b2-a33c-52d400725433.png)
+
+
 
 ### FEATURES
 #### Display & play:
