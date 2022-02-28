@@ -33,7 +33,7 @@ To load & play music:
 [foo_youtube: ](https://www.foobar2000.org/components)required for use of youtube functionality.
 
 ### INSTALLATION
-Install as package as below.
+Install as a package as follows.
 
 New install or update:
 1) Add a spider monkey panel to foobar2000 if required
