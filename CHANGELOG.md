@@ -1,15 +1,12 @@
 # v1.0.1
 
-### Release highlight
-Track popularity tagger
+### Added
+- Track popularity tagger (see below)
+- Ability to send thumbnails and details with video so always immediately available
 
 ### Changed
 - Now uses package-data folder for storage (find-&-play-cache etc). Anything wanted from previous yttm location* can be moved in, as the folder & file structure are the same.
      * data is in lastfm folder which can be moved
-
-### Added
-- Ability to send thumbails and details with video so always immediately available
-- Track popularity tagger (see below)
 
 ### Fix
 - Wine stabilisation: Find & Play should no longer give errors in Wine, but some limitations remain:
