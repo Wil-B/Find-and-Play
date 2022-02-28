@@ -2,7 +2,7 @@
 
 ### Added
 - Track popularity tagger (see below)
-- Option to send thumbnails and details with video so always immediately available (search tab)
+- Option to directly send thumbnails and details with video so not reliant on foo_youtube (search tab)
 
 ### Changed
 - Now uses package-data folder for storage (find-&-play-cache etc). Anything wanted from previous yttm location* can be moved in, as the folder & file structure are the same.
