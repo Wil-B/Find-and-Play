@@ -2,7 +2,7 @@
 
 ### Added
 - Track popularity tagger (see below)
-- Ability to send thumbnails and details with video so always immediately available
+- Option to send thumbnails and details with video so always immediately available (search tab)
 
 ### Changed
 - Now uses package-data folder for storage (find-&-play-cache etc). Anything wanted from previous yttm location* can be moved in, as the folder & file structure are the same.
