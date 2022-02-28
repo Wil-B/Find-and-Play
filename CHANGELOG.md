@@ -16,7 +16,7 @@ Track popularity tagger
     - Copy & paste into search box using clipboard may not work.
     - Options dialog may not load: menu now indicates there was a problem & console explains what to do instead
 
-### Popularity tagger
+### Track popularity tagger
 - Context menu > playlists
 - Writes last.fm playcount (scrobbles), listeners & a combined score (1-100) as a multi-value tag
 - Scores rank the long-term popularity of tracks on a 1-100 scale using total scrobbles and listeners. The highest scoring track at last.fm is set to a score of 100.
