@@ -5,7 +5,7 @@
 - Option to directly send thumbnails and details with video so not reliant on foo_youtube (search tab)
 
 ### Changed
-- Now uses package-data folder for storage (find-&-play-cache etc). Anything wanted from previous yttm location* can be moved in, as the folder & file structure are the same.
+- Now uses package-data folder for storage (find-&-play-cache etc). Anything wanted from previous yttm location can be moved in, as the folder & file structure are the same.
      * data is in lastfm folder which can be moved
 
 ### Fix
@@ -16,7 +16,7 @@
 ### Track popularity tagger
 - Context menu > playlists
 - Writes last.fm playcount (scrobbles), listeners & a combined score (1-100) as a multi-value tag
-- Scores rank the long-term popularity of tracks on a 1-100 scale using total scrobbles and listeners. The highest scoring track at last.fm is set to a score of 100.
+- Scores rank the long-term popularity of tracks on a 1-100 scale using total scrobbles and listeners. The highest scoring track at last.fm is set to a score of 100
 
 - Access tag values as e.g:
 ```
