@@ -2,7 +2,7 @@
 
 <!-- <img src= "https://img.shields.io/github/v/release/Wil-b/Find-and-Play?include_prereleases">[![CodeFactor](https://www.codefactor.io/repository/github/wil-b/smp-scripts/badge?s=e31aef34da666a7f881d60c035843654ee451e7d)](https://www.codefactor.io/repository/github/wil-b/smp-scripts) -->
 
- Feature rich plug-in for foobar2000 that finds and plays music.
+ Feature rich plug-in for [foobar2000](https://www.foobar2000.org) that finds and plays music.
  Works great with youtube and your own media library.
  
  <img src="https://user-images.githubusercontent.com/35600752/155885873-d8916e93-a989-4bfa-9c04-0c3a100939f9.png" width=67%>
