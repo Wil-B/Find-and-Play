@@ -10,8 +10,8 @@
 
 ### Fix
 - Wine stabilisation: Find & Play should no longer give errors in Wine, but some limitations remain:
-    - Copy & paste into search box using clipboard may not work
-    - Options dialog may not load: menu now indicates there was a problem & console explains what to do instead
+    - copy & paste into search box using clipboard may not work
+    - options dialog may not load: menu now indicates there was a problem & console explains what to do instead
 
 ### Track popularity tagger
 - Context menu > playlists
