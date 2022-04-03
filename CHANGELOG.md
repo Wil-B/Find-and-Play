@@ -24,7 +24,6 @@ $meta(Track Statistics Last.fm,1[playcount])
 $meta(Track Statistics Last.fm,3[listeners])
 $meta(Track Statistics Last.fm,5[score])
 ```
-
 #### Possible library tree filters:
 - 5* tracks (last.fm score) `"$meta(Track Statistics Last.fm,5[score])" GREATER 69`
 - 5/4* tracks (last.fm score) `"$meta(Track Statistics Last.fm,5[score])" GREATER 59`
