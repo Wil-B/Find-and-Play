@@ -25,8 +25,11 @@ $meta(Track Statistics Last.fm,3[listeners])
 $meta(Track Statistics Last.fm,5[score])
 ```
 
-- Something like "$meta(Track Statistics Last.fm,5[score])" GREATER 69 can be used to filter for better tracks
+#### Possible library tree filters:
+- 5* tracks (last.fm score) `"$meta(Track Statistics Last.fm,5[score])" GREATER 69`
+- 5/4* tracks (last.fm score) `"$meta(Track Statistics Last.fm,5[score])" GREATER 59`
+- 5/4/3* tracks (last.fm score) `"$meta(Track Statistics Last.fm,5[score])" GREATER 49`
 
-- Possible library tree view (note that this view requires that artist and album statistics are similary tagged [use biography])
+#### Possible library tree view (note that this view requires that artist and album statistics are similary tagged [use biography])
 
 ```View by score: $nodisplay{$sub(9999,$meta(Artist Statistics Last.fm,5[score]))}[$meta(Artist Statistics Last.fm,5[score]) - ]%artist%|$nodisplay{$sub(9999,$meta(Album Statistics Last.fm,5[score]))}[$meta(Album Statistics Last.fm,5[score]) - ]$if2(%album%,εXtra)|$nodisplay{$sub(9999,$meta(Track Statistics Last.fm,5[score]))}[$meta(Track Statistics Last.fm,5[score]) - ]%title%```
