@@ -10,7 +10,7 @@
 
 ### Fix
 - Wine stabilisation: Find & Play should no longer give errors in Wine, but some limitations remain:
-    - copy & paste into search box using clipboard may not work
+    - copy & paste into search box may not work. It can be fixed by installing this version of Spider Monkey Panel (v1.6.2-dev+7c0928bf) which includes marc2k3's utils.GetClipboardText/utils.SetClipboardText (thx to marc2k3)
     - options dialog may not load: menu now indicates there was a problem & console explains what to do instead
 
 ### Track popularity tagger
