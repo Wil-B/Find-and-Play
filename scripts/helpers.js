@@ -100,11 +100,15 @@ class Helpers {
 		return fso.FolderExists(fo);
 	}
 
-	getClipboardData() { 
+	getClipboardData() {
 		try {
-			return doc.parentWindow.clipboardData.getData('Text');
-		} catch (e) {
-			return null;
+			return utils.GetClipboardText();
+		} catch(e) {
+			try {
+				return doc.parentWindow.clipboardData.getData('Text');
+			} catch (e) {
+				return null;
+			}
 		}
 	}
 
@@ -283,9 +287,13 @@ class Helpers {
 
 	setClipboardData(n) {
 		try {
-			doc.parentWindow.clipboardData.setData('Text', n);
+			utils.SetClipboardText(n);
 		} catch(e) {
-			this.trace('unable to set clipboard text');
+			try {
+				doc.parentWindow.clipboardData.setData('Text', n);
+			} catch(e) {
+				this.trace('unable to set clipboard text');
+			}
 		}
 	}
 

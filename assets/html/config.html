@@ -302,17 +302,28 @@ Last.fm playcount (scrobbles), listeners & a combined score (1-100) are written 
 
 Scores rank the long-term popularity of tracks on a 1-100 scale using total scrobbles and listeners. The highest scoring track at last.fm is set to a score of 100. Each 10 point change in track score represents ~3 fold change in scrobbles and listeners.
 
-Access tag as e.g:
-
-$meta(Track Statistics Last.fm,1[playcount])
-$meta(Track Statistics Last.fm,3[listeners])
-$meta(Track Statistics Last.fm,5[score])
-
-Something like "$meta(Track Statistics Last.fm,5[score])" LESS 60 can be used to skip tracks in own data mode, thereby favouring more popular tracks. If used with autoDJ, disabling best tracks bias (advanced tab), so a random pick is used, may work best.
-
-Remove punctuation from playcount & listeners if used in queries, sorting or arithmetic title formatting functions, e.g. $replace($meta(Track Statistics Last.fm,1[playcount]),',',,.,, ,)
+<i>Access tag</i>
 
 </div>
+<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,1[playcount])"/></div>
+<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,3[listeners])"/></div>
+<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,5[score])"/></div>
+<div class="info4" style="padding-right: 10%;">
+
+<i>Skip tracks</i>
+
+Something like the following can be used to skip tracks in own data mode, thereby favouring more popular tracks (5* & 4*):
+</div>
+<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value='"$meta(Track Statistics Last.fm,5[score])" LESS 60'/></div>
+<div class="info4" style="padding-right: 10%;">
+If used with autoDJ, disabling best tracks bias (advanced tab), so a random pick is used, may work best.
+
+<i>Title format</i>
+
+Remove punctuation from playcount & listeners if used in queries, sorting or arithmetic title formatting functions, e.g.
+</div>
+<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$replace($meta(Track Statistics Last.fm,1[playcount]),',',,.,, ,)"/></div>
+
 <div class="info5">&nbsp</div>
 		</div>
 			</div>
@@ -322,7 +333,8 @@ Remove punctuation from playcount & listeners if used in queries, sorting or ari
 				<div class="div_text6">Auto DJ and find options</div>
 				<div class="info7">Show options for:</div>
 				<div id="autoDJSel"></div>
-				<div id="lfmOptions">
+				<div id="lfmOptions" style="background-color:Gainsboro;">
+				<div style="margin: 0 1em;">
 				<div class="info2" style="padding:0.85em 0 0; color:RGB(213, 0, 12);" ><b>Last.fm options</b></div>
 										
 						<span style="padding:0.31em 0 0;" class="dropdown"><a id="lfm_dropdown" class="dropbtn" href="#" onclick="toggle('lfmDataPop');"></a>
@@ -339,13 +351,16 @@ Remove punctuation from playcount & listeners if used in queries, sorting or ari
 							<div id="autoDJGenre"></div>
 						</div>
 					</div>
-					</div>
-				<div id="ownOptions">		
+				</div>
+				</div>
+				<div id="ownOptions" style="background-color:Gainsboro;">
+				<div style="margin: 0 1em;">
 					<div style="color:purple; margin:5px 0; padding:0.85em 0 0;"><b>Own data options</b></div>
 					<div id="ownDataFilter"></div>
 				<span style="padding:0.7em 0 1em;" class="dropdown"><a id="own_dropdown" class="dropbtn" href="#" onclick="toggle('ownDataOptions');"></a>
 				<span id="ownDataOptions" class="dropdown-content"></span>
 				</span>
+				</div>
 				</div>
 				<div class="row">
 					<div class="column50">
@@ -413,7 +428,8 @@ Remove punctuation from playcount & listeners if used in queries, sorting or ari
 				<span class="dropdown"><a id="seeker_dropdown" class="dropbtn" href="#" onclick="toggle('seeker');"></a>
 				<span id="seeker" class="dropdown-content"></span>
 				</span>
-				<div id="seekerStyle" style="padding-top:0.5em;"></div>
+				<div id="seekerStyle"></div>
+				<div id="seekerDots"></div>
 			</div>
 			
 			<div class="column31">
@@ -488,7 +504,7 @@ The standard API quota allows up to 97 track searches / day (~6 hours of new mus
 <br>
 <b><i>Web Search</i></b>
 <br>
-The web search method should be the same as API method for most users. There is a small difference in the handling of m-Tags if you opt to use these (see below). The web search method is also more likely to break due to site changes than the API method.
+The web search method doesn't have a defined quota. There is a small difference in the handling of m-Tags if you opt to use these (see below). The web search method is also more likely to break due to site changes than the API method.
 <br>
 <br><b>m-TAGS</b>
 <br>
@@ -736,7 +752,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var lfmImage = ['Lastfm button small.png', 'Lastfm text button small.png'];
 				var npLabels = ['Graphic + text', 'Graphic', 'Text', 'Text shadow effect', 'Graphic: prefer video', 'Title format', 'Preview'];
 				var ownDataLabels = ['Most played', 'Highest rated', 'Random'];
-				var photoLabels = ['Auto-cycle', 'Auto-cycle time (seconds)', "Downloader is the same as that in Biography. If that's used, don't enable here, just ensure folder is same (default is same).", 'Save folder', 'Preview'];
+				var photoLabels = ['Auto-cycle', 'Auto-cycle time (seconds)', "Downloader is the same as that in Biography. If that's used, don't enable here, just ensure folder is same.", 'Save folder', 'Preview'];
 				var playlistLabels = ['Selection', 'Auto DJ', 'Loved', 'Cache'];
 				var playlistSaveLabels = ['Auto DJ: played tracks', 'Find: top tracks playlists'];
 				var preferLabels = ['Most played', 'Highest rated', 'Random', 'Highest bitrate', 'Lowest bitrate', 'Longest', 'Shortest', 'Latest', 'Earliest'];
@@ -748,13 +764,13 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var sbarTypeLabels = ['Default', 'Styled', 'Windows'];
 				var scrollbarLabels = ['Bar width', 'Narrow bar width (0 = auto)', 'Arrow width', 'Arrow padding (+/-)', 'Grip min height', 'Custom icon*', 'Custom icon font name', 'Custom Icon Offset (%)', 'Prefer Full Height Scrollbar'];				
 				var scrollLabels = ['Use windows metrics', 'Smooth scroll', 'Touch control'];
-				var seekerLabels = ['Hide', 'Auto', 'Show', 'Dots', 'Counter'];
+				var seekerLabels = ['Counter', 'Seeker', 'Bar', 'Dots'];
 				var similarArtistLabels = ['Favour higher similarity', 'Random pick'];
 				var similarNoLabels = [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 125, 150, 200, 250];
 				var sourceImage = ['', 'Source red small.png', 'Source green small.png', 'Source neutral small.png'];
 				var textStyleLabels = ['Alternative scrollbar spacing'];
 				var tfLabels = ['Artist', 'Album', 'Genre', 'Title', 'Playcount', 'Rating', '', 'All uses'];
-				var youTubeLabels = ["'Live' reduction", 'Prefer&nbsp&nbsp&nbsp', 'Obtain with Find & Play, so always immediately available. <i>Note: the foo_youtube option "prefer youtube-dl analyzer..." can interefere with thumbnail display</i>'];
+				var youTubeLabels = ["'Live' reduction", 'Prefer&nbsp&nbsp&nbsp', 'Obtain with Find & Play, so always immediately available. <i>Note: the foo_youtube option "prefer youtube-dl analyzer..." might interfere with thumbnail display</i>'];
 				var themeLabels = ['User interface', 'Dark', 'Blend', 'Light', 'Always cover based', 'Swap colours', 'Highlight heading'];
 				var themeBlurLabels = ['Auto-Fill', 'Level (%)', 'Opacity (%)', '%'];
 				var ytLabels = ['API', 'Web', 'Youtube API Key', 'Last.fm API Key'];
@@ -797,7 +813,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 					display: ['extra_sbar_w', 'autoLayout', 'btn_mode', 'dblClickToggle', 'linesEmbolden', 'rowStripes', 'showLogo', 'sbarWinMetrics', 'smooth', 'touchControl', 'covBlur', 'swapCol', 'headHighlight', 'highLightText', 'npShadow', 'videoMode'],
 					playlists: ['removePlayed', 'autoRad', 'autoDJFilterUse', 'djSaveTracks', 'findSavePlaylists'],
 					search: ['libFilterUse', 'yt_filter', 'ytPref', 'partialMatch', 'ytSend'],
-					image: ['covCirc', 'artCirc', 'imgReflection', 'imgBorder', 'highlightImgBor', 'imgShadow', 'imgSmoothTrans', 'imgSeekerDots', 'imgCounter', 'cycPhoto', 'dl_art_img'],
+					image: ['covCirc', 'artCirc', 'imgReflection', 'imgBorder', 'highlightImgBor', 'imgShadow', 'imgSmoothTrans', 'imgCounter', 'imgSeeker', 'cycPhoto', 'dl_art_img'],
 					custom: ['custFontUse', 'custFontNowplayingUse', 'textUse', 'text_hUse', 'textSelUse', 'bgUse', 'bg_hUse', 'bgSelUse', 'frameUse', 'sideMarkerUse', 'bgTransUse'],
 					advanced: ['blurAutofill', 'refineLastfm']
 				}
@@ -806,12 +822,12 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 					display: ['theme', 'highLightRow', 'logoText', 'showSource'],
 					playlists: ['configOwnData', 'curPop', 'genre_tracks', 'randomArtist'],
 					search: [],
-					image: [],
+					image: ['imgSeekerDots'],
 					custom: [],
 					maintenance: ['ytDataSource'],
 					advanced: []
 				}
-				radio.all = radio.display.concat(radio.playlists, radio.maintenance);
+				radio.all = radio.display.concat(radio.playlists, radio.image, radio.maintenance);
 
 				function setBestTracksBias(n) {
 					window.bias_dropdown.innerHTML = 'Best Tracks Bias: ' + biasLabels[n];
@@ -876,8 +892,8 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				}
 
 				function setSeekerShow(n) {
-					window.seeker_dropdown.innerHTML = seekerLabels[n];
-					ppt['imgSeeker_internal'].value = n;
+					window.seeker_dropdown.innerHTML = sbarShowLabels[n];
+					ppt['imgSeekerShow_internal'].value = n;
 					window.seeker.style.display = 'none';
 				}
 
@@ -972,9 +988,11 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				}
 
 				function setImage() {
-					window.seeker_dropdown.innerHTML = seekerLabels[ppt['imgSeeker_internal'].value];
-					for (i = 0; i < 3; i++) {window.seeker.insertAdjacentHTML('beforeend', '<a onclick="setSeekerShow(' + i + ');">'+seekerLabels[i]+'</a>');}
-					for (i = 3; i < 5; i++) {window.seekerStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="mainImg_checkbox'+i+'" name="image_checkbox" style="'+cbox+'" type="checkbox" /><label for="mainImg_checkbox'+i+'" class="checkbox_label">'+seekerLabels[i]+'</label></div>');}
+					window.seeker_dropdown.innerHTML = sbarShowLabels[ppt['imgSeekerShow_internal'].value];
+					for (i = 0; i < 3; i++) {window.seeker.insertAdjacentHTML('beforeend', '<a onclick="setSeekerShow(' + i + ');">'+sbarShowLabels[i]+'</a>');}
+					for (i = 0; i < 2; i++) {window.seekerStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="imgSeekerStyle'+i+'" name="image_checkbox" style="'+cbox+'" type="checkbox" /><label for="imgSeekerStyle'+i+'" class="checkbox_label">'+seekerLabels[i]+'</label></div>');}
+					for (i = 2; i < 4; i++) {window.seekerDots.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="imgSeekerDots'+i+'" name="imgSeekerDots" style="'+cbox+'" type="radio" /><label for="imgSeekerDots'+i+'" class="checkbox_label">'+seekerLabels[i]+'</label></div>');}
+
 					for (i = 0; i < 4; i++) {window.imageStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="imageStyle_checkbox'+i+'" name="image_checkbox" style="'+cbox+'" type="checkbox" /><label for="imageStyle_checkbox'+i+'" class="checkbox_label">'+imgStyleLabels[i]+'</label></div>');}
 					i = 4; window.imageStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="imageStyle_checkbox'+i+'" name="image_checkbox" style="'+cbox+'; margin-left:3em" type="checkbox" /><label for="imageStyle_checkbox'+i+'" class="checkbox_label">'+imgStyleLabels[i]+'</label></div>');
 					for (i = 5; i < 7; i++) {window.imageStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="imageStyle_checkbox'+i+'" name="image_checkbox" style="'+cbox+'" type="checkbox" /><label for="imageStyle_checkbox'+i+'" class="checkbox_label">'+imgStyleLabels[i]+'</label></div>');}
@@ -1051,6 +1069,10 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				window.theme_checkbox4.parentNode.disabled = ppt['theme_internal'].value == 0;
 				window.theme_checkbox5.parentNode.disabled = ppt['theme_internal'].value == 1;
 				window.removePlayed1.parentNode.disabled = !window.removePlayed_checkbox0.checked;
+				window.imgSeekerStyle0.parentNode.disabled = !ppt['imgSeekerShow_internal'].value;
+				window.imgSeekerStyle1.parentNode.disabled = !ppt['imgSeekerShow_internal'].value;
+				window.imgSeekerDots2.parentNode.disabled = !ppt['imgSeekerShow_internal'].value || !window.imgSeekerStyle1.checked;
+				window.imgSeekerDots3.parentNode.disabled = !ppt['imgSeekerShow_internal'].value || !window.imgSeekerStyle1.checked;
 				window.imageStyle_checkbox2.disabled = window.imageStyle_checkbox5.checked;
 				window.imageStyle_checkbox4.disabled = !window.imageStyle_checkbox3.checked;
 				window.imageStyle_checkbox5.disabled = window.imageStyle_checkbox2.checked;
@@ -1149,7 +1171,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 					setOwnDataPop(ppt['sortAutoDJ_internal'].default_value);
 				}
 				if (cur.page == 'image') {
-					setSeekerShow(ppt['imgSeeker_internal'].default_value);
+					setSeekerShow(ppt['imgSeekerShow_internal'].default_value);
 				}
 				if (cur.page == 'custom') setCustomColours('default_value');
 				if (cur.page == 'advanced') setBestTracksBias('default_value');

@@ -631,7 +631,7 @@ class MenuItems {
 			},
 			func: () => this.loadnPlay(i),
 			flags: () => {
-				return i == 1 && alb.handleList.Count || i > 1 && alb.topTracksAvailable ? MF_STRING : MF_GRAYED // want !i gray?
+				return i == 1 && alb.handleList.Count || i > 1 && alb.topTracksAvailable ? MF_STRING : MF_GRAYED
 			},
 			separator: () => {
 				return !i || !alb.isAlbum() && (i == 1 || i == 4);

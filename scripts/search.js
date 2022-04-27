@@ -378,8 +378,8 @@ class Search {
 					}
 					this.cursor = true;
 					this.cursorTimer(true);
-				} else if (this.scrollbarType()) {
-					vkey == vk.home ? this.scrollbarType().checkScroll(0, 'full') : this.scrollbarType().scrollToEnd();
+				} else if (alb.scrollbarType()) {
+					vkey == vk.home ? alb.scrollbarType().checkScroll(0, 'full') : alb.scrollbarType().scrollToEnd();
 				}
 				break;
 			case vk.del:

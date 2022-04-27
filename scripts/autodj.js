@@ -515,6 +515,10 @@ class AutoDJ {
 
 		this.f2 = `${panel.cachePath}lastfm\\`;
 		$.create(this.f2);
+		
+		this.getNextTrack = $.debounce(() => {
+			this.dldNextTrack();
+		}, 3000); // handle 403s
 	}
 
 	// Methods
@@ -600,16 +604,25 @@ class AutoDJ {
 	dldNextTrack() {
 		if (!this.list.items.length) return;
 		index.reset_add_loc();
-		let tracks;
+		//let tracks;
 		const mode = !ppt.playTracks ? this.mode : 0;
 		switch (mode) {
-			case 0:
-				tracks = this.list.items.slice(ppt.playTracksListIndex, ppt.playTracksListIndex + this.get_no(false, plman.PlaylistItemCount(pl.dj())));
+			case 0: {
+				const tracks = [];
+				let playTracksLoaded = $.jsonParse(ppt.playTracksLoaded, false);
+				this.list.items.some((v, i) => {
+					if (!playTracksLoaded.includes(i)) {
+						tracks.push(v);
+						playTracksLoaded.push(i);
+					}
+					return tracks.length == this.get_no(false, plman.PlaylistItemCount(pl.dj()));
+				});
+				ppt.playTracksLoaded = JSON.stringify(playTracksLoaded);
 				tracks.forEach((v, i) => yt_dj.do_youtube_search('playTracks', v.artist, v.title, i, tracks.length, pl.dj()));
-				ppt.playTracksListIndex = ppt.playTracksListIndex + tracks.length;
 				break;
-			default:
-				tracks = this.get_no(this.limit, plman.PlaylistItemCount(pl.dj()));
+			}
+			default: {
+				const tracks = this.get_no(this.limit, plman.PlaylistItemCount(pl.dj()));
 				switch (this.type == 4 ? 2 : this.type) {
 					case 0:
 						for (let i = 0; i < tracks; i++) {
@@ -658,6 +671,7 @@ class AutoDJ {
 						break;
 				}
 				break;
+			}
 		}
 	}
 
@@ -720,7 +734,7 @@ class AutoDJ {
 		if (get_list) {
 			if (!mode) this.loadnPlay();
 			else this.searchForArtist(this.source, mode, this.type, this.artVariety, this.songHot, this.type != 1 && this.type != 3 && this.songHot < 101 && this.curPop ? true : false);
-		} else this.dldNextTrack();
+		} else this.getNextTrack();
 	}
 
 	loadnPlay() {
@@ -730,9 +744,7 @@ class AutoDJ {
 			type = 'reload';
 		}
 		ppt.playTracks = alb.playlist.length ? true : false;
-
 		if (ppt.playTracks) yt_dj.execute(this.on_dld_dj_tracks_done.bind(this), '', 0, type, '', '', Math.max(this.limit, 5), '', pl.dj());
-
 	}
 
 	mbtn_up(x, y) {
@@ -888,7 +900,7 @@ class AutoDJ {
 			plman.ActivePlaylist = pl.dj();
 			if (type == 'new') {
 				if (ppt.removePlayed) pl.clear(plman.ActivePlaylist);
-				ppt.playTracksListIndex = 0;
+				ppt.playTracksLoaded = JSON.stringify([]);
 			}
 			this.cur_text = '';
 			this.feedback(true);
@@ -897,7 +909,7 @@ class AutoDJ {
 				plman.ActivePlaylist = pl.dj();
 				if (ppt.removePlayed) pl.clear(plman.ActivePlaylist);
 			}
-			if (type == 'new') ppt.playTracksListIndex = 0;
+			if (type == 'new') ppt.playTracksLoaded = JSON.stringify([]);
 			this.cur_text = '';
 			this.updateFav = true;
 			index.autoDjFound(p_q)

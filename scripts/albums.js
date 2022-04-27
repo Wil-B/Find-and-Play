@@ -1280,11 +1280,11 @@ class Albums {
 		switch (vkey) {
 			case vk.pgUp:
 				if (!this.scrollbarType()) break;
-				this.scrollbarType().this.pageThrottle(1);
+				this.scrollbarType().pageThrottle(1);
 				break;
 			case vk.pgDn:
 				if (!this.scrollbarType()) break;
-				this.scrollbarType().this.pageThrottle(-1);
+				this.scrollbarType().pageThrottle(-1);
 				break;
 		}
 	}

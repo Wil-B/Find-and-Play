@@ -341,7 +341,6 @@ class MTags {
 		const album = panel.add_loc.mtags[p_alb_id][0].ALBUM || '';
 
 		const a = ($.clean(p_artist) + ' - ' + $.clean(album)).trim();
-		//const fns = `${panel.yttm}albums\\${a.substr(0, 1).toLowerCase()}\\`;
 		const fns = `${panel.cachePath}albums\\${a.substr(0, 1).toLowerCase()}\\`;
 
 		let fna = `${fns + a}\\`;

@@ -14,7 +14,7 @@ class Images {
 		this.ny = 0;
 		this.x = 0;
 		this.y = 0;
-		this.exclArr = [6473, 6500, 24104, 24121, 34738, 35875, 37235, 68626, 86884, 92172];
+		this.exclArr = [6467, 6473, 6500, 24104, 24121, 34738, 29520, 35875, 37235, 47700, 52526, 68626, 86884, 92172];
 
 		this.art = {
 			allFilesLength: 0,
@@ -673,6 +673,7 @@ class Images {
 				if (this.art.images.length < 2) break;
 				this.change(-step);
 				if (ppt.artistView && ppt.cycPhoto) timer.image();
+				seeker.debounce(); // see if helps auto
 				break;
 			case true:
 				if (ppt.imgReflection) this.setReflStrength(-step * 5);
@@ -755,7 +756,9 @@ class Seeker {
 		this.down = false;
 		this.hand = false;
 		this.imgNo = 0;
-		this.show = ppt.imgSeeker == 2 ? true : false;
+		ppt.imgSeekerShow = $.clamp(ppt.imgSeekerShow, 0, 2);
+		this.imgSeeker = (!ppt.imgSeeker && !ppt.imgCounter) ? 0 : ppt.imgSeekerShow;
+		this.show = this.imgSeeker == 2 ? true : false;
 
 		this.bar = {
 			dot_w: 4,
@@ -768,6 +771,7 @@ class Seeker {
 			x3: 25,
 			y1: 25,
 			y2: 200,
+			y3: 201,
 			w1: 100,
 			w2: 110
 		}
@@ -780,7 +784,7 @@ class Seeker {
 		if (ui.style.textOnly) return;
 
 		this.debounce = $.debounce(() => {
-			if (ppt.imgSeeker == 2 || panel.m.x > this.bar.x1 && panel.m.x < this.bar.x1 + this.bar.w1 && panel.m.y > img.ny + img.nh && panel.m.y < img.ny + img.nh) return;
+			if (this.imgSeeker == 2  || panel.m.x > this.bar.x1 && panel.m.x < this.bar.x1 + this.bar.w1 && panel.m.y > img.ny + img.nh && panel.m.y < img.ny + img.nh) return;
 			this.show = false;
 			img.paint();
 		}, 3000);
@@ -788,9 +792,8 @@ class Seeker {
 
 	draw(gr) {
 		if (!this.show || this.imgNo < 2 || panel.video.show && panel.isVideo()) return;
-
 		let prog = 0;
-		if (ppt.imgSeekerDots) {
+		if (ppt.imgSeeker && ppt.imgSeekerDots == 1) { // dots
 			gr.SetSmoothingMode(2);
 			prog = this.dn ? $.clamp(panel.m.x - this.bar.x2 - this.bar.grip_h / 2, this.prog.min, this.prog.max) : (img.art.ix + 0.5) * this.bar.w1 / this.imgNo - (this.bar.grip_h - this.bar.dot_w) / 2;
 			for (let i = 0; i < this.imgNo; i++) {
@@ -802,15 +805,26 @@ class Seeker {
 			gr.SetSmoothingMode(0);
 		}
 
+		if (ppt.imgSeeker && ppt.imgSeekerDots == 0) { // bar
+			prog = this.dn ? $.clamp(panel.m.x - this.bar.x1, 0, this.bar.w1) : (ppt.artistView ? img.art.ix + 0.5 : img.cov.ix + 0.5) * this.bar.w1 / this.imgNo;
+			gr.DrawRect(this.bar.x1, this.bar.y2, this.bar.w1, this.bar.h, ui.style.l_w, RGB(128, 128, 128));
+			gr.FillSolidRect(this.bar.x2, this.bar.y3, this.bar.w1 - ui.style.l_w, this.bar.h - ui.style.l_w, RGBA(0, 0, 0, 75));
+			gr.FillSolidRect(this.bar.x2, this.bar.y3, prog - ui.style.l_w, this.bar.h - ui.style.l_w, RGB(245, 245, 245));
+			gr.SetSmoothingMode(2);
+			gr.FillEllipse(this.bar.x2 + prog - Math.round((this.bar.grip_h) / 2), this.bar.y3 - this.bar.gripOffset, this.bar.grip_h, this.bar.grip_h, RGB(245, 245, 245));
+			gr.DrawEllipse(this.bar.x2 + prog - Math.round((this.bar.grip_h) / 2), this.bar.y3 - this.bar.gripOffset, this.bar.grip_h, this.bar.grip_h, ui.style.l_w, RGB(128, 128, 128));
+			gr.SetSmoothingMode(0);
+		}
+
 		if (ppt.imgCounter) {
-			if (ppt.imgSeekerDots) prog += Math.round(this.bar.grip_h / 2 - this.bar.dot_w / 2);
+			if (ppt.imgSeekerDots == 1) prog += Math.round(this.bar.grip_h / 2 - this.bar.dot_w / 2);
 			const count = (img.art.ix + 1 + (' / ' + this.imgNo));
 			const count_m = (this.imgNo + (' / ' + this.imgNo)) + ' ';
 			if (count) {
 				const count_w = gr.CalcTextWidth(count_m, ui.font.small);
-				const count_x = ppt.imgSeekerDots ? Math.round($.clamp(this.bar.x1 - count_w / 2 + prog, this.bar.l + 2, this.bar.l + img.nw - count_w - 4)) : img.x + ui.style.l_w * 2 + img.bor.w1;
+				const count_x = ppt.imgSeeker ? Math.round($.clamp(this.bar.x1 - count_w / 2 + prog, this.bar.l + 2, this.bar.l + img.nw - count_w - 4)) : img.x + ui.style.l_w * 2 + img.bor.w1;
 				const count_h = gr.CalcTextHeight(count, ui.font.small);
-				const count_y = ppt.imgSeekerDots ? Math.round(this.bar.y1 - this.bar.gripOffset - count_h * 1.5) : img.y + ui.style.l_w * 2 + img.bor.w1;
+				const count_y = ppt.imgSeeker ? Math.round(this.bar.y1 - this.bar.gripOffset - count_h * 1.5) : img.y + ui.style.l_w * 2 + img.bor.w1;
 				gr.FillRoundRect(count_x, count_y, count_w + 2, count_h + 2, 3, 3, RGBA(0, 0, 0, 210));
 				gr.DrawRoundRect(count_x + 1, count_y + 1, count_w, count_h, 1, 1, 1, RGBA(255, 255, 255, 60));
 				gr.DrawRoundRect(count_x, count_y, count_w + 2, count_h + 2, 1, 1, 1, RGBA(0, 0, 0, 200));
@@ -822,9 +836,9 @@ class Seeker {
 	lbtn_dn(p_x, p_y) {
 		this.dn = false;
 		this.down = true;
-		if (ppt.imgSeeker) {
+		if (this.imgSeeker) {
 			if (ppt.artistView && this.imgNo > 1)
-				this.dn = p_x > this.bar.x3 && p_x < this.bar.x3 + this.bar.w2 && p_y > img.ny + img.nh * 0.8 && p_y < img.ny + img.nh;
+				this.dn = this.hand;
 		}
 		if (this.dn) {
 			const prog = $.clamp(p_x - this.bar.x1, 0, this.bar.w1);
@@ -838,37 +852,39 @@ class Seeker {
 	}
 
 	metrics() {
-		if (!ppt.imgSeeker) {
+		this.imgSeeker = (!ppt.imgSeeker && !ppt.imgCounter) ? 0 : ppt.imgSeekerShow;
+		if (!this.imgSeeker) {
 			this.show = false;
 			img.paint();
 			return;
-		}
+		} else if (this.imgSeeker == 2) this.show = true;
 
 		this.imgNo = ppt.showAlb || !ppt.artistView ? 0 : img.art.images.length;
 		if (this.imgNo < 2) return;
-
-		this.bar.h = 6 * $.scale;
-		this.bar.grip_h = 10 * $.scale;
+		this.bar.h = (ppt.imgSeekerDots == 1 ? 6 : 5) * $.scale;
+		this.bar.grip_h = (ppt.imgSeekerDots == 1 ? 10 : 9) * $.scale;
 		this.bar.gripOffset = Math.round((this.bar.grip_h - this.bar.h) / 2) + Math.ceil(ui.style.l_w / 2);
 		this.bar.w1 = Math.min(this.imgNo * 30 * $.scale, Math.min(img.nw, img.nh) - 30 * $.scale);
 		this.bar.w2 = this.bar.w1 + Math.round(this.bar.grip_h);
 		this.bar.l = (panel.w - img.nw) / 2;
 		this.bar.x1 = Math.round(this.bar.l + (img.nw - this.bar.w1) / 2);
-		this.bar.x2 = this.bar.x1 + Math.ceil(ui.style.l_w / 2);
 		this.bar.x3 = this.bar.x1 - Math.round(this.bar.grip_h / 2);
 		this.bar.y1 = Math.round(img.ny + img.nh * 0.9 - this.bar.h / 2);
 		this.bar.y2 = this.bar.y1 + Math.ceil(ui.style.l_w / 2);
-		if (ppt.imgSeekerDots) {
+		this.bar.y3 = this.bar.y2 + Math.ceil(ui.style.l_w / 2);
+		if (ppt.imgSeekerDots == 1) {
 			this.bar.dot_w = Math.floor($.clamp(this.bar.w1 / this.imgNo, 2, this.bar.h));
 			this.bar.x2 = this.bar.x1 - Math.round(this.bar.dot_w / 2);
 			this.prog.min = 0.5 / this.imgNo * this.bar.w1 - (this.bar.grip_h - this.bar.dot_w) / 2;
 			this.prog.max = ((this.imgNo - 0.5) / this.imgNo) * this.bar.w1 - (this.bar.grip_h - this.bar.dot_w) / 2;
-		} else this.bar.x2 = this.bar.x1 + Math.ceil(ui.style.l_w / 2);
+		} else {
+			this.bar.x2 = this.bar.x1 + Math.ceil(ui.style.l_w / 2);
+		}
 	}
 
 	move(p_x, p_y) {
 		this.hand = false;
-		if (ppt.imgSeeker) {
+		if (this.imgSeeker) {
 			const trace = p_x > this.bar.l && p_x < this.bar.l + img.nw && p_y > img.ny && p_y < img.ny + img.nh;
 			const show = (!panel.video.show || !panel.isVideo()) && (ppt.imgSeeker == 2 || p_x > this.bar.l && trace);
 			if (ppt.artistView && this.imgNo > 1 && (!panel.video.show || !panel.isVideo()))

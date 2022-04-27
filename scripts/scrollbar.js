@@ -106,25 +106,26 @@ class Scrollbar {
 			this.scrollTo();
 		}, 16);
 
-		this.minimiseDebounce = $.debounce(() => {
-			if (this.scrollbar.zone) return txt.paint();
-			this.narrow.show = true;
-			if (ppt.sbarShow == 1) but.setScrollBtnsHide(true, this.type);
-			this.scrollbar.zone = this.scrollbar.cur_zone = false;
-			this.hover = this.hover_o = false;
-			this.alpha = this.alpha1;
-			txt.paint();
-		}, 1000);
-
 		this.hideDebounce = $.debounce(() => {
 			if (this.scrollbar.zone) return;
 			this.active = false;
 			this.cur_active = this.active;
 			this.hover = false;
-			this.hover_o = false;
+			this.cur_hover = false;
 			this.alpha = this.alpha1;
 			txt.paint();
 		}, 5000);
+
+		this.minimiseDebounce = $.debounce(() => {
+			if (this.scrollbar.zone) return txt.paint();
+			this.narrow.show = true;
+			if (ppt.sbarShow == 1) but.setScrollBtnsHide(true, this.type);
+			this.scrollbar.cur_zone = this.scrollbar.zone;
+			this.hover = false;
+			this.cur_hover = false;
+			this.alpha = this.alpha1;
+			txt.paint();
+		}, 1000);
 
 		this.setCol();
 	}
@@ -268,7 +269,7 @@ class Scrollbar {
 		this.hover = !this.hover;
 		this.paint();
 		this.hover = false;
-		this.hover_o = false;
+		this.cur_hover = false;
 	}
 
 	metrics(x, y, w, h, rows_drawn, row_h, text_y, text_h) {
@@ -333,7 +334,7 @@ class Scrollbar {
 		const y = p_y - this.y;
 		if (x < 0 || x > this.w || y > this.bar.y + this.bar.h || y < this.bar.y || but.Dn) this.hover = false;
 		else this.hover = true;
-		if (!this.bar.timer && (this.hover != this.hover_o || this.active != this.cur_active)) {
+		if (!this.bar.timer && (this.hover != this.cur_hover || this.active != this.cur_active)) {
 			this.init = false;
 			this.paint();
 			this.cur_active = this.active;
@@ -358,7 +359,7 @@ class Scrollbar {
 			this.alpha = this.hover ? Math.min(this.alpha += this.inStep, this.alpha2) : Math.max(this.alpha -= 3, this.alpha1);
 			window.RepaintRect(this.x, this.y, this.w, this.h);
 			if (this.hover && this.alpha == this.alpha2 || !this.hover && this.alpha == this.alpha1) {
-				this.hover_o = this.hover;
+				this.cur_hover = this.hover;
 				clearTimeout(this.bar.timer);
 				this.bar.timer = null;
 			}

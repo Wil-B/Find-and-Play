@@ -1719,11 +1719,23 @@ class AutoDjTracks {
 				this.on_search_done_callback(true, 0, '', '', '', '', '', this.dj.type);
 				dj.list.items = alb.playlist;
 				const plDjCount = plman.PlaylistItemCount(pl.dj());
-				ppt.playTracksListIndex = Math.min(ppt.playTracksListIndex, plDjCount);
-				const tracks = this.dj.type == 'new' ? alb.playlist.slice(0, dj.get_no(this.limit, plDjCount)) :
-					alb.playlist.slice(ppt.playTracksListIndex, ppt.playTracksListIndex + dj.get_no(false, plDjCount));
+				let playTracksLoaded = $.jsonParse(ppt.playTracksLoaded, false);
+				let tracks = [];
+				if (this.dj.type == 'new') {
+					const no = dj.get_no(this.limit, plDjCount);
+					tracks = alb.playlist.slice(0, no);
+					playTracksLoaded = Array.from(Array(no).keys());
+				} else {
+					alb.playlist.some((v, i) => {
+						if (!playTracksLoaded.includes(i)) {
+							tracks.push(v);
+							playTracksLoaded.push(i)
+						}
+						return tracks.length == dj.get_no(false, plDjCount);
+					});
+				}
+				ppt.playTracksLoaded = JSON.stringify(playTracksLoaded);
 				tracks.forEach((v, i) => this.do_youtube_search('playTracks', v.artist, v.title, i, tracks.length, p_pn));
-				ppt.playTracksListIndex = ppt.playTracksListIndex + tracks.length;
 			}
 		} else if (!ppt.useSaved) this.do_lfm_dj_tracks_search(this.dj.source, this.dj.mode, this.dj.type, this.artVariety, this.songHot, this.curPop, '', '', p_pn);
 		else {
@@ -2167,7 +2179,7 @@ class DldAlbumTracks {
 			} else {
 				alb.setRow(p_alb_id, 0, p_artist);
 				txt.paint();
-				if (ppt.libAlb == 2) fb.ShowPopupMessage('Request Made: Load Album Using Only Library Tracks\n\nResult: No Matching Tracks Found', 'Find & Play');
+				if (ppt.libAlb == 2) console.log('Request Made: Load Album Using Only Library Tracks\n\nResult: No Matching Tracks Found', 'Find & Play');
 			}
 	}
 
