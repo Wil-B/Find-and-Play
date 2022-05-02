@@ -2,6 +2,7 @@
 
 ### Added
 - Track popularity tagger (see below)
+- New random colour dark theme
 - Option to directly send thumbnails and details with video so not reliant on foo_youtube (search tab)
 
 ### Changed
