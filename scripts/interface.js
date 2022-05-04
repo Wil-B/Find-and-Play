@@ -7,7 +7,7 @@ class UserInterface {
 
 		ppt.highLightRow = $.clamp(ppt.highLightRow, 0, 3);
 		ppt.nowPlayingStyle = $.value(ppt.nowPlayingStyle, 0, 2);
-		ppt.theme = $.clamp(ppt.theme, 0, 3);
+		ppt.theme = $.clamp(ppt.theme, 0, 4);
 
 		if (ppt.narrowSbarWidth != 0) ppt.narrowSbarWidth = $.clamp(ppt.narrowSbarWidth, 2, 10);
 		this.narrowSbarWidth = 2;
@@ -19,7 +19,7 @@ class UserInterface {
 		this.blur = {
 			alpha: $.clamp(ppt.blurAlpha, 0, 100) / 30,
 			blend: ppt.theme == 2,
-			dark: ppt.theme == 1,
+			dark: ppt.theme == 1 || ppt.theme == 4,
 			blendAlpha: $.clamp($.clamp(ppt.blurAlpha, 0, 100) * 105 / 30, 0, 255),
 			level: ppt.theme == 2 ? 91.05 - $.clamp(ppt.blurTemp, 1.05, 90) : $.clamp(ppt.blurTemp * 2, 0, 254),
 			light: ppt.theme == 3
@@ -129,7 +129,7 @@ class UserInterface {
 
 	getBlurColours() {
 		this.style.isBlur = ppt.theme > 0;
-		this.blur.dark = ppt.theme == 1;
+		this.blur.dark = ppt.theme == 1 || ppt.theme == 4;
 		this.blur.blend = ppt.theme == 2;
 		this.blur.light = ppt.theme == 3;
 		if (this.blur.dark) {
@@ -227,7 +227,7 @@ class UserInterface {
 			this.col.txt_h = RGB(255, 255, 255);
 		}
 		if (this.blur.light) {
-			this.col.txt = RGB(0, 0, 0);
+			this.col.txt = RGB(50, 50, 50);
 			this.col.txt_h = RGB(71, 129, 183);
 		}
 
@@ -278,7 +278,7 @@ class UserInterface {
 		this.col.searchSel = window.IsTransparent || !this.col.bgSel ? 0xff0099ff : this.getContrast(this.col.text_h, this.col.bgSel) > 3 ? this.col.bgSel : this.getBlend(this.col.text_h, this.col.bg == 0 ? 0xff000000 : this.col.bg, 0.25);
 
 		['blend1', 'blend2', 'blend3'].forEach((v, i) => {
-			this.col[v] = this.blur.blend ? this.col.text & RGBA(255, 255, 255, i == 2 ? 40 : 12) : this.blur.dark ? (i == 2 ? RGBA(255, 255, 255, 50) : RGBA(0, 0, 0, 40)) : this.blur.light ? RGBA(0, 0, 0, i == 2 ? 40 : 15) : this.getBlend(this.col.bg == 0 ? 0xff000000 : this.col.bg, this.col.text, !i ? 0.9 : i == 2 ? 0.87 : (this.style.isBlur ? 0.75 : 0.82));
+			this.col[v] = this.blur.blend ? this.col.text & RGBA(255, 255, 255, i == 2 ? 40 : 12) : this.blur.dark ? (i == 2 ? RGBA(255, 255, 255, 50) : RGBA(0, 0, 0, 40)) : this.blur.light ? RGBA(50, 50, 50, i == 2 ? 40 : 15) : this.getBlend(this.col.bg == 0 ? 0xff000000 : this.col.bg, this.col.text, !i ? 0.9 : i == 2 ? 0.87 : (this.style.isBlur ? 0.75 : 0.82));
 		});
 		this.col.blend4 = $.toRGBA(this.col.blend1);
 		this.col.butBg = !this.style.isBlur ? this.outline(this.col.bg, true) : RGBA(this.col.blend4[0], this.col.blend4[1], this.col.blend4[2], Math.min(this.col.blend4[3] * 2, 255))
@@ -311,14 +311,14 @@ class UserInterface {
 				if (this.col.bg === '') this.col.bg = window.GetColourCUI(3);
 				this.col.txt = window.GetColourCUI(0);
 				this.col.txt_h = window.GetColourCUI(2);
-				if (this.col.bgSel === '') this.col.bgSel = this.blur.dark ? RGBA(255, 255, 255, 36) : this.blur.light ? RGBA(0, 0, 0, 36) : window.GetColourCUI(4);
+				if (this.col.bgSel === '') this.col.bgSel = this.blur.dark ? RGBA(255, 255, 255, 36) : this.blur.light ? RGBA(50, 50, 50, 36) : window.GetColourCUI(4);
 				if (this.col.textSel === '') this.col.textSel = !this.blur.dark && !this.blur.light ? window.GetColourCUI(1) : this.col.text;
 				break;
 			case 1:
 				if (this.col.bg === '') this.col.bg = window.GetColourDUI(1);
 				this.col.txt = window.GetColourDUI(0);
 				this.col.txt_h = window.GetColourDUI(2);
-				if (this.col.bgSel === '') this.col.bgSel = this.blur.dark ? RGBA(255, 255, 255, 36) : this.blur.light ? RGBA(0, 0, 0, 36) : window.GetColourDUI(3);
+				if (this.col.bgSel === '') this.col.bgSel = this.blur.dark ? RGBA(255, 255, 255, 36) : this.blur.light ? RGBA(50, 50, 50, 36) : window.GetColourDUI(3);
 				break;
 		}
 	}

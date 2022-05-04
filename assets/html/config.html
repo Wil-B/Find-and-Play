@@ -305,16 +305,16 @@ Scores rank the long-term popularity of tracks on a 1-100 scale using total scro
 <i>Access tag</i>
 
 </div>
-<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,1[playcount])"/></div>
-<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,3[listeners])"/></div>
-<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,5[score])"/></div>
+<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,1[playcount])"/></div>
+<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,3[listeners])"/></div>
+<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,5[score])"/></div>
 <div class="info4" style="padding-right: 10%;">
 
 <i>Skip tracks</i>
 
 Something like the following can be used to skip tracks in own data mode, thereby favouring more popular tracks (5* & 4*):
 </div>
-<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value='"$meta(Track Statistics Last.fm,5[score])" LESS 60'/></div>
+<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value='"$meta(Track Statistics Last.fm,5[score])" LESS 60'/></div>
 <div class="info4" style="padding-right: 10%;">
 If used with autoDJ, disabling best tracks bias (advanced tab), so a random pick is used, may work best.
 
@@ -322,7 +322,7 @@ If used with autoDJ, disabling best tracks bias (advanced tab), so a random pick
 
 Remove punctuation from playcount & listeners if used in queries, sorting or arithmetic title formatting functions, e.g.
 </div>
-<div class="input_cnt2"><input class="input98" style="border:none; background:none;" value="$replace($meta(Track Statistics Last.fm,1[playcount]),',',,.,, ,)"/></div>
+<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$replace($meta(Track Statistics Last.fm,1[playcount]),',',,.,, ,)"/></div>
 
 <div class="info5">&nbsp</div>
 		</div>
@@ -771,7 +771,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var textStyleLabels = ['Alternative scrollbar spacing'];
 				var tfLabels = ['Artist', 'Album', 'Genre', 'Title', 'Playcount', 'Rating', '', 'All uses'];
 				var youTubeLabels = ["'Live' reduction", 'Prefer&nbsp&nbsp&nbsp', 'Obtain with Find & Play, so always immediately available. <i>Note: the foo_youtube option "prefer youtube-dl analyzer..." might interfere with thumbnail display</i>'];
-				var themeLabels = ['User interface', 'Dark', 'Blend', 'Light', 'Always cover based', 'Swap colours', 'Highlight heading'];
+				var themeLabels = ['User interface', 'Dark', 'Blend', 'Light', 'Random', 'Always cover based', 'Swap colours', 'Highlight heading'];
 				var themeBlurLabels = ['Auto-Fill', 'Level (%)', 'Opacity (%)', '%'];
 				var ytLabels = ['API', 'Web', 'Youtube API Key', 'Last.fm API Key'];
 
@@ -932,8 +932,8 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 					for (i = 0; i < 3; i++) {window.scrolling.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="scroll_checkbox'+i+'" name="display_checkbox" style="'+cbox+'" type="checkbox" /><label for="scroll_checkbox'+i+'" class="checkbox_label">'+scrollLabels[i]+'</label></div>');}
 					
 					window.theme_dropdown.innerHTML = themeLabels[ppt['theme_internal'].value];
-					for (i = 0; i < 4; i++) {window.themeBg.insertAdjacentHTML('beforeend', '<a onclick="setTheme(' + i + ');">'+themeLabels[i]+'</a>');}
-					for (i = 4; i < 7; i++) {window.themeStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="theme_checkbox'+i+'" name="display_checkbox" style="'+cbox+'" type="checkbox" /><label for="theme_checkbox'+i+'" class="checkbox_label">'+themeLabels[i]+'</label></div>');}
+					for (i = 0; i < 5; i++) {window.themeBg.insertAdjacentHTML('beforeend', '<a onclick="setTheme(' + i + ');">'+themeLabels[i]+'</a>');}
+					for (i = 5; i < 8; i++) {window.themeStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="theme_checkbox'+i+'" name="display_checkbox" style="'+cbox+'" type="checkbox" /><label for="theme_checkbox'+i+'" class="checkbox_label">'+themeLabels[i]+'</label></div>');}
 					
 					window.showHl_dropdown.innerHTML = highLightLabels[ppt['highLightRow_internal'].value];
 					for (i = 0; i < 4; i++) {window.showHl.insertAdjacentHTML('beforeend', '<a onclick="setHoverBg(' + i + ');">'+highLightLabels[i]+'</a>');}
@@ -1066,8 +1066,8 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 			}
 
 			function setCheckboxStates() {
-				window.theme_checkbox4.parentNode.disabled = ppt['theme_internal'].value == 0;
-				window.theme_checkbox5.parentNode.disabled = ppt['theme_internal'].value == 1;
+				window.theme_checkbox5.parentNode.disabled = ppt['theme_internal'].value == 0;
+				window.theme_checkbox6.parentNode.disabled = ppt['theme_internal'].value == 1 || ppt['theme_internal'].value == 4;
 				window.removePlayed1.parentNode.disabled = !window.removePlayed_checkbox0.checked;
 				window.imgSeekerStyle0.parentNode.disabled = !ppt['imgSeekerShow_internal'].value;
 				window.imgSeekerStyle1.parentNode.disabled = !ppt['imgSeekerShow_internal'].value;

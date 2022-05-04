@@ -237,7 +237,7 @@ let properties = [
 	['Image Blur Background Level (%)', 90, 'blurTemp'],
 	['Image Blur Background Opacity (%)', 30, 'blurAlpha'],
 	['Image Border', false, 'imgBorder'],
-	['Image Border', false, 'highlightImgBor'],
+	['Image Border Highlight', false, 'highlightImgBor'],
 	['Image Circular Cover', false, 'covCirc'],
 	['Image Circular Photo', false, 'artCirc'],
 	['Image Counter', false, 'imgCounter'],

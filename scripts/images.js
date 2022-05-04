@@ -172,14 +172,23 @@ class Images {
 		const blurImg = $.gr(panel.w, panel.h, true, (g, gi) => {
 			g.SetInterpolationMode(0);
 			if (ui.blur.blend) {
-				const iSmall = image.Resize(panel.w * ui.blur.level / 100, panel.h * ui.blur.level / 100, 2);
-				const iFull = iSmall.Resize(panel.w, panel.h, 2);
-				const offset = 90 - ui.blur.level;
-				g.DrawImage(iFull, 0 - offset, 0 - offset, panel.w + offset * 2, panel.h + offset * 2, 0, 0, iFull.Width, iFull.Height, 0, ui.blur.blendAlpha);
+				if (ppt.blurTemp) {
+					const iSmall = image.Resize(panel.w * ui.blur.level / 100, panel.h * ui.blur.level / 100, 2);
+					const iFull = iSmall.Resize(panel.w, panel.h, 2);
+					const offset = 90 - ui.blur.level;
+					g.DrawImage(iFull, 0 - offset, 0 - offset, panel.w + offset * 2, panel.h + offset * 2, 0, 0, iFull.Width, iFull.Height, 0, ui.blur.blendAlpha);
+				} else g.DrawImage(image, 0, 0, panel.w, panel.h, 0, 0, image.Width, image.Height, 0, ui.blur.blendAlpha); // no blur
 			} else {
-				g.DrawImage(image, 0, 0, panel.w, panel.h, 0, 0, image.Width, image.Height);
-				if (ui.blur.level > 1) gi.StackBlur(ui.blur.level);
-				g.FillSolidRect(0, 0, panel.w, panel.h, this.isImageDark(gi) ? ui.col.bg_light : ui.col.bg_dark);
+				if (ppt.theme == 1 || ppt.theme == 3) {
+					g.DrawImage(image, 0, 0, panel.w, panel.h, 0, 0, image.Width, image.Height);
+					if (ui.blur.level > 1) gi.StackBlur(ui.blur.level);
+					g.FillSolidRect(0, 0, panel.w, panel.h, this.isImageLight(gi) ? ui.col.bg_light : ui.col.bg_dark);
+				}
+				if (ppt.theme == 4) {
+					g.FillSolidRect(0, 0, panel.w, panel.h, this.getRandomCol());
+					g.DrawImage(image, 0, 0, panel.w, panel.h, 0, 0, image.Width, image.Height, 0, this.getImgAlpha(image));
+					if (ui.blur.level > 1) gi.StackBlur(ui.blur.level);
+				}
 			}
 		});
 		return blurImg;
@@ -267,20 +276,18 @@ class Images {
 		let ih = image.Height
 		switch (type) {
 			case 'circular':
-			case 'crop': {
-				const s1 = iw / this.im.w;
-				const s2 = ih / this.im.h;
+			case 'crop': {				
+				const s1 = iw / w;
+				const s2 = ih / h;
 				if (s1 > s2) {
-					iw = Math.round(this.im.w * s2);
+					iw = Math.round(w * s2);
 					ix = Math.round((image.Width - iw) / 2);
 				} else {
-					ih = Math.round(this.im.h * s1);
+					ih = Math.round(h * s1);
 					iy = Math.round((image.Height - ih) / 8);
 				}
 				image = image.Clone(ix, iy, iw, ih);
-
 				if (caller == 'blurAutofill') return image;
-
 				if (type == 'circular') this.circularMask(image, image.Width, image.Height);
 				if (!border) image = image.Resize(w, h, 2);
 				break;
@@ -390,6 +397,32 @@ class Images {
 		this.cache().cacheIt(image, 'noitem');
 	}
 
+	getImgAlpha(image) {
+		const colorSchemeArray = JSON.parse(image.GetColourSchemeJSON(15));
+		let rTot = 0;
+		let gTot = 0;
+		let bTot = 0;
+		let freqTot = 0;
+		colorSchemeArray.forEach(v => {
+			const col = $.toRGB(v.col);
+			rTot += col[0] ** 2 * v.freq;
+			gTot += col[1] ** 2 * v.freq;
+			bTot += col[2] ** 2 * v.freq;
+			freqTot += v.freq;
+		});
+		const avgCol = ($.clamp(Math.round(Math.sqrt(rTot / freqTot)), 0, 255) + $.clamp(Math.round(Math.sqrt(gTot / freqTot)), 0, 255) + $.clamp(Math.round(Math.sqrt(bTot / freqTot)), 0, 255)) / 3;
+		return $.clamp(avgCol * -0.32 +  128, 64, 128);
+	}
+
+	getRandomCol() {
+		const rc = () => {
+			return Math.floor(Math.random() * 256);
+		};
+		let c = [rc(), rc(), rc()];
+		while (!this.isColOk(c)) c = [rc(), rc(), rc()];
+		return $.RGBAtoRGB(RGBA(c[0], c[1], c[2], Math.min(80 / ui.blur.alpha, 255)), RGB(0, 0, 0));
+	}
+
 	images(v) {
 		if (!$.file(v)) return false;
 		const fileSize = utils.GetFileSize(v);
@@ -400,7 +433,7 @@ class Images {
 		return ui.style.isBlur ? image.Clone(0, 0, image.Width, image.Height) : null;
 	}
 
-	isImageDark(image) {
+	isImageLight(image) {
 		const colorSchemeArray = JSON.parse(image.GetColourSchemeJSON(15));
 		let rTot = 0;
 		let gTot = 0;
@@ -415,6 +448,15 @@ class Images {
 		});
 		const avgCol = [$.clamp(Math.round(Math.sqrt(rTot / freqTot)), 0, 255), $.clamp(Math.round(Math.sqrt(gTot / freqTot)), 0, 255), $.clamp(Math.round(Math.sqrt(bTot / freqTot)), 0, 255)];
 		return ui.getSelCol(avgCol, true, true) == 50 ? true : false;
+	}
+
+	isColOk(c) {
+		const hsp = Math.sqrt(
+			0.299 * (c[0] * c[0]) +
+			0.587 * (c[1] * c[1]) +
+			0.114 * (c[2] * c[2])
+		);
+		return hsp > 55; // exclude too dark
 	}
 
 	lbtn_dn(p_x) {

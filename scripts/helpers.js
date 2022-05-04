@@ -238,6 +238,18 @@ class Helpers {
 		return n.replace(/([*+\-?^!:&"~${}()|[\]/\\])/g, '\\$1');
 	}
 
+	removeDiacritics(str) {
+		return str.replace(/[^\u0000-\u007E]/g, n => $.diacriticsMap[n] || n);
+	}
+
+	removeNulls(o) {
+		const isArray = $.isArray(o);
+		Object.keys(o).forEach(v => {
+			if (o[v].length == 0) isArray ? o.splice(v, 1) : delete o[v];
+			else if (typeof o[v] == 'object') this.removeNulls(o[v]);
+		});
+	}
+
 	RGBAtoRGB(c, bg) {
 		c = this.toRGBA(c);
 		bg = this.toRGB(bg);
@@ -257,17 +269,6 @@ class Helpers {
 		return RGB(nR, nG, nB);
 	}
 
-	removeDiacritics(str) {
-		return str.replace(/[^\u0000-\u007E]/g, n => $.diacriticsMap[n] || n);
-	}
-
-	removeNulls(o) {
-		const isArray = $.isArray(o);
-		Object.keys(o).forEach(v => {
-			if (o[v].length == 0) isArray ? o.splice(v, 1) : delete o[v];
-			else if (typeof o[v] == 'object') this.removeNulls(o[v]);
-		});
-	}
 	run(c, w) {
 		try {
 			w === undefined ? WshShell.Run(c) : WshShell.Run(c, w);

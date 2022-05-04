@@ -177,7 +177,7 @@ class Albums {
 			if (ppt.showAlb) this.searchForAlbumNames(0, [ppt.lfmReleaseType, 4, 3][ppt.mb], ns);
 		}, 1500);
 
-		this.alb_id = -1;
+		this.alb_id = 0;
 	}
 
 	// Methods
