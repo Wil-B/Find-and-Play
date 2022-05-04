@@ -1,4 +1,4 @@
-# v1.0.1
+# v1.1.0
 
 ### Added
 - Track popularity tagger (see below)
