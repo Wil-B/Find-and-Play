@@ -1,4 +1,4 @@
-# v1.1.1 [unreleased]
+# v1.1.1
 
 ### Added
 - Checks to test if ShowHtmlDialog is supported, with fallback to an alternative where possible (thx to regor)
