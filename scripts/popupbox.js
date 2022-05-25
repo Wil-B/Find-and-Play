@@ -40,54 +40,34 @@ class PopUpBox {
 	}
 
 	config(ppt, dialogWindow, ok_callback) {
-		try {
-			utils.ShowHtmlDialog(0, this.configHtmlCode, {
-				data: [ppt, dialogWindow, window.IsTransparent, ok_callback, this.bias_callback, this.tf_callback],
-				resizable: true
-			});
-		} catch (e) {
-			this.ok = false;
-			$.trace('options dialog isn\'t available with current operating system. All settings in options are available in panel properties. Common settings are on the menu.');
-		}
+		utils.ShowHtmlDialog(0, this.configHtmlCode, {
+			data: [ppt, dialogWindow, window.IsTransparent, ok_callback, this.bias_callback, this.tf_callback],
+			resizable: true
+		});
 	}
 
 	confirm(msg_title, msg_content, btn_yes_label, btn_no_label, height_adjust, confirm_callback) {
-		try {
-			utils.ShowHtmlDialog(0, this.confirmHtmlCode, {
-				data: [msg_title, msg_content, btn_yes_label, btn_no_label, height_adjust, confirm_callback]
-			});
-		} catch (e) {
-			return true;
-		}
+		utils.ShowHtmlDialog(0, this.confirmHtmlCode, {
+			data: [msg_title, msg_content, btn_yes_label, btn_no_label, height_adjust, confirm_callback]
+		});
 	}
 
 	input(title, msg, ok_callback, input, def) {
-		try {
-			utils.ShowHtmlDialog(0, this.inputHtmlCode, {
-				data: [title, msg, 'Cancel', ok_callback, input, def]
-			});
-		} catch (e) {
-			return true;
-		}
+		utils.ShowHtmlDialog(0, this.inputHtmlCode, {
+			data: [title, msg, 'Cancel', ok_callback, input, def]
+		});
 	}
 
 	query(title, msg, ok_callback, input, def) {
-		try {
-			utils.ShowHtmlDialog(0, this.queryHtmlCode, {
-				data: [title, msg, 'Cancel', ok_callback, this.check_query_callback, input, def]
-			});
-		} catch (e) {
-			return true;
-		}
+		utils.ShowHtmlDialog(0, this.queryHtmlCode, {
+			data: [title, msg, 'Cancel', ok_callback, this.check_query_callback, input, def]
+		});
 	}
 
 	message() {
-		try {
-			utils.ShowHtmlDialog(0, this.messageHtmlCode, {
-				data: [this.window_ok_callback, $.scale],
-			});
-		} catch (e) {
-		}
+		utils.ShowHtmlDialog(0, this.messageHtmlCode, {
+			data: [this.window_ok_callback, $.scale],
+		});
 	}
 
 	bias_callback() {

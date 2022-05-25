@@ -198,7 +198,7 @@ class Albums {
 		}
 		const caption = artist + ' | ' + album;
 		const prompt = 'This Album Exists In Library As:' + (orig_alb ? '\n\nOriginal Library Album' : '') + (orig_alb && mtags_alb ? '\n\nAND' : '') + (mtags_alb ? '\n\nAlbum Built With m-TAGS' : '') + '\n\nContinue?';
-		const wsh = popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation);
+		const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));		
 		return albumDone;
 	}

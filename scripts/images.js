@@ -715,7 +715,7 @@ class Images {
 				if (this.art.images.length < 2) break;
 				this.change(-step);
 				if (ppt.artistView && ppt.cycPhoto) timer.image();
-				seeker.debounce(); // see if helps auto
+				seeker.debounce();
 				break;
 			case true:
 				if (ppt.imgReflection) this.setReflStrength(-step * 5);

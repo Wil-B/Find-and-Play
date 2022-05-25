@@ -54,7 +54,7 @@ class Tagger {
 		const caption = 'Tag Files with Last.fm Track Statistics';
 		const prompt = ppt.v ? `Update ${list.Count} ${list.Count > 1 ? 'tracks' : 'track'}.\n\nObtains top 1000 tracks per artist and tags matching tracks.\n\nWrites last.fm playcount, listeners & a combined score (1-100) as a multi-value tag.\n\nTag name: '${ppt.lfmTrackStatsTagName}' (change in panel properties 'Tagger...').\n\nRuns at 1 artist every 3 seconds to allow time for downloading & processing.\n\nContinue?` :
 							`Update ${list.Count} ${list.Count > 1 ? 'tracks' : 'track'}.\n\nObtains top 1000 tracks per artist and tags matching tracks.\n\nWrites last.fm playcount, listeners & a combined score (1-100) as a multi-value tag.\n\nTHIS FEATURE REQUIRES YOUR OWN LAST.FM API KEY. PLEASE PASTE IN MAINTENANCE TAB AND TRY AGAIN.`
-		const wsh = popUpBox.confirm(caption, prompt, 'OK', 'Cancel', continue_confirmation);
+		const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'OK', 'Cancel', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));
 	}
 
@@ -167,7 +167,7 @@ class LastfmTrackStatistics {
 			return n >= tag.score[v].threshold ? (Math.log(n / tag.score[v].scale) * tag.score[v].baseLog) * 10 : (n * 0.9 / tag.score[v].threshold + 0.1) * 10;
 		});
 		const pcScore = $.clamp(Math.floor(score[0]), 1, 105);
-		const lisScore =  $.clamp(Math.floor(score[1]), 1, 105);
+		const lisScore = $.clamp(Math.floor(score[1]), 1, 105);
 		return pcScore > 98 && pcScore < 105 ? 100 : $.clamp(Math.floor((pcScore + lisScore) / 2), 1, 100);
 	}
 	

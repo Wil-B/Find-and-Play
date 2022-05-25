@@ -211,7 +211,11 @@ class Helpers {
 	}
 
 	open(f) {
-		return this.file(f) ? utils.ReadTextFile(f) : '';
+		try { // handle locked files
+			return this.file(f) ? utils.ReadTextFile(f) : '';
+		} catch (e) {
+			return '';
+		}
 	}
 
 	padNumber(num, len, base) {

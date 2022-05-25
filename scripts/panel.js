@@ -278,7 +278,12 @@ class Panel {
 			dialogWindow = JSON.stringify(dialogWindow);
 			ppt.set('Find & Play Dialog Box', dialogWindow);
 		}
-		popUpBox.config(JSON.stringify(ppt), dialogWindow, ok_callback);
+		
+		if (soFeatures.gecko && soFeatures.clipboard) popUpBox.config(JSON.stringify(ppt), dialogWindow, ok_callback);
+		else {
+			popUpBox.ok = false;
+			$.trace('options dialog isn\'t available with current operating system. All settings in options are available in panel properties. Common settings are on the menu.');
+		}
 	}
 
 	on_size() {

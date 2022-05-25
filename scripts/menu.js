@@ -511,10 +511,12 @@ class MenuItems {
 			checkRadio: i == !ppt.focus || panel.video.mode ? 0 : 1
 		});
 
-		menu.newItem({separator: true});
-		menu.newItem({
-			str: () => popUpBox.ok ? 'Options...' : 'Options: see console',
-			func: () => panel.open(),
+		if (utils.IsKeyPressed(0x10)) menu.newItem({separator: true});
+		for (let i = 0; i < 2; i++) menu.newItem({
+			str: () => [popUpBox.ok ? 'Options...' : 'Options: see console', 'Configure...'][i],
+			func: () => !i ? panel.open() : window.EditScript(),
+			separator: !i && utils.IsKeyPressed(0x10),
+			hide: i && !utils.IsKeyPressed(0x10)
 		});
 	}
 
@@ -964,7 +966,7 @@ class MenuItems {
 				}
 				const caption = 'Select ' + (djType == 0 ? 'artist' : djType == 1 ? 'genre' : djType == 2 ? 'artist & similar artists' : 'similar song');
 				const prompt = 'Type name of ' + ((djType == 0 || djType == 2) ? 'artist' : djType == 1 ? 'genre' : 'artist | title' + '\nUse pipe separator');
-				const fallback = popUpBox.input(caption, prompt, ok_callback, '', index.cur_dj_source);
+				const fallback = soFeatures.gecko && soFeatures.clipboard ? popUpBox.input(caption, prompt, ok_callback, '', index.cur_dj_source) : true;	
 				if (fallback) {
 					let ns = '';
 					let status = 'ok';
@@ -1013,7 +1015,7 @@ class MenuItems {
 		}
 		ppt.configOwnData = ppt.djOwnData = i != 3 ? 0 : 1;
 		lib.update.artists = true;
-		if (!ml.fooYouTubeInstalled && i < 2 && ppt.foo_youtubeNotInstalledMsg) popUpBox.message();
+		if (!ml.fooYouTubeInstalled && i < 2 && ppt.foo_youtubeNotInstalledMsg && soFeatures.gecko && soFeatures.clipboard) popUpBox.message();
 	}
 
 	setFavourites(i) {
@@ -1039,8 +1041,8 @@ class MenuItems {
 				}
 				const caption = 'Reset list';
 				const prompt = 'This action removes all items from the list\n\nContinue?';
-				const wsh = popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation);
-				if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));
+				const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
+				if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));	
 			}
 		}
 	}
@@ -1125,7 +1127,7 @@ class MenuItems {
 				}
 				const caption = 'Query search';
 				const prompt = 'Enter media library query. Examples:\nRock\nGenre HAS Rock\n%rating% GREATER 3\nGenre IS Rock AND %Date% AFTER 1979 AND %Date% BEFORE 1990';
-				const fallback = popUpBox.query(caption, prompt, ok_callback, 'Query:', index.cur_dj_source ? index.cur_dj_source : 'Enter query');
+				const fallback = soFeatures.gecko && soFeatures.clipboard ? popUpBox.query(caption, prompt, ok_callback, 'Query:', index.cur_dj_source ? index.cur_dj_source : 'Enter query') : true;
 				if (fallback) {
 					let ns = '';
 					let status = 'ok';
@@ -1144,7 +1146,7 @@ class MenuItems {
 				}
 				const caption = 'Last.fm tag search';
 				const prompt = 'Type tag\n\nAnything recognised by last.fm can be used, e.g. 2015, Rock, Happy, American etc';
-				const fallback = popUpBox.input(caption, prompt, ok_callback, '', index.cur_dj_source);
+				const fallback = soFeatures.gecko && soFeatures.clipboard ? popUpBox.input(caption, prompt, ok_callback, '', index.cur_dj_source) : true;
 				if (fallback) {
 					let ns = '';
 					let status = 'ok';

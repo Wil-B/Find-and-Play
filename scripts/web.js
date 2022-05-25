@@ -2069,7 +2069,7 @@ class DldAlbumTracks {
 		}
 		const caption = artist + ' | ' + album;
 		const prompt = `This Album Has A Lot of Tracks: ${length}\n\nRequires ${(ppt.libAlb ? 'up to ' : '') + length} YouTube Searches\n\nContinue?`;
-		const wsh = popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation);
+		const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));
 	}
 

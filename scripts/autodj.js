@@ -604,7 +604,6 @@ class AutoDJ {
 	dldNextTrack() {
 		if (!this.list.items.length) return;
 		index.reset_add_loc();
-		//let tracks;
 		const mode = !ppt.playTracks ? this.mode : 0;
 		switch (mode) {
 			case 0: {
