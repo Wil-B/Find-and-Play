@@ -41,3 +41,6 @@ New install or update:
 5) On the script tab ensure package is selected
 6) Open package manager if it doesn't open automatically
 7) Import the package
+
+### SUPPORT
+The official discussion thread for Find and Play is located at [HydrogenAudio](https://hydrogenaud.io/index.php?topic=121006.0) and that's a great place to go for questions and other support issues.
