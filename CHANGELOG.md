@@ -1,8 +1,18 @@
+# v1.1.2 [unreleased]
+### Fixed
+- Occasional issues with the options dialog not opening due to the feature checker wrongly reporting Spider Monkey Panel Show HTML Dialog as unsupported. In such cases there is now a confirm to guard against false negatives. Additionally, there is a manual setting in the first panel property
+- Album & tracks pane: calls to youtube were incorrectly being allowed with track source library
+- Index is out of bounds error
+
+<br />
+
 # v1.1.1
 
 ### Added
 - Checks to test if ShowHtmlDialog is supported, with fallback to an alternative where possible (thx to regor)
 - Menu configure that opens Spider Monkey Panel configuration (right click + shift)
+
+<br />
 
 # v1.1.0
 
