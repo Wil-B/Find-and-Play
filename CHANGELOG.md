@@ -1,6 +1,6 @@
 # v1.2.0 [unreleased]
 ### Changed
-- Readme rewritten with new screenshots to more fully reflect capablities
+- Readme rewritten with new screenshots to more fully reflect capabilities
 - Standard matching now ignores diacritics, e.g. a = á
 
 ### Added
