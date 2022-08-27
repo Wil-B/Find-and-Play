@@ -1,7 +1,6 @@
 # v1.2.0 [unreleased]
 ### Changed
 - Readme rewritten with new screenshots to more fully reflect capabilities
-- Standard matching now ignores diacritics, e.g. a = á
 
 ### Added
 - Library playlist generator (morphed from previous find functionality)
@@ -13,11 +12,12 @@
 	- smart mix feature for library playlist generator
 
 ### Fixed
-- Feature detection issue
 - Album & tracks pane with library source incorrectly allowing calls to YouTube
+- Occasional issues with the options dialog not opening due to the feature checker wrongly reporting Spider Monkey Panel Show HTML Dialog as unsupported. In such cases there is now a confirm to guard against false negatives. Additionally, there is a manual setting in the first panel property
 - Index is out of bounds error
 - Charts sometimes not loading due to timeout being too short
 - Search text was difficult to read with certain theme and colour combinations
+- Standard matching now ignores diacritics, e.g. a = á
 
 <br />
 
