@@ -1,8 +1,23 @@
-# v1.1.2 [unreleased]
+# v1.2.0 [unreleased]
+### Changed
+- Readme rewritten with new screenshots to more fully reflect capablities
+- Standard matching now ignores diacritics, e.g. a = á
+
+### Added
+- Library playlist generator (morphed from previous find functionality)
+    - Easily create awesome playlists by songs, artists, genres, moods, themes, decades, locale or queries
+- AutoDJ & library playlist generator
+	- search suggestions
+	- browse & search dialog: offers full search options with autocomplete + 'try another' if no matches
+	- inbuilt support for 1,000+ genres, 350 moods & 250 themes + choose your own
+	- smart mix feature for library playlist generator
+
 ### Fixed
-- Occasional issues with the options dialog not opening due to the feature checker wrongly reporting Spider Monkey Panel Show HTML Dialog as unsupported. In such cases there is now a confirm to guard against false negatives. Additionally, there is a manual setting in the first panel property
-- Album & tracks pane: calls to youtube were incorrectly being allowed with track source library
+- Feature detection issue
+- Album & tracks pane with library source incorrectly allowing calls to YouTube
 - Index is out of bounds error
+- Charts sometimes not loading due to timeout being too short
+- Search text was difficult to read with certain theme and colour combinations
 
 <br />
 
