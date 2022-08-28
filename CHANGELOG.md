@@ -17,7 +17,6 @@
 - Index is out of bounds error
 - Charts sometimes not loading due to timeout being too short
 - Search text was difficult to read with certain theme and colour combinations
-- Standard matching now ignores diacritics, e.g. a = á
 
 <br />
 
