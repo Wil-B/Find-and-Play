@@ -1,13 +1,16 @@
 # v1.2.0 [unreleased]
 ### Changed
 - Readme rewritten with new screenshots to more fully reflect capabilities
+- Standard matching now ignores diacritics, e.g. a = á
+- Tagger now respects partial match setting
 
 ### Added
-- Library playlist generator (morphed from previous find functionality)
+- Library playlist generator
     - Easily create awesome playlists by songs, artists, genres, moods, themes, decades, locale or queries
 - AutoDJ & library playlist generator
 	- search suggestions
-	- browse & search dialog: offers full search options with autocomplete + 'try another' if no matches
+	- browse & search dialog that offers full search options with autocomplete + 'try another' if no matches
+		- this is an html dialog supported on Windows. If you're using WINE or something else that isn't fully compliant with Spider Monkey panel features, browse & search dialog may not be available. Instead the flyout menus have an alternative 'More...' option for searching
 	- inbuilt support for 1,000+ genres, 350 moods & 250 themes + choose your own
 	- smart mix feature for library playlist generator
 
@@ -17,7 +20,6 @@
 - Index is out of bounds error
 - Charts sometimes not loading due to timeout being too short
 - Search text was difficult to read with certain theme and colour combinations
-- Standard matching now ignores diacritics, e.g. a = á
 
 <br />
 
