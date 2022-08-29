@@ -1,6 +1,6 @@
 # v1.2.0 [unreleased]
 ### Changed
-- Readme rewritten with new screenshots to more fully reflect capabilities
+- [Readme](https://github.com/Wil-B/Find-and-Play/blob/main/README.md) rewritten with new screenshots to more fully reflect capabilities
 - Standard matching now ignores diacritics, e.g. a = á
 - Tagger now respects partial match setting
 
