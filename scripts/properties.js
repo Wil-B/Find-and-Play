@@ -87,6 +87,7 @@ class PanelProperties {
 }
 
 let properties = [
+	['- Show Html Dialog Unsupported-0 Supported-1 Autocheck-2', 2, 'isHtmlDialogSupported'],
 	['Album Manager Chart Date', 0, 'chartDate'],
 	['Album Manager Lfm Release Type', 1, 'lfmReleaseType'],
 	['Album Manager Lfm SortBy Playcount', false, 'lfmSortPC'],
@@ -122,8 +123,9 @@ let properties = [
 	['Auto DJ Current Query', false, 'cur_dj_query'],
 	['Auto DJ Current Range', 1, 'cur_dj_range'],
 	['Auto DJ Current Source', 'N/A', 'cur_dj_source'],
+	['Auto DJ Current Tag', 'genre', 'cur_dj_tag'],
 	['Auto DJ Current Type', 2, 'cur_dj_type'],
-	['Auto DJ Data Source Last.fm-0 Own-1', 0, 'djOwnData'],
+	['Auto DJ Data Source Last.fm-0 Own-1', 0, 'djOwnData'],	
 	['Auto DJ Decades Menu', JSON.stringify([{
 		tag1: '50s',
 		tag2: '1950s',
@@ -159,7 +161,6 @@ let properties = [
 	}]), 'decadesMenu'],
 	['Auto DJ Decades Short Format', 0, 'longDecadesFormat'],
 	['Auto DJ Favourites', 'No Favourites', 'favourites'],
-	['Auto DJ Genre Menu', 'Alternative,Alternative Rock,Classic Rock,Electronic,Experimental,Female Vocalists,Folk,Hard Rock,Hip Hop,Indie,Instrumental,Jazz,Metal,Pop,Progressive Rock,Punk,Rock', 'genreMenu'],
 	['Auto DJ Last Current Mode', 1, 'last_cur_dj_mode'],
 	['Auto DJ Last Data Source Last.fm-0 Own-1', 0, 'lastDjOwnData'],
 	['Auto DJ Last Library', 1, 'lastLibDj'],
@@ -182,6 +183,11 @@ let properties = [
 	['Auto DJ TopTracks Feed Size: Similar Songs', 'Artist Values Multiplied By,2.5', 'songFeed'],
 	['Auto DJ Track Count Log', 0, 'trackCount'],
 	['Auto DJ Tracks [Lfm] Curr Popularity', 1, 'curPop'],
+
+	['Autocomplete Last Name', 'N/A', 'autocompleteLastName'],
+	['Autocomplete Last Type', 3, 'autocompleteLastType'],
+	['Autocomplete IsCaller', 0, 'autocompleteIsCaller'],
+	['Autocomplete Type', 3, 'autocompleteType'],
 
 	['Border Increase Right Margin By Scrollbar Width', false, 'extra_sbar_w'],
 	['Border', 25, 'bor'],
@@ -217,11 +223,10 @@ let properties = [
 	['Custom Font Scroll Icon', 'Segoe UI Symbol,0', 'butCustIconFont'],
 
 	['Favourites Auto ', true, 'autoFav'],
-	['Find Current Mode', 2, 'cur_find_mode'],
+	['Find Current', JSON.stringify({source: 'N/A'}), 'cur_find'],
 	['Find Data Source Last.fm-0 Own-1', 0, 'findOwnData'],
-	['Find Mode', 2, 'findMode'],
-	['Find Randomize', false, 'findRandomize'],
 	['Find Save Top Tracks Playlists', false, 'findSavePlaylists'],
+	['Find Sort', 0, 'findLfmDataSort'],
 	['Font Size Base', 16, 'baseFontSize'],
 	['Genre Tracks', 1, 'genre_tracks'],
 	['Heading Highlight ', true, 'headHighlight'],
@@ -231,7 +236,7 @@ let properties = [
 	['Image [Artist] Auto-Download', false, 'dl_art_img'],
 	['Image [Artist] Cycle Time (seconds)', 15, 'cycleTime'],
 	['Image [Artist] Cycle', true, 'cycPhoto'],
-	['Image [Artist] Folder Location', '%profile%\\yttm\\art_img\\$lower($cut($meta(artist,0),1))\\$meta(artist,0)', 'imgArtPth'],
+	['Image [Artist] Folder Location', '%profile%\\foo_spider_monkey_panel\\package_data\\{BA9557CE-7B4B-4E0E-9373-99F511E81252}\\biography-cache\\art_img\\$lower($cut($meta(artist,0),1))\\$meta(artist,0)', 'imgArtPth'],
 	['Image Blur Background Always Use Front Cover', false, 'covBlur'],
 	['Image Blur Background Auto-Fill', false, 'blurAutofill'],
 	['Image Blur Background Level (%)', 90, 'blurTemp'],
@@ -259,10 +264,11 @@ let properties = [
 	['Library Auto DJ', 1, 'libDj'],
 	['Library Filter All Uses', '', 'libFilter'],
 	['Library Filter Auto DJ', '%rating% IS 1', 'autoDJFilter'],
-	['Library Filter Auto DJ Use', false, 'autoDJFilterUse'],
+	['Library Filter Auto DJ Use', true, 'autoDJFilterUse'],
 	['Library Filter All Uses Use', false, 'libFilterUse'],
-	['Library Sort', $.playCountInstalled ? 0 : 2, 'sortType'],
+	['Library Sort', 0, 'sortType'],
 	['Library Sort Auto DJ', 0, 'sortAutoDJ'],
+	['Library Sort Find', 2, 'findOwnDataSort'],
 
 	['Lines Embolden', false, 'linesEmbolden'],
 	['Line Padding', 0, 'verticalPad'],
@@ -284,19 +290,24 @@ let properties = [
 	['Partial Match Configuration', 'FuzzyMatch%,80,RegEx,\\(|\\[|feat,Console,false', 'partialMatchConfig'],
 	['Partial Match: 0 Fuzzy-1 RegEx-2 Either-3', 'AlbumTrack,1,AutoDJTrack,3,TopTrack,1', 'partialMatchType'],
 
-	['Playlist Label Top', 'Top', 'playlistTop'],
+	['Playlist Label Library Smart Mix', 'Library Smart Mix', 'playlistSmartMix'],
 	['Playlist Label Tracks', 'Tracks', 'playlistTracks'],
 	['Playlist Name Selection', 'Find & Play Selection', 'playlistSelection'],
+	['Playlist Name Library Mix', 'Library Mix', 'playlistGenerator'],
 	['Playlist Name Cache', 'Find & Play Cache', 'playlistCache'],
 	['Playlist Name Loved', 'Loved', 'playlistLoved'],
 	['Playlist Name Auto DJ', 'Auto DJ', 'playlistDj'],
 	['Playlist Soft Mode', false, 'playlistSoftMode'],
+	['Playlist Soft Mode Limit', 50, 'playlistSoftModeLimit'],
 	['Playlist Sort', '%album artist% | %date% | %album% | [[%discnumber%.]%tracknumber%. ][%track artist% - ]%title%', 'albumSortOrder'],
 	['Prefer Focus', false, 'focus'],
 
 	['Query Artist Field', 'Artist', 'queryArtistField'],
 	['Query Album Field', 'Album', 'queryAlbumField'],
-	['Query Genre Field', 'Genre', 'queryGenreField'],
+	['Query Genre Field', 'Genre|Style|Artist Genre Last.fm|Artist Genre AllMusic', 'queryGenreField'],
+	['Query Locale Field', 'Locale|Locale Last.fm|Artistcountry', 'queryLocaleField'],
+	['Query Mood Field', 'Mood|Album Mood AllMusic', 'queryMoodField'],
+	['Query Theme Field', 'Theme|Album Theme AllMusic', 'queryThemeField'],
 	['Query Title Field', 'Title', 'queryTitleField'],
 	['Row Stripes', false, 'rowStripes'],
 
@@ -327,12 +338,12 @@ let properties = [
 	['Theme', 0, 'theme'],
 
 	['Titleformat (Web Search) Artist', '[$if3($meta(artist,0),$meta(album artist,0),$meta(composer,0),$meta(performer,0))]', 'tfArtist'],
-	['Titleformat (Web Search) Album', '[$meta(album,0)]', 'tfAlbum'],
-	['Titleformat (Web Search) Genre', '[$meta(genre,0)]', 'tfGenre'],
+	['Titleformat (Web Search) Genre', '[$if3($meta(genre,1),$meta(style,0),$meta(artist genre last.fm,0),$meta(artist genre allmusic,1),$meta(genre,0))]', 'tfGenre'],
 	['Titleformat (Web Search) Title', '[$meta(title,0)]', 'tfTitle'],
 	['Titleformat Nowplaying', '[%artist%]$crlf()[%title%]', 'tfNowplaying'],
 	['Titleformat Play Count', '%play_count%', 'tfPlaycount'],
-	['Titleformat Rating', '%rating%', 'tfRating'],
+	['Titleformat Popularity', '$meta(Track Statistics Last.fm,5[score])', 'tfPopularity'],
+	['Titleformat Rating', '$if2(%rating%,$meta(rating))', 'tfRating'],
 
 	['Top Tracks Number to Play', 3, 'topTracksIX'],
 	['Touch Control', false, 'touchControl'],
@@ -362,3 +373,16 @@ let properties = [
 const ppt = new PanelProperties;
 ppt.init('auto', properties);
 properties = undefined;
+
+if (ppt.get('Update Properties', true)) {
+	ppt.queryGenreField = 'Genre|Style|Artist Genre Last.fm|Artist Genre AllMusic';
+	ppt.tfGenre = '[$if3($meta(genre,1),$meta(style,0),$meta(artist genre last.fm,0),$meta(artist genre allmusic,1),$meta(genre,0))]';
+	ppt.tfRating = '$if2(%rating%,$meta(rating))';
+	window.SetProperty('Auto DJ Genre Menu', null);
+	window.SetProperty('Find Current Mode', null);
+	window.SetProperty('Find Mode', null);
+	window.SetProperty('Find Randomize', null);
+	window.SetProperty('Playlist Label Top', null);
+	window.SetProperty('Titleformat (Web Search) Album', null);
+	ppt.set('Update Properties', false);
+}

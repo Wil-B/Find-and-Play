@@ -54,7 +54,7 @@ class Tagger {
 		const caption = 'Tag Files with Last.fm Track Statistics';
 		const prompt = ppt.v ? `Update ${list.Count} ${list.Count > 1 ? 'tracks' : 'track'}.\n\nObtains top 1000 tracks per artist and tags matching tracks.\n\nWrites last.fm playcount, listeners & a combined score (1-100) as a multi-value tag.\n\nTag name: '${ppt.lfmTrackStatsTagName}' (change in panel properties 'Tagger...').\n\nRuns at 1 artist every 3 seconds to allow time for downloading & processing.\n\nContinue?` :
 							`Update ${list.Count} ${list.Count > 1 ? 'tracks' : 'track'}.\n\nObtains top 1000 tracks per artist and tags matching tracks.\n\nWrites last.fm playcount, listeners & a combined score (1-100) as a multi-value tag.\n\nTHIS FEATURE REQUIRES YOUR OWN LAST.FM API KEY. PLEASE PASTE IN MAINTENANCE TAB AND TRY AGAIN.`
-		const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'OK', 'Cancel', continue_confirmation) : true;
+		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'OK', 'Cancel', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));
 	}
 
@@ -197,6 +197,16 @@ class LastfmTrackStatistics {
 					if (pcNum && lisNum) {
 						trackStatistics[i] = ['Playcount', pcNum.toLocaleString(), 'Listeners', lisNum.toLocaleString(), 'Score', this.getScore(pcNum, lisNum)];
 						return true;
+					}
+				}
+				if (lib.fuzzy.trackTitle) {
+					if (lib.fuzzyMatch(titles[i], v.title)) {
+						const pcNum = parseInt(v.playcount);
+						const lisNum = parseInt(v.listeners);
+						if (pcNum && lisNum) {
+							trackStatistics[i] = ['Playcount', pcNum.toLocaleString(), 'Listeners', lisNum.toLocaleString(), 'Score', this.getScore(pcNum, lisNum)];
+							return true;
+						}
 					}
 				}
 			});

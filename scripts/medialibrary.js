@@ -7,6 +7,7 @@ class MediaLibrary {
 		this.fooYouTubeInstalled = utils.CheckComponent('foo_youtube', true);
 
 		this.playcount = ppt.tfPlaycount.trim();
+		this.popularity = ppt.tfPopularity.trim();
 		this.rating = panel.id.local ? '%_autorating%' : ppt.tfRating.trim();
 		this.upd_yt_mtags = ppt.mtagsInstalled && this.fooYouTubeInstalled ? $.value(mtagsSync[1], 1, 1) : 0;
 		this.upd_lib_mtags = ppt.mtagsInstalled ? $.value(mtagsSync[3], 1, 1) : 0;
@@ -75,10 +76,10 @@ class MediaLibrary {
 
 	sort(i, set) {
 		if (set) ppt.sortType = i;
-		const sort_ar = [this.playcount, this.rating, '$rand()', '%bitrate%', '%bitrate%', '%length%', '%length%', '%date%', '%date%'];
-		this.track_pref = ['Most Played', 'Highest Rated', 'Random', 'Highest Bitrate', 'Lowest Bitrate', 'Longest', 'Shortest', 'Latest', 'Earliest'];
-		const sort_dir = [0, 0, 1, 0, 1, 0, 1, 0, 1];
-		this.sort_rand = ppt.sortType == 2;
+		const sort_ar = [this.playcount, this.rating, this.popularity, '$rand()', '%bitrate%', '%bitrate%', '%length%', '%length%', '%date%', '%date%'];
+		this.track_pref = ['Most Played', 'Highest Rated', 'Most popular', 'Random', 'Highest Bitrate', 'Lowest Bitrate', 'Longest', 'Shortest', 'Latest', 'Earliest'];
+		const sort_dir = [0, 0, 0, 1, 0, 1, 0, 1, 0, 1];
+		this.sort_rand = ppt.sortType == 3;
 		this.dir = sort_dir[ppt.sortType];
 		this.item_sort = FbTitleFormat(sort_ar[ppt.sortType]);
 	}

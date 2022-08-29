@@ -27,8 +27,8 @@
 	input[type="radio"]:hover:focus {border:1px solid #0078D7; padding:1px 0;}
 	input[type="radio"]:hover {border:1px solid #000000; padding:1px 0;}
 	
-	.alignLeftHa {width:10%; padding:1.25em 0 0; float:left;}
-	.alignRightHa {width:58%;padding:1.25em 0 0; float:left;}	
+	.alignLeftHa {width:7.6%; padding:1.25em 0 0; float:left;}
+	.alignRightHa {width:48.2%;padding:1.25em 0 0; float:left;}	
 	.alignRightHa2 {padding:1.25em 0 0; float:left;}
 
 	.div_text1 {padding:0.7em 0 0.91em;}
@@ -41,9 +41,10 @@
 		font:bold 1.15em Segoe UI; color:#0066CC; word-wrap:break-word; white-space:pre-wrap;
 	}
 	
-	.alignLeftH {width:10%; padding:0.7em 0 0; float:left;}
-	.alignRightH {width:58%;padding:0.7em 0 0; float:left;}	
+	.alignLeftH {width:7.6%; padding:0.7em 0 0; float:left;}
+	.alignRightH {width:48.3%;padding:0.7em 0 0; float:left;}	
 	.alignRightH2 {padding:0.7em 0 0; float:left;}
+	.alignRightH3 {padding:0.7em 0 0; float:right;}
 	.info2 {padding:0.7em 0 0.31em;}
 	.info3 {margin:0 2% 0 0;}
 	.info4 {padding:0.7em 0 0;}
@@ -51,7 +52,7 @@
 	.info6 {padding:0.7em 0;}
 	.info7 {padding:0.15em 0 0.31em 0;}
 	.info12 {padding:0.7em 0 0.5em;}
-	.alignLeftH, .alignRightH, .alignRightH2, .info1, .info2, .info3, .info4, .info5, .info6, .info7, .info12 {
+	.alignLeftH, .alignRightH, .alignRightH2, .alignRightH3, .info1, .info2, .info3, .info4, .info5, .info6, .info7, .info12 {
 		word-wrap:break-word; white-space:pre-wrap;
 	}
 
@@ -61,12 +62,12 @@
 	.input_cnt1 {margin-top:0.58em; margin-bottom:0.58em;}
 	.input_cnt2 {margin:0; padding:0;}
 	.input_cnt3 {padding-top:0.7em;}
-	.input_cnt4 {padding-top:0.31em;}
+	.input_cnt4 {padding-top:0.25em;}
 	.input_cnt5 {margin-top:0.25em; margin-bottom:0.25em;}
 	.input2 {width:2em; text-align:center}
 	.input3 {width:3em;}
-	.input21 {display:inline-block; vertical-align:middle; width:21%; margin-left:2%; margin-right:0; margin-bottom:0.46em;}
-	.input50 {width:60%; vertical-align:middle;}
+	.input60 {width:60%; vertical-align:middle;}
+	.input75 {width:75%; vertical-align:middle;}
 	.input85 {width:85%; margin-bottom:0.46em;}
 
 	.input87 {width:87%;}
@@ -77,14 +78,13 @@
 
 	.input35 {width:35%; margin-bottom:0.31em;}
 	.input40 {width:40%; margin-left:5%;}
-	.input56 {width:56%; margin-left:2%; margin-bottom:0.46em;}
+	.input56 {width:46%; margin-left:2%; margin-bottom:0.46em;}
 	.input66 {width:66%;}
 	.input35, .input40, .input56, .input66 {
 		display:inline-block; vertical-align:middle;
 	}
 
 	.inp_label2 {padding-left:0.46em;}
-	.inp_label4 {display:inline-block; width:8%;}
 	.btn_cnt {padding:0.7em 1em; position:absolute; bottom:0; right:0; left:0;}
 	#btn_cnt_right {background:#e5e5e5; border-top:1px solid #d0d0d0; text-align:right;}
 	#btn_cnt_left {text-align:left;}
@@ -108,17 +108,15 @@
 	.stub {border:0; vertical-align:middle;}
 
 	.column27 {width:27%;}
-	.column29 {width:29%;}
 	.column31 {width:31%;}
 	.column34 {width:34%;}
 	.column38 {width:38%;}
 	.column39 {width:39%;}
 	.column40 {width:40%;}
 	.column50 {width:50%;}
-	.column59 {width:59%;}
-	.column69 {width:69%;}
+	.column57 {width:57%;}
 
-	.column27, .column29, .column31, .column34, .column38, .column39, .column40, .column50, .column59, .column69 {
+	.column27, .column31, .column34, .column38, .column39, .column40, .column50, .column57 {
 		margin:0; padding:0; float:left;
 	}
 
@@ -211,7 +209,7 @@
 			<div class="info5"><b>Nowplaying panel</b></div>
 			<div class="info5">
 <i>Image:</i> click to toggle artist vs album; middle click to enlarge.
-<i>Text:</i> click to toggle title format versus auto DJ and find info.</div>
+<i>Text:</i> click to toggle title format versus auto DJ and library playlist generator info.</div>
 			<div class="info5"><b>Graphic: prefer video</b></div>
 			<div class="info5">
 This employs the foo_youtube video player popup, which is best positioned over the nowplaying album art. The album art auto-hides when a video is playing.
@@ -236,101 +234,23 @@ In foobar2000\preferences\shell integration, it's recommended to uncheck "Bring 
 			<div class="column50">
 				<div class="div_text6"><b>Playlist names</b></div>
 				<div id="playlistName"></div>
-				<button id="help_autodj" name="help_autodj" style="margin:2em 0 0;" type="button">Show Playlist, AutoDJ, Find & Tagger Help</button>
+				<div class="div_text8">Auto DJ</div>
+				<div id="removePlayed"></div>
+				<div class="div_text6">Library mix</div>
+				<div id="smartMix"></div>
+				<button id="help_autodj" name="help_autodj" style="margin:2em 0 0;" type="button">Show Help</button>
 			<div id="autodj_help" style="display: none;">
-			<div class="info5" style="padding-right: 10%;"><b>Load & play music</b>
-
-1) Click an item in the album & tracks pane or use the context menu.
-
-2) Click the +  in the album & tracks pane for multiple items (local loads cached, & if the library is used, library tracks as well).
-
-3) Choose 'Auto DJ...' or 'Find tracks in library...' on context menu. Loads auto DJ or finds music in the media library in a selected style.
-
-Toggle between 'Auto DJ...' and 'Find tracks in library...' on context menu.
-		
-<b>Album & tracks pane</b>
-			
-<i>Track source</i>
-
-Select on the album manager drop down menu.
-
-<i>Cache playlist</i>
-
-This stores youtube items obtained through the album & tracks pane. On reload, they're loaded from there into the selection playlist. The context menu has a reload option that can be used to replace dead links.
-
-The cache playlist can be viewed in tree style using library tree.
-
-Auto DJ doesn't use the cache because there is no easy way to refresh dead links.
-
-<b>Auto DJ</b>
-
-By default the last.fm music discovery service is used & selected tracks include youtube. If preferred, tracks can be limited to the library on the context menu and own data used to help select tracks.
-
-Popularity settings for both last.fm and own data are adjustable. The higher the popularity the smaller the track pools and vice versa.
-
-Some track pool sizes may vary slightly on each load due to the dynamic algorithms used. Similarly, some pool sizes are initially estimated and refine as more tracks are played.
-
-<b>Find in library</b>
-
-Find uses the same track pools as those obtained by using the autoDJ with library tracks. As find loads the whole track pool, you can choose the tracks rather than the auto DJ.
-
-It will not be known until running a look up whether the library has matching tracks.
-
-<i>Last.fm data</i>
-
-The library is filtered for tracks in last.fm top tracks lists. The number of tracks returned will depend on the last.fm popularity setting chosen.
-
-With last.fm tag searches such as a genre (e.g. rock), a style (e.g. happy) or a locale (e.g. American) etc, a last.fm top tracks list will be returned that's used to find matching tracks in the library, i.e. it's independent of the music file tags.
-
-<i>Own data</i>
-
-This mostly uses automated library queries of the type artist IS bla and genre IS bla etc and returns the results as a list sorted by the chosen method. Thus it's dependendent on music file tags.
-
-Last.fm data is used in a limited way, to get similar artists and songs and top artists of a genre, e.g. library is queried for all of the similar artists.
-
-Custom library queries can also be used.
-
-<b>Favourites</b>
-
-This remembers recent searches for the auto DJ and find. When choosing an item from the favourites list, current settings apply, i.e. auto DJ vs find and the nature of their settings. The only exception is for custom library queries, which have to use "own data" mode and which will automatically engage.
-
-<b>Tagger</b>
-
-This enables tagging files with last.fm track statistics (context menu>playlists).
-
-Last.fm playcount (scrobbles), listeners & a combined score (1-100) are written as a multi-value tag.
-
-Scores rank the long-term popularity of tracks on a 1-100 scale using total scrobbles and listeners. The highest scoring track at last.fm is set to a score of 100. Each 10 point change in track score represents ~3 fold change in scrobbles and listeners.
-
-<i>Access tag</i>
-
-</div>
-<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,1[playcount])"/></div>
-<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,3[listeners])"/></div>
-<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$meta(Track Statistics Last.fm,5[score])"/></div>
-<div class="info4" style="padding-right: 10%;">
-
-<i>Skip tracks</i>
-
-Something like the following can be used to skip tracks in own data mode, thereby favouring more popular tracks (5* & 4*):
-</div>
-<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value='"$meta(Track Statistics Last.fm,5[score])" LESS 60'/></div>
-<div class="info4" style="padding-right: 10%;">
-If used with autoDJ, disabling best tracks bias (advanced tab), so a random pick is used, may work best.
-
-<i>Title format</i>
-
-Remove punctuation from playcount & listeners if used in queries, sorting or arithmetic title formatting functions, e.g.
-</div>
-<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="$replace($meta(Track Statistics Last.fm,1[playcount]),',',,.,, ,)"/></div>
+			<div class="info4">
+				<div> <a href="microsoft-edge:https://github.com/Wil-B/Find-and-Play/blob/main/README.md" target=\"_blank\">For help, see the readme</a></div>
+If there are any problems opening, paste link in a browser:
+				<div class="input_cnt2"><input class="input90" style="border:none; background:none;" value="https://github.com/Wil-B/Find-and-Play/blob/main/README.md"/></div>
+			</div>
 
 <div class="info5">&nbsp</div>
 		</div>
 			</div>
 			<div class="column50">
-				<div class="div_text6">Auto DJ</div>
-				<div id="removePlayed"></div>
-				<div class="div_text6">Auto DJ and find options</div>
+				<div class="div_text6">Auto DJ and library mix options</div>
 				<div class="info7">Show options for:</div>
 				<div id="autoDJSel"></div>
 				<div id="lfmOptions" style="background-color:Gainsboro;">
@@ -347,7 +267,7 @@ Remove punctuation from playcount & listeners if used in queries, sorting or ari
 						<div id="autoDJPop"></div>
 						</div>
 						<div id="extraLfmOptions" class="column50">
-							<div class="info2"><i>Genre method</i></div>
+							<div class="info2"><i>Genre, mood & theme method</i></div>
 							<div id="autoDJGenre"></div>
 						</div>
 					</div>
@@ -381,39 +301,36 @@ Remove punctuation from playcount & listeners if used in queries, sorting or ari
 		</div>
 		</div>
 		
-		<div id="search" class="tabcontent">	
-			<span class="alignLeftHa">Field</span>
-			<span class="alignRightHa">Title format</span>
-			<span class="alignRightHa2">Query field (no title formatting)</span>
-			<div style="clear:both;"></div>
-			<span class="alignLeftH">&nbsp</span>
-			<span class="alignRightH">Web search</span>
-			<span class="alignRightH2">Library search</span>
-			<div style="clear:both;"></div>
-			<div id="search_title_format1"></div>
-			<span class="alignLeftH">&nbsp</span>
-			<span class="alignRightH">Library analysis (used with most played or highest rated options)</span>
-			<div style="clear:both;"></div>
-			<div id="search_title_format2"></div>
-			<div id="title_formatPreview"></div>
-			<div class="row">
-			<div class="column69">
-				<div class="div_text2">Library filter</div>
+		<div id="search" class="tabcontent">
+		<div class="row">
+			<div class="column50">
+				<div class="div_text6"><b>Title format</b></div>
+				<div class="info4"><b>Web search and display names</b></div>
+				<div id="search_title_formata"></div>
+				<div class="info4" style="padding-top:1.57em"><b>Library analysis</b></div>
+				<div class="info4" >Options for own data. Popularity can be any numeric tag.</div>
+				<div id="search_title_formatb"></div>
+				<div id="title_format_Preview"></div>
+				<div class="div_text6">Library filter</div>
 				<div id="filterAll"></div>
-				<div class="div_text6">YouTube filters</div>
+				<div class="div_text6">YouTube</div>
 				<div id="youtube"></div>
+				<div id="analysis"></div>
 			</div>
-			
-			<div class="column29">
-				<div class="div_text3">Library track matching</div>
+			<div class="column50">
+				<div class="div_text6"><b>Field (no title formatting)</b></div>
+				<div class="info4"><b>Library search</b></div>
+				<div id="search_title_formatc"></div>
+				<div class="info4">Genre, locale, mood & theme support multiple fields (| separator).
+				
+Locale tags can either use demonym (e.g. American) or country (e.g. United States).</div>
+				<div class="div_text6">Library track matching</div>
 				<span style="padding-top:0.31em;" class="dropdown"><a id="match_dropdown" class="dropbtn" href="#" onclick="toggle('multipleMatch');"></a>
 				<span id="multipleMatch" class="dropdown-content"></span>
 				</span>
 				<div id="partialMatch"></div>
 			</div>
-			</div>
-			<div class="div_text6">YouTube thumbnails & details</div>
-			<div id="analysis"></div>
+		</div>
 		</div>
 
 		<div id="image" class="tabcontent">
@@ -532,7 +449,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				<div id="smoothTransLevel"></div>
 				<div class="div_text3">Auto DJ</div>
 				<div class="info2"><b>Best tracks bias</b></div>
-				<div> <i>Auto DJ uses a 'Best tracks bias' algorithmn. Defaults consider source type. Current auto value shows if auto DJ is active. A custom value can be set below that applies to all sources.</i></div>
+				<div> <i>Auto DJ uses a 'Best tracks bias' algorithmn. Defaults consider source type. Current auto value shows if auto DJ is playing. A custom value can be set below that applies to all sources.</i></div>
 				<span style="margin:0.7em 0 0.31em"; class="dropdown"><a id="bias_dropdown" class="dropbtn" href="#" onclick="toggle('bestTracksBias');"></a>
 				<span id="bestTracksBias" class="dropdown-content"></span>
 				</span>
@@ -743,7 +660,8 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var biasLabels = ['Auto' + defBias, '1&nbsp(No&nbspBias:&nbspRandom)&nbsp&nbsp', '2', '3', '4', '5', '6', '7', '8', '9', '10&nbsp(High)'];
 				var colourLabels = ['Text', 'Text highlight', 'Text selection', 'Background', 'Background highlight', 'Background selection', 'Frame hover', 'Sidemarker', 'Transparent fill'];
 				var cusScrollLabels = ['Step (0 = page)', 'Smooth duration Max (ms)', 'Touch duration Max (ms)', 'Touch sensitivity 0-10'];
-				var displayLabels = ['Auto-adjust', 'Button mode (auto DJ only)', 'Click action: prefer double-click', 'Embolden lines', 'Row stripes', 'Start up logos', 'Site', 'Neutral', 'Source', 'Neutral'];
+				var displayLabels = ['Auto-adjust', 'Button mode', 'Click action: prefer double-click', 'Embolden lines', 'Row stripes', 'Start up logos', 'Site', 'Neutral', 'Source', 'Neutral'];
+				var fieldLabels = ['Artist', 'Album', 'Title', 'Genre', 'Locale', 'Mood', 'Theme'];
 				var fontLabels = ['Main', 'Nowplaying'];
 				var highLightLabels = ['None', 'Side marker', 'Accent', 'Frame', 'Highlight text'];
 				var imgStyleLabels = ['Circular cover', 'Circular photo', 'Reflection', 'Border', 'Highlight border', 'Shadow', 'Smooth transition'];
@@ -751,11 +669,11 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var lfmDataLabels = []; for (i = 0; i < presets.length; i += 2) lfmDataLabels.push(presets[i]);
 				var lfmImage = ['Lastfm button small.png', 'Lastfm text button small.png'];
 				var npLabels = ['Graphic + text', 'Graphic', 'Text', 'Text shadow effect', 'Graphic: prefer video', 'Title format', 'Preview'];
-				var ownDataLabels = ['Most played', 'Highest rated', 'Random'];
+				var ownDataLabels = ['Most played', 'Highest rated', 'Most popular', 'Random'];
 				var photoLabels = ['Auto-cycle', 'Auto-cycle time (seconds)', "Downloader is the same as that in Biography. If that's used, don't enable here, just ensure folder is same.", 'Save folder', 'Preview'];
-				var playlistLabels = ['Selection', 'Auto DJ', 'Loved', 'Cache'];
-				var playlistSaveLabels = ['Auto DJ: played tracks', 'Find: top tracks playlists'];
-				var preferLabels = ['Most played', 'Highest rated', 'Random', 'Highest bitrate', 'Lowest bitrate', 'Longest', 'Shortest', 'Latest', 'Earliest'];
+				var playlistLabels = ['Selection', 'Auto DJ', 'Library', 'Loved', 'Cache'];
+				var playlistSaveLabels = ['Auto DJ: played tracks', 'Library mix: results'];
+				var preferLabels = ['Most played', 'Highest rated', 'Most popular', 'Random', 'Highest bitrate', 'Lowest bitrate', 'Longest', 'Shortest', 'Latest', 'Earliest'];
 				var refineLabels = ['Normalise for artists of varying popularity'];
 				var reflPosLabels = ['Strength (%) [shift + wheel]', 'Size (%)', 'Gradient level (%)'];
 				var sbarColLabels = ['Grey', 'Blend'];
@@ -769,8 +687,8 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var similarNoLabels = [10, 20, 30, 40, 50, 60, 70, 80 , 90, 100, 125, 150, 200, 250];
 				var sourceImage = ['', 'Source red small.png', 'Source green small.png', 'Source neutral small.png'];
 				var textStyleLabels = ['Alternative scrollbar spacing'];
-				var tfLabels = ['Artist', 'Album', 'Genre', 'Title', 'Playcount', 'Rating', '', 'All uses'];
-				var youTubeLabels = ["'Live' reduction", 'Prefer&nbsp&nbsp&nbsp', 'Obtain with Find & Play, so always immediately available. <i>Note: the foo_youtube option "prefer youtube-dl analyzer..." might interfere with thumbnail display</i>'];
+				var tfLabels = ['Artist', 'Title', 'Genre', 'Playcount', 'Rating', 'Popularity', 'Preview', 'All uses'];
+				var youTubeLabels = ["'Live' reduction filter", 'Prefer&nbsp&nbsp&nbsp', 'Obtain thumbnails & details with Find & Play'];
 				var themeLabels = ['User interface', 'Dark', 'Blend', 'Light', 'Random', 'Always cover based', 'Swap colours', 'Highlight heading'];
 				var themeBlurLabels = ['Auto-Fill', 'Level (%)', 'Opacity (%)', '%'];
 				var ytLabels = ['API', 'Web', 'Youtube API Key', 'Last.fm API Key'];
@@ -782,12 +700,12 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 						
 					},
 					playlists: {
-						name: ['playlistSelection', 'playlistDj', 'playlistLoved', 'playlistCache', 'djPlaylistLimit', 'autoDJFilter'],
-						type: ['text', 'text', 'text', 'text', 'int', 'text']
+						name: ['playlistSelection', 'playlistDj', 'playlistGenerator', 'playlistLoved', 'playlistCache', 'djPlaylistLimit', 'playlistSoftModeLimit', 'autoDJFilter'],
+						type: ['text', 'text', 'text', 'text', 'text', 'int', 'int', 'text']
 					},
 					search: {
-						name: ['tfArtist', 'queryArtistField', 'tfAlbum', 'queryAlbumField', 'tfGenre', 'queryGenreField', 'tfTitle', 'queryTitleField', 'tfPlaycount', 'tfRating', 'libFilter', 'yt_pref_kw'],
-						type: ['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']
+						name: ['tfArtist', 'tfTitle', 'tfGenre', 'tfPlaycount', 'tfRating', 'tfPopularity', 'libFilter', 'yt_pref_kw', 'queryArtistField', 'queryAlbumField', 'queryTitleField', 'queryGenreField', 'queryLocaleField', 'queryMoodField', 'queryThemeField'],
+						type: ['text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text']
 					},
 					image: {
 						name: ['reflStrength', 'reflSize', 'reflGradient', 'cycleTime', 'imgArtPth'],
@@ -812,7 +730,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var box = {
 					display: ['extra_sbar_w', 'autoLayout', 'btn_mode', 'dblClickToggle', 'linesEmbolden', 'rowStripes', 'showLogo', 'sbarWinMetrics', 'smooth', 'touchControl', 'covBlur', 'swapCol', 'headHighlight', 'highLightText', 'npShadow', 'videoMode'],
 					playlists: ['removePlayed', 'autoRad', 'autoDJFilterUse', 'djSaveTracks', 'findSavePlaylists'],
-					search: ['libFilterUse', 'yt_filter', 'ytPref', 'partialMatch', 'ytSend'],
+					search: ['libFilterUse', 'yt_filter', 'ytPref', 'ytSend', 'partialMatch'],
 					image: ['covCirc', 'artCirc', 'imgReflection', 'imgBorder', 'highlightImgBor', 'imgShadow', 'imgSmoothTrans', 'imgCounter', 'imgSeeker', 'cycPhoto', 'dl_art_img'],
 					custom: ['custFontUse', 'custFontNowplayingUse', 'textUse', 'text_hUse', 'textSelUse', 'bgUse', 'bg_hUse', 'bgSelUse', 'frameUse', 'sideMarkerUse', 'bgTransUse'],
 					advanced: ['blurAutofill', 'refineLastfm']
@@ -949,20 +867,21 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				}
 
 				function setPlaylists() {					
-					for (i = 0; i < 4; i++) {window.playlistName.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="playlistName_container'+i+'" name="playlists_input" class="input50" /><label for="playlistName_container_input'+i+'" class="inp_label2">'+playlistLabels[i]+'</label></div>');}
+					for (i = 0; i < 5; i++) {window.playlistName.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="playlistName_container'+i+'" name="playlists_input" class="input60" /><label for="playlistName_container_input'+i+'" class="inp_label2">'+playlistLabels[i]+'</label></div>');}
 
 					i = 0; window.removePlayed.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="removePlayed_checkbox0" name="playlists_checkbox" style="'+cbox+'" type="checkbox" /><label for="removePlayed_checkbox0" style="padding-right:0.75em;" class="checkbox_label">Remove played tracks&nbsp&nbsp&nbsp</label><input id="removePlayed_checkbox1" name="playlists_checkbox" style="'+cbox+'" type="checkbox" /><label for="removePlayed_checkbox1" class="checkbox_label">Enable</label></div>');
 					i = 1; window.removePlayed.insertAdjacentHTML('beforeend', '<div class="input_cnt1"><label for="removePlayed_container'+i+'">Maintain&nbsp&nbsp</label><input id="removePlayed'+i+'" name="playlists_input" style="padding:0; margin:0;" class="input2" /><label for="removePlayed_container'+i+'" class="inp_label2">tracks in playlist</label></div>');
+					window.smartMix.insertAdjacentHTML('beforeend', '<div class="input_cnt4"><label for="smartMix_container">Smart mix playlist size&nbsp&nbsp</label><input name="playlists_input" style="padding:0; margin:0;" class="input2" /><label for="smartMix_container" class="inp_label2">tracks</label></div>');
 
 					for (i = 0; i < 2; i++) {window.autoDJSel.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="configOwnData'+i+'" name="configOwnData" style="'+cbox+'" type="radio" /><label for="configOwnData'+i+'" class="checkbox_label">'+autoDJDataSource[i]+'</label></div>');}
 					
 					window.lfm_dropdown.innerHTML = '<b>Tracks: Favour: </b>' + lfmDataLabels[ppt['djRange_internal'].value];
 					for (i = 0; i < lfmDataLabels.length; i++) {window.lfmDataPop.insertAdjacentHTML('beforeend', '<a onclick="setLfmDataPop(' + i + ');">'+lfmDataLabels[i]+'</a>');}
 
-					window.own_dropdown.innerHTML = '<b>Tracks: Favour: </b>' + ownDataLabels[ppt['sortAutoDJ_internal'].value];
-					for (i = 0; i < 3; i++) {window.ownDataOptions.insertAdjacentHTML('beforeend', '<a onclick="setOwnDataPop(' + i + ');">'+ownDataLabels[i]+'</a>');}
+					window.own_dropdown.innerHTML = ('<b>Tracks: Favour: </b>') + ownDataLabels[ppt['sortAutoDJ_internal'].value];
+					for (i = 0; i < 4; i++) {window.ownDataOptions.insertAdjacentHTML('beforeend', '<a onclick="setOwnDataPop(' + i + ');">'+ownDataLabels[i]+'</a>');}
 					
-					i = 0; window.ownDataFilter.insertAdjacentHTML('beforeend', '<div class="input_cnt5"><input id="ownDataFilter_checkbox'+i+'" name="playlists_checkbox" style="'+cbox+'" type="checkbox" /><label for="ownDataFilter_checkbox'+i+'" class="checkbox_label">Always skip tracks matching query:</label></div>');
+					i = 0; window.ownDataFilter.insertAdjacentHTML('beforeend', '<div class="input_cnt5"><input id="ownDataFilter_checkbox'+i+'" name="playlists_checkbox" style="'+cbox+'" type="checkbox" /><label for="ownDataFilter_checkbox'+i+'" class="checkbox_label">Skip tracks matching query:</label></div>');
 					i = 1; window.ownDataFilter.insertAdjacentHTML('beforeend', '<div style="padding-top:0.31em"; ><input id="ownDataFilter_container'+i+'" name="playlists_input" class="input90" /></div>');
 					for (i = 0; i < 2; i++) {window.autoDJPop.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="curPop'+i+'" name="curPop" style="'+cbox+'" type="radio" /><label for="curPop'+i+'" class="checkbox_label">'+autoDJPopLabels[i]+'</label></div>');}
 					for (i = 0; i < 2; i++) {window.autoDJGenre.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="genre_tracks'+i+'" name="genre_tracks" style="'+cbox+'" type="radio" /><label for="genre_tracks'+i+'" class="checkbox_label">'+autoDJGenreLabels[i]+'</label></div>');}
@@ -975,16 +894,17 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				}
 
 				function setSearch() {
-					for (i = 0; i < 4; i++) {window.search_title_format1.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><label for="tf_search_container'+i+'" class="inp_label4">'+tfLabels[i]+'</label><input id="tf_search_container'+i+'" name="search_input" class="input56" /><input id="query_container'+i+'" name="search_input" class="input21" /></div>');}
-					for (i = 4; i < 6; i++) {window.search_title_format2.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><label for="tf_search_container'+i+'" class="inp_label4">'+tfLabels[i]+'</label><input id="tf_search_container'+i+'" name="search_input" class="input56" /></div>');}
-					i = 6; window.title_formatPreview.insertAdjacentHTML('beforeend', '<div class="input_cnt3" id="tf_search_container'+i+'""><label for="tf_search_preview" class="inp_label4">Preview</label><input id="tf_search_preview" name="previewTf" class="input56" readonly/></div>')
-					i = 7; window.filterAll.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="filterAll_checkbox'+i+'" name="search_checkbox" type="checkbox" /><label for="filterAll_checkbox'+i+'" class="checkbox_label">'+tfLabels[i]+'</label><input id="filterAll_container'+i+'" name="search_input" class="input56" /></div>');
+					for (i = 0; i < 3; i++) {window.search_title_formata.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="tf_search_container'+i+'" name="search_input" class="input75" /><label for="tf_search_container'+i+'" class="inp_label2">'+tfLabels[i]+'</label></div>');}
+					for (i = 3; i < 6; i++) {window.search_title_formatb.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="tf_search_container'+i+'" name="search_input" class="input75" /><label for="tf_search_container'+i+'" class="inp_label2">'+tfLabels[i]+'</label></div>');}
+					i = 6; window.title_format_Preview.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="tf_search_preview" name="previewTf" class="input75" readonly/><label for="tf_search_preview" class="inp_label2">'+tfLabels[i]+'</label></div>');
+					for (i = 0; i < 7; i++) {window.search_title_formatc.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="tf_search_container'+i+'" name="search_input" class="input75" /><label for="tf_search_container'+i+'" class="inp_label2">'+fieldLabels[i]+'</label></div>');}
+					i = 7; window.filterAll.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="filterAll_checkbox'+i+'" name="search_checkbox" type="checkbox" /><label for="filterAll_checkbox'+i+'" class="checkbox_label">'+tfLabels[i]+'</label><input id="filterAll_container'+i+'" name="search_input" class="input56" style="margin-top:0.5em";/></div>');
 					i = 0; window.youtube.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="youtube_checkbox'+i+'" name="search_checkbox" style="'+cbox+'" type="checkbox" /><label for="youtube_checkbox'+i+'" class="checkbox_label">'+youTubeLabels[i]+'</label></div>');
-					i = 1; window.youtube.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="youtube_checkbox'+i+'" name="search_checkbox" type="checkbox" /><label for="youtube_checkbox'+i+'" class="checkbox_label">'+youTubeLabels[i]+'</label><input id="youtube_container'+i+'" name="search_input" class="input56" /><label for="youtube_container'+i+'" class="inp_label2">Keywords (| separator)</label></div>');
-					i = 2; window.analysis.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="youtube_checkbox'+i+'" name="search_checkbox" style="'+cbox+'" type="checkbox" /><label for="youtube_checkbox'+i+'" class="checkbox_label">'+youTubeLabels[i]+'</label></div>');
+					i = 1; window.youtube.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="youtube_checkbox'+i+'" name="search_checkbox" type="checkbox" /><label for="youtube_checkbox'+i+'" class="checkbox_label">'+youTubeLabels[i]+'</label><input id="youtube_container'+i+'" name="search_input" class="input56" style="margin-top:0.5em"/><label for="youtube_container'+i+'" class="inp_label2">Keywords (| separator)</label></div>');
+					i = 2; window.analysis.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="youtube_checkbox'+i+'" name="search_checkbox" style="'+cbox+'" type="checkbox" /><label for="youtube_checkbox'+i+'" class="checkbox_label">'+youTubeLabels[i]+'</label></div>');
 					i = 0; window.partialMatch.insertAdjacentHTML('beforeend', '<div class="input_cnt3"><input id="partialMatch_checkbox'+i+'" name="search_checkbox" style="'+cbox+'" type="checkbox" /><label for="partialMatch_checkbox'+i+'" class="checkbox_label">Include partial matches</label></div>');
 					window.match_dropdown.innerHTML = 'Multiple Matches: Prefer: ' + preferLabels[ppt['sortType_internal'].value];
-					for (i = 0; i < 9; i++) {window.multipleMatch.insertAdjacentHTML('beforeend', '<a onclick="setPreferredType(' + i + ');">'+preferLabels[i]+'</a>');}
+					for (i = 0; i < 10; i++) {window.multipleMatch.insertAdjacentHTML('beforeend', '<a onclick="setPreferredType(' + i + ');">'+preferLabels[i]+'</a>');}
 				}
 
 				function setImage() {
@@ -1174,7 +1094,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 					setSeekerShow(ppt['imgSeekerShow_internal'].default_value);
 				}
 				if (cur.page == 'custom') setCustomColours('default_value');
-				if (cur.page == 'advanced') setBestTracksBias('default_value');
+				if (cur.page == 'advanced') setBestTracksBias(0);
 				set_state();
 			}
 
@@ -1230,10 +1150,10 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 			autodj_btn.onclick = function() {
 				if (visib.style.display === 'none') {
 					visib.style.display = 'block';
-					autodj_btn.innerHTML = 'Hide Playlist, AutoDJ, Find & Tagger Help';
+					autodj_btn.innerHTML = 'Hide Help';
 				} else {
 					visib.style.display = 'none';
-					autodj_btn.innerHTML = 'Show Playlist, AutoDJ, Find & Tagger Help';
+					autodj_btn.innerHTML = 'Show Help';
 				}
 			}
 

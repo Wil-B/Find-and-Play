@@ -168,7 +168,7 @@ class MTags {
 				panel.addLoc(pth, pl_active);
 			}
 		}
-		const fallback = soFeatures.gecko && soFeatures.clipboard ? popUpBox.input('Create m-TAGS Album', 'Type Album Name', ok_callback, '', album) : true;
+		const fallback = popUpBox.isHtmlDialogSupported() ? popUpBox.input('Create m-TAGS Album', 'Type Album Name', ok_callback, '', album) : true;
 		if (fallback) {
 			let ns = '';
 			let status = 'ok';

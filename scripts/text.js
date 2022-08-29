@@ -63,8 +63,6 @@ class Text {
 		}];
 
 		this.decadesMenu = $.jsonParse(ppt.decadesMenu, this.defDecades);
-		this.genreMenu = $.split(ppt.genreMenu, 1).filter(v => v.trim());
-		this.genreMenu.push('Use tag or query search for more genres')
 	}
 
 	// Methods

@@ -6,7 +6,7 @@ class Panel {
 		this.storageFolder = `${my_utils.packageInfo.Directories.Storage}\\`;
 		this.h = 0;
 		this.w = 0;
-		this.showLogo = ppt.showLogo;
+		this.showLogo = ppt.btn_mode ? false : ppt.showLogo;
 		this.cachePath = `${this.storageFolder}find-&-play-cache\\`;
 
 		ppt.get('Find & Play Dialog Box', JSON.stringify({
@@ -75,6 +75,7 @@ class Panel {
 
 		ppt.lfmReleaseType = $.value(ppt.lfmReleaseType, 0, 2);
 		ppt.mbReleaseType = $.clamp(ppt.mbReleaseType, 0, 4);
+		if (!ppt.playlistSoftModeLimit || ppt.playlistSoftModeLimit < 1) ppt.playlistSoftModeLimit = 50;
 		ppt.prefMbTracks = $.value(ppt.prefMbTracks, 1, 1);
 
 		$.buildPth(this.storageFolder);
@@ -116,15 +117,7 @@ class Panel {
 	}
 
 	cleanPth(pth, handle) {
-		pth = pth.trim().replace(/\//g, '\\');
-		if (pth.toLowerCase().includes('%profile%')) {
-			let fbPth = fb.ProfilePath.replace(/'/g, "''").replace(/([()[\]%,])/g, "'$1'");
-			if (fbPth.includes('$')) {
-				const fbPthSplit = fbPth.split('$');
-				fbPth = fbPthSplit.join("'$$'");
-			}
-			pth = pth.replace(/%profile%(\\|)/gi, fbPth);
-		}
+		pth = pth.trim().replace(/\//g, '\\').replace(/^%profile%\\?/i, $.tfEscape(fb.ProfilePath));
 		pth = !handle ? $.eval(pth) : FbTitleFormat(pth).EvalWithMetadb(handle);
 		if (!pth) return '';
 
@@ -261,7 +254,6 @@ class Panel {
 			case 'pth':
 				return this.cleanPth(tf);
 		}
-
 	}
 
 	open(page) {
@@ -279,7 +271,7 @@ class Panel {
 			ppt.set('Find & Play Dialog Box', dialogWindow);
 		}
 		
-		if (soFeatures.gecko && soFeatures.clipboard) popUpBox.config(JSON.stringify(ppt), dialogWindow, ok_callback);
+		if (popUpBox.isHtmlDialogSupported()) popUpBox.config(JSON.stringify(ppt), dialogWindow, ok_callback);
 		else {
 			popUpBox.ok = false;
 			$.trace('options dialog isn\'t available with current operating system. All settings in options are available in panel properties. Common settings are on the menu.');

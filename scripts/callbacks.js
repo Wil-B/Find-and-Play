@@ -1,5 +1,10 @@
 'use strict';
 
+function on_char(code) {
+	filter.on_char(code);
+	search.on_char(code);
+}
+
 function on_colours_changed() {
 	ui.getColours();
 	alb_scrollbar.setCol();
@@ -15,6 +20,11 @@ function on_colours_changed() {
 	txt.paint();
 }
 
+function on_focus(is_focused) {
+	filter.on_focus(is_focused);
+	search.on_focus(is_focused);
+}
+
 function on_font_changed() {
 	alb.deactivateTooltip();
 	ui.getFont();
@@ -25,6 +35,18 @@ function on_font_changed() {
 
 function on_get_album_art_done(handle, art_id, image, image_path) {
 	img.on_get_album_art_done(handle, art_id, image, image_path);
+}
+
+function on_key_down(vkey) {
+	alb.on_key_down(vkey);
+	filter.on_key_down(vkey);
+	search.on_key_down(vkey);
+	if (!ui.style.textOnly || ui.style.isBlur) img.on_key_down(vkey)
+}
+
+function on_key_up(vkey) {
+	filter.on_key_up(vkey);
+	search.on_key_up(vkey);
 }
 
 function on_item_focus_change() {
@@ -44,6 +66,32 @@ function on_item_focus_change() {
 	if (!ui.style.textOnly || ui.style.isBlur) img.focusServer();
 }
 
+function on_library_items_added(handleList) {
+	lib.update.artists = true;
+	lib.update.library = true;
+	handleList.Convert().some(h => {
+		if (h.Path.endsWith('!!.tags')) {
+			lib.getAlbumMetadb(true);
+			return true;
+		}
+	});
+}
+
+function on_library_items_changed() {
+	if ((ppt.sortType > 1) && (fb.PlaybackTime > 59 && fb.PlaybackTime < 65)) return;
+	if (fb.IsPlaying) {
+		const handle = fb.GetNowPlaying();
+		if (handle && handle.Path.slice(-7) == '!!.tags') return; /*!!.tags use mtags_mng due to m-TAGS/YouTube popup triggers*/
+	}
+	lib.update.artists = true;
+	lib.update.library = true;
+}
+
+function on_library_items_removed() {
+	lib.update.artists = true;
+	lib.update.library = true;
+}
+
 function on_load_image_done(id, image, image_path) {
 	img.on_load_image_done(image, image_path);
 }
@@ -56,115 +104,6 @@ function on_metadb_changed() {
 		img.focusServer();
 	}
 	alb.metadbServer(); 
-}
-
-function on_playback_stop(reason) {
-	if (reason == 2) return;
-	on_item_focus_change();
-}
-
-function on_size() {
-	txt.rp = false;
-	panel.w = window.Width;
-	panel.h = window.Height;
-	if (!panel.w || !panel.h) return;
-	panel.on_size();
-	ui.getFont();
-	but.refresh(true);
-	filter.metrics();
-	search.metrics();
-	if (!ui.style.textOnly || ui.style.isBlur) img.on_size();
-	dj.on_size();
-	txt.rp = true;
-}
-
-function on_paint(gr) {
-	ui.draw(gr);
-	if (panel.displayLogo()) {
-		panel.draw(gr);
-		return;
-	}
-	if (!ui.style.textOnly || ui.style.isBlur) {
-		img.draw(gr);
-		seeker.draw(gr);
-	}
-	if (!ppt.showAlb) dj.draw(gr);
-	else {
-		search.drawSearch(gr);
-		filter.drawFilter(gr);
-		alb.draw(gr);
-	}
-	but.draw(gr);
-	tag.draw(gr);
-}
-
-function on_playback_new_track() {
-	ml.execute();
-	if (ml.upd_yt_mtags || ml.upd_lib_mtags) mtags.check();
-	if (!ppt.lock) alb.orig_artist = alb.artist = name.artist();
-	if (fb.PlaybackLength > 0) timer.clear(timer.dl);
-	if (!ui.style.textOnly || ui.style.isBlur) img.on_playback_new_track();
-	if (ppt.dl_art_img && fb.PlaybackLength > 0) dl_art.run();
-	dj.removePlayed();
-	dj.on_playback_new_track();
-	alb.on_playback_new_track();
-	if (panel.youTube.backUp) sv.track(panel.isYtVideo(true) ? true : false);
-}
-
-function on_playback_dynamic_info_track() {
-	if (!ppt.lock) alb.orig_artist = alb.artist = name.artist();
-	timer.clear(timer.dl);
-	if (panel.image.show) img.on_playback_dynamic_track();
-	if (ppt.dl_art_img) dl_art.run();
-	alb.on_playback_new_track();
-}
-
-function on_char(code) {
-	filter.on_char(code);
-	search.on_char(code);
-}
-
-function on_focus(is_focused) {
-	filter.on_focus(is_focused);
-	search.on_focus(is_focused);
-}
-
-function on_key_down(vkey) {
-	alb.on_key_down(vkey);
-	filter.on_key_down(vkey);
-	search.on_key_down(vkey);
-	if (!ui.style.textOnly || ui.style.isBlur) img.on_key_down(vkey)
-}
-
-function on_key_up(vkey) {
-	filter.on_key_up(vkey);
-	search.on_key_up(vkey);
-}
-
-function on_library_items_added(handleList) {
-	lib.update.artists = true;
-	lib.update.library = true;
-	handleList.Convert().some(h => {
-		if (h.Path.endsWith('!!.tags')) {
-			lib.getAlbumMetadb(true);
-			return true;
-		}
-	});
-}
-
-function on_library_items_removed() {
-	lib.update.artists = true;
-	lib.update.library = true;
-}
-
-function on_library_items_changed() {
-	if (($.playCountInstalled && ppt.sortType > 1) && (fb.PlaybackTime > 59 && fb.PlaybackTime < 65)) return;
-	if (fb.IsPlaying) {
-		const handle = fb.GetNowPlaying();
-		if (handle && handle.Path.slice(-7) == '!!.tags') return; /*!!.tags use mtags_mng due to m-TAGS/YouTube popup triggers*/
-	}
-	lib.update.artists = true;
-	lib.update.library = true;
 }
 
 function on_mouse_lbtn_dblclk(x, y, mask) {
@@ -301,13 +240,59 @@ function on_notify_data(name, info) {
 	}
 }
 
-function on_playback_time(pbt) {
-	ml.on_playback_time();
-	if (!(pbt % 25)) timer.dj();
+function on_paint(gr) {
+	ui.draw(gr);
+	if (panel.displayLogo()) {
+		panel.draw(gr);
+		return;
+	}
+	if (!ui.style.textOnly || ui.style.isBlur) {
+		img.draw(gr);
+		seeker.draw(gr);
+	}
+	if (!ppt.showAlb) dj.draw(gr);
+	else {
+		search.drawSearch(gr);
+		filter.drawFilter(gr);
+		alb.draw(gr);
+	}
+	but.draw(gr);
+	tag.draw(gr);
 }
 
 function on_playlists_changed() {
 	pl.playlists_changed();
+}
+
+function on_playback_dynamic_info_track() {
+	if (!ppt.lock) alb.orig_artist = alb.artist = name.artist();
+	timer.clear(timer.dl);
+	if (panel.image.show) img.on_playback_dynamic_track();
+	if (ppt.dl_art_img) dl_art.run();
+	alb.on_playback_new_track();
+}
+
+function on_playback_new_track() {
+	ml.execute();
+	if (ml.upd_yt_mtags || ml.upd_lib_mtags) mtags.check();
+	if (!ppt.lock) alb.orig_artist = alb.artist = name.artist();
+	if (fb.PlaybackLength > 0) timer.clear(timer.dl);
+	if (!ui.style.textOnly || ui.style.isBlur) img.on_playback_new_track();
+	if (ppt.dl_art_img && fb.PlaybackLength > 0) dl_art.run();
+	dj.removePlayed();
+	dj.on_playback_new_track();
+	alb.on_playback_new_track();
+	if (panel.youTube.backUp) sv.track(panel.isYtVideo(true) ? true : false);
+}
+
+function on_playback_stop(reason) {
+	if (reason == 2) return;
+	on_item_focus_change();
+}
+
+function on_playback_time(pbt) {
+	ml.on_playback_time();
+	if (!(pbt % 25)) timer.dj();
 }
 
 function on_playlist_items_added(pn) {
@@ -336,9 +321,18 @@ function on_playlist_switch() {
 	on_item_focus_change();
 }
 
-function on_script_unload() {
-	timer.clear(timer.img);
-	timer.clear(timer.vid);
-	if (panel.video.mode && $.eval('%video_popup_status%') == 'visible') fb.RunMainMenuCommand('View/Visualizations/Video');
-	but.on_script_unload();
+function on_size() {
+	txt.rp = false;
+	panel.w = window.Width;
+	panel.h = window.Height;
+	if (!panel.w || !panel.h) return;
+	panel.on_size();
+	ui.getFont();
+	tooltip.SetMaxWidth(Math.max(panel.w, 800));
+	but.refresh(true);
+	filter.metrics();
+	search.metrics();
+	if (!ui.style.textOnly || ui.style.isBlur) img.on_size();
+	dj.on_size();
+	txt.rp = true;
 }

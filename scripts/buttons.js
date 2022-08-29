@@ -318,7 +318,7 @@ class Buttons {
 				hover: this.cross.hover
 			}, !ppt.showAlb, '', () => search.clear(), () => search.text ? 'Clear Search Text' : 'Show Text', true, 'cross'),
 
-			dj: new Btn(0, 0, panel.w, panel.h, 2, '', '', '', '', !ppt.btn_mode, '', () => men.rbtn_up(this.b.x, this.b.y2), '', true, 'dj'),
+			dj: new Btn(0, 0, panel.w, panel.h, 2, '', '', '', '', !ppt.btn_mode, '', () => men.rbtn_up(panel.m.x, panel.m.y), '', true, 'dj'),
 			search: new Btn(this.max_w - this.b.w1 * 1.15, this.b.y2 + 1, this.b.w1, this.b.h1, 8, this.font.search, '\uF002', 0, '', !ppt.showAlb, '', '', () => 'Search list', true, 'Search'),
 			clear: new Btn(this.max_w - this.b.w1 * 1.1, this.b.y2, this.b.w1, this.b.h1, 8, this.font.clear, '\u2716', 0, '', true, '', () => filter.clear(), () => 'Clear search', true, 'Clear')
 

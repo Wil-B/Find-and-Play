@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<style>
+* {
+  box-sizing:border-box;
+}
+
+body {
+  font:caption;
+}
+
+.autocomplete {
+  position:relative;
+  display:inline-block;
+  width:84.8%;
+}
+
+input {
+  border:1px solid transparent;
+  background-color:#f1f1f1;
+  padding:10px;
+  font:caption;
+}
+
+input[type=text] {
+  background-color:#f1f1f1;
+  width:100%;
+}
+
+input[type=submit] {
+  background-color:DodgerBlue;
+  color:#fff;
+  cursor:pointer;
+}
+
+button {
+  background-color:#4CAF50;
+  border:none;
+  color:white;
+  padding:2px;
+  min-width:1.15em; 
+  text-align:center;
+  text-decoration:none;
+  display:inline-block;
+  font:caption;
+  float:left;
+}
+
+button:hover {
+  background-color:#3e8e41;
+  color:white;
+}
+
+.autocomplete-items {
+  position:absolute;
+  border:1px solid #d4d4d4;
+  border-bottom:none;
+  border-top:none;
+  z-index:1;
+  top:100%;
+  left:0;
+  right:0;
+}
+
+.autocomplete-items div {
+  padding:10px;
+  cursor:pointer;
+  background-color:#fff; 
+  border-bottom:1px solid #d4d4d4; 
+}
+
+.autocomplete-items div:hover {
+  background-color:#e9e9e9; 
+}
+
+.autocomplete-active {
+  background-color:DodgerBlue !important; 
+  color:#ffffff; 
+}
+
+.dropbtn {white-space:nowrap; width:100%; background-color:#4CAF50; color:white; text-decoration:none; padding:0.13em 5px; border:none; cursor:pointer;}
+.dropbtn:after {font-family: FontAwesome; content: "\f107"; padding-left:0.5em; padding-right:0.19em;}
+
+.dropdown {margin-top: 10px; position:static; display:inline-block;}
+.dropdown-content {display:none; position:absolute; background-color:#f9f9f9; min-width:10em; white-space:nowrap; box-shadow:0 8px 1.01em 0 rgba(0,0,0,0.2); z-index:2;}
+.dropdown-content a {padding:0.13em 5px; color:black; text-decoration:none; display:block;}
+.dropdown-content a:hover {background-color:#f1f1f1;}
+.dropdown .dropdown-content {display:none;}
+.dropdown:hover .dropbtn {background-color:#3e8e41;}
+</style>
+</head>     
+<body">
+
+<!--Make sure the form has the autocomplete function switched off:-->
+<div id="buttonsHolder"></div>
+<div style="clear:both;"></div>
+<div id="info" style="font-size:90%; padding-top:0.5em; color:#0066CC;">Use the nowplaying view for search feedback</div>
+<span class="dropdown" style="margin-bottom:0.6em;"><a id="type_dropdown" class="dropbtn" href="#" onclick="toggle('selectType');"></a>
+<span id="selectType" class="dropdown-content"></span>
+</span>
+<div id="input"></div>
+
+<script>
+var parsed_args;
+var callback;
+try {
+	parsed_args = window.external.dialogArguments.toArray();
+}
+catch(e) {
+}
+var items = [];
+var caption = ['Enter any artist & click load', 'Enter any artist as seed & click load', 'Enter any song (artist | title) as seed & click load', 'Enter any genre & click load', 'Enter any mood & click load', 'Enter any theme & click load', 'Enter a decade from list & click load', 'Enter a locale from list & click load'];
+if (parsed_args) {
+	var mode = parsed_args[0];
+	var msg = parsed_args[1]
+	callback = parsed_args[2];
+	var lastType = parsed_args[3];
+	var lastName = parsed_args[4];
+	var arrays = JSON.parse(parsed_args[5]);
+	var autocompleteType = arrays.pop();
+
+	document.title = (!mode ? 'AutoDJ | ' : 'Library playlist generator | ') + caption[autocompleteType];
+	items = arrays[autocompleteType];
+	var isSongs = autocompleteType == 2;
+}
+
+var currentFocus;
+var window_w = screen.width * 0.34;
+var window_h = screen.height * 0.781;
+var left = (screen.width - window_w) / 2;
+var top = (screen.height - window_h) / 2;
+var typeLabels = ['By artist...', 'By similar artists...', 'By similar songs...', 'By genre...', 'By mood...', 'By theme...', 'By decade...', 'By locale...'];
+window.resizeTo(window_w, window_h);
+window.moveTo(left, top);
+
+window.type_dropdown.innerHTML = typeLabels[autocompleteType];
+for (i = 0; i < 8; i++) {window.selectType.insertAdjacentHTML('beforeend', '<a onclick="setType(' + i + ');">'+typeLabels[i]+'</a>');}
+window.input.insertAdjacentHTML('beforeend', '<form autocomplete="off" ><div class="autocomplete"><input id="myInput" type="text" value="' + lastName + '"></div><input type="submit" value="Load"></form>');
+window.info.innerHTML = msg || 'Use the nowplaying view for search feedback';
+if (msg) window.info.style.color = 'red';
+var inp = document.getElementById("myInput");
+if (autocompleteType != lastType) setLetter(lastType != 6 ? lastName.charAt() : '#');
+
+function addActive(x) {
+	if (!x) return false;
+	removeActive(x);
+	if (currentFocus >= x.length) currentFocus = 0;
+	if (currentFocus < 0) currentFocus = (x.length - 1);
+	x[currentFocus].classList.add("autocomplete-active");
+}
+ 
+
+function autocomplete() {
+	inp.addEventListener("input", parse );
+	inp.addEventListener("keydown", key);
+}
+
+function closeAllLists(elmnt) {
+	var x = document.getElementsByClassName("autocomplete-items");
+	for (var i = 0; i < x.length; i++) {
+		if (elmnt != x[i] && elmnt != inp) {
+			x[i].parentNode.removeChild(x[i]);
+		}
+	}
+}
+
+function close_window() {
+	window.open('', '_self', '');
+	window.close();
+}
+
+var h = [['type_dropdown', 'selectType']];
+
+function hide() {
+	try {
+		var id = document.activeElement.id;
+		for (i = 0; i < h.length; i++) {
+			if (id != h[i][0]) window[h[i][1]].style.display = 'none';
+		}
+	} catch(e) {
+	}
+}
+
+function key(e) {
+	var x = document.getElementById(this.id + "autocomplete-list");
+	if (x) x = x.getElementsByTagName("div");
+	if (e.keyCode == 40) { // arrow DOWN
+		currentFocus++;
+		addActive(x);
+	} else if (e.keyCode == 38) { // arrow UP
+		currentFocus--;
+		addActive(x);
+	} else if (e.keyCode == 13) { // ENTER
+		e.preventDefault();
+		if (currentFocus > -1) {
+			if (x) x[currentFocus].click();
+		}
+	}
+}
+
+function parse() {
+	var a, b, i, val = this.value;
+	closeAllLists();
+	if (!val) return false;
+	currentFocus = -1;
+	a = document.createElement("DIV");
+	a.setAttribute("id", this.id + "autocomplete-list");
+	a.setAttribute("class", "autocomplete-items");
+	this.parentNode.appendChild(a);
+	var matches = [];
+	for (i = 0; i < items.length; i++) {
+		if (/^#/.test(val)) {
+			if (/[^A-Za-z]/.test(items[i].substr(0, 1)) && items[i].substr(1, val.length - 1).toUpperCase() == val.substr(1, val.length - 1).toUpperCase()) {
+				matches.push(items[i]);
+			}
+		} else if (items[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+			matches.push(items[i]);
+		}
+	}
+	window.info.style.color = '#0066CC';
+	window.info.innerHTML = matches.length > 1000 && isSongs ? "To show songs, click artist or type..." : "Use the nowplaying view for search feedback";
+	var needItem = true;
+	var curArtist = '';
+	var j = 0;
+	for (var k = 0; k < matches.length; k++) {
+		if (j == 1000) break;
+		if (isSongs && matches.length > 1000) {
+			var artist = matches[k].split(' | ')[0];
+			if (artist != curArtist) {
+				needItem = true;
+				curArtist = artist;
+			} else needItem = false;
+			if (needItem) matches[k] = artist;
+		} else needItem = true;
+		if (!needItem) continue;
+		j++;
+		b = document.createElement("DIV");
+		b.innerHTML = "<strong>" + matches[k].substr(0, val.length) + "</strong>";
+		b.innerHTML += matches[k].substr(val.length);
+		b.innerHTML += '<input type="hidden" value="' + matches[k] + '">';
+		b.addEventListener("click", function(e) {
+			inp.value = this.getElementsByTagName("input")[0].value;
+			closeAllLists();
+			if (isSongs) {
+				triggerEvent(inp, 'input');
+				if (/\|/.test(e.target.innerText) && e.target.innerText == inp.value) closeAllLists()
+			}
+		});
+		a.appendChild(b);
+	}
+}
+
+function removeActive(x) {
+	for (var i = 0; i < x.length; i++) {
+		x[i].classList.remove("autocomplete-active");
+	}
+}
+
+function setLetter(letter) {
+	inp.value = letter
+	triggerEvent(inp, 'input');
+}
+
+function setType(n) {
+	window.type_dropdown.innerHTML = typeLabels[n];
+	autocompleteType = n;
+	callback && callback("ok", JSON.stringify([null, autocompleteType]));
+	window.selectType.style.display = 'none';
+	items = arrays[autocompleteType];
+	var chr = inp.value.charAt()
+	inp.innerHtml = '';
+	document.title = (!mode ? 'AutoDJ | ' : 'Library playlist generator | ') + caption[autocompleteType];
+	closeAllLists();
+	isSongs = autocompleteType == 2;
+	inp.removeEventListener("input", parse );
+	inp.removeEventListener("keydown", key );
+	autocomplete();
+	setLetter(autocompleteType != 6 ? chr : '#');
+}
+
+function toggle(item) {
+	if (window[item].style.display != 'block') window[item].style.display = 'block'
+	else window[item].style.display = 'none';
+}
+
+function triggerEvent(el, type){
+	if ('createEvent' in document) {
+		// IE9+
+		var e = document.createEvent('HTMLEvents');
+		e.initEvent(type, false, true);
+		el.dispatchEvent(e);
+	}
+}
+
+document.onclick = function () {
+	hide();
+}
+
+window.addEventListener("load", function(windowLoadE) {
+	var p, letter, button, holder;
+	holder = document.getElementById("buttonsHolder");
+	var letters = ['#'];
+	for ( var i = 65; i < 91; i++ ) letters.push(String.fromCharCode(i));
+	for ( var i = 0; i < letters.length; i++ ) {
+		var letter = letters[i];
+		var button = document.createElement( "button" );
+		button.innerHTML = letter;
+		button.setAttribute( "data-letter", letter );
+		button.onclick = function( e ) {setLetter( this.getAttribute( "data-letter" ) );};
+		holder.appendChild( button );
+	}
+});
+
+window.onsubmit = function() {
+	var load = inp.value;
+	if (/^#/.test(load)) {
+		alert('Cannot load sources starting with #.\n\nPlease change # to the required character and try again.\n\n# is provided as a convenient shortcut button and acts as a wild card to match items that don\'t start with a letter.\n\nIf it\'s a genuine leading #, escape by replacing with \\#');
+		return false;
+	}
+	if (/^\\#/.test(load)) load = load.replace('\\#', '#');
+	if (isSongs && !/\|/.test(load)) {
+		alert('Songs require a | separator between the artist & title: artist | title.\n\nPlease adjust and try again.');
+		return false;
+	}
+	var found = false;
+	if (autocompleteType > 5) {
+		found = false
+		for (var i = 0; i < items.length; i++) {
+			if (load == items[i]) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			if (autocompleteType == 6) alert('Only decades in the list are supported.\n\nThese can either be in 20s or 2020s style.\n\nPlease try again.\n\nClick # to show list.');
+			else alert('Only locales in the list are supported.\n\nPlease try again.\n\nClick a letter to show items.');
+			return false;
+		}
+	}
+	callback && callback("ok", JSON.stringify([inp.value, null]));
+	close_window();
+}
+
+autocomplete();
+
+</script>
+</body>
+</html>

@@ -21,7 +21,6 @@ class Helpers {
 	constructor() {
 		this.diacriticsMap = {};
 		this.scale = this.getDpi();
-		this.playCountInstalled = utils.CheckComponent('foo_playcount', true);
 
 		this.createDiacriticsMap();
 	}
@@ -130,6 +129,7 @@ class Helpers {
 	}
 
 	gr(w, h, im, func) {
+		if (isNaN(w) || isNaN(h)) return;
 		let i = gdi.CreateImage(Math.max(w, 2), Math.max(h, 2));
 		let g = i.GetGraphics();
 		func(g, i);
@@ -239,7 +239,7 @@ class Helpers {
 	}
 
 	regexEscape(n) {
-		return n.replace(/([*+\-?^!:&"~${}()|[\]/\\])/g, '\\$1');
+		return n.replace(/[*+\-?^!:&"~${}()|[\]/\\]/g, '\\$&');
 	}
 
 	removeDiacritics(str) {
@@ -343,7 +343,8 @@ class Helpers {
 	}
 
 	strip(n) {
-		return n.replace(/[.\u2026,!?:;'\u2019"\-_\u2010\s+]/g, '').toLowerCase();
+		n = n.replace(/[.\u2026,!?:;'\u2019"\-_\u2010\s+]/g, '').toLowerCase();
+		return this.removeDiacritics(n);
 	}
 
 	stripRemaster(n) {
@@ -360,12 +361,7 @@ class Helpers {
 	}
 
 	tfEscape(n) {
-		let str = n.replace(/'/g, "''").replace(/[()[\],%]/g, "'$&'");
-		if (str.indexOf('$') != -1) {
-			const strSplit = str.split('$');
-			str = strSplit.join("'$$'");
-		}
-		return str;
+		return n.replace(/'/g, "''").replace(/[()[\],%]/g, "'$&'").replace(/\$/g, '$$$$');
 	}
 
 	tidy(n) {

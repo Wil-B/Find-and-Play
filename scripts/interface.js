@@ -167,13 +167,15 @@ class UserInterface {
 	}
 
 	getFont() {
+		const RunningWine = () => utils.IsFile('Z:\\bin\\bash' || 'Z:\\bin\\ls' || 'Z:\\bin\\sh' || 'Z:\\etc\\fstab'); /* detects if user is running Wine on Linux or MacOs, default Wine mount point is Z:\ */
+
 		if (ppt.custFontUse && ppt.custFont.length) {
 			const custFont = $.split(ppt.custFont, 1);
 			this.font.main = gdi.Font(custFont[0], Math.max(Math.round($.value(custFont[1], 16, 0)), 1), Math.round($.value(custFont[2], 0, 0)));
 		} else if (this.dui) this.font.main = window.GetFontDUI(2);
 		else this.font.main = window.GetFontCUI(0);
 
-		if (!this.font.main) {
+		if (!this.font.main || /tahoma/i.test(this.font.main.Name) && RunningWine()) { // Windows: check still needed (test MS Serif or Modern, neither can be used); Wine: tahoma is default system font, but bold and some unicode characters don't work: if Wine + tahoma detected changed to Segoe UI (if that's not installed, tahoma is still used) 
 			this.font.main = gdi.Font('Segoe UI', 16, 0);
 			$.trace('Spider Monkey Panel is unable to use your default font. Using Segoe UI at default size & style instead');
 		}
@@ -275,7 +277,7 @@ class UserInterface {
 			if (this.getColSat(this.col.bg) > 759) this.col.bg2 = 0x06000000;
 		}
 		this.col.t = this.style.bg ? this.getSelCol(this.col.bg, true) : 200;
-		this.col.searchSel = window.IsTransparent || !this.col.bgSel ? 0xff0099ff : this.getContrast(this.col.text_h, this.col.bgSel) > 3 ? this.col.bgSel : this.getBlend(this.col.text_h, this.col.bg == 0 ? 0xff000000 : this.col.bg, 0.25);
+		this.col.searchSel = window.IsTransparent || !this.col.bgSel ? 0xff0099ff : this.getContrast(this.col.text_h, this.col.bgSel) > 3 ? this.col.bgSel : this.getBlend(this.col.text_h, this.col.bg == 0 || this.blur.dark ? 0xff000000 : this.col.bg, 0.25);
 
 		['blend1', 'blend2', 'blend3'].forEach((v, i) => {
 			this.col[v] = this.blur.blend ? this.col.text & RGBA(255, 255, 255, i == 2 ? 40 : 12) : this.blur.dark ? (i == 2 ? RGBA(255, 255, 255, 50) : RGBA(0, 0, 0, 40)) : this.blur.light ? RGBA(50, 50, 50, i == 2 ? 40 : 15) : this.getBlend(this.col.bg == 0 ? 0xff000000 : this.col.bg, this.col.text, !i ? 0.9 : i == 2 ? 0.87 : (this.style.isBlur ? 0.75 : 0.82));

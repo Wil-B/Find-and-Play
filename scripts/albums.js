@@ -198,7 +198,7 @@ class Albums {
 		}
 		const caption = artist + ' | ' + album;
 		const prompt = 'This Album Exists In Library As:' + (orig_alb ? '\n\nOriginal Library Album' : '') + (orig_alb && mtags_alb ? '\n\nAND' : '') + (mtags_alb ? '\n\nAlbum Built With m-TAGS' : '') + '\n\nContinue?';
-		const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
+		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));		
 		return albumDone;
 	}
@@ -1045,6 +1045,10 @@ class Albums {
 							this.deactivateTooltip();
 							const item = this.artists.list[i];
 							item.alb_id = 'track' + ++this.alb_id;
+							if (!item.source) {
+								alb.setRow(item.alb_id, 0);
+								return;
+							}
 							if (this.loadExisting(item, true, refresh, add, remove)) {
 								this.setRow(item.alb_id, 2);
 								return;
@@ -1084,6 +1088,10 @@ class Albums {
 							this.getTracks('track' + item.alb_id, i, refresh, add, remove, x < this.x + this.icon_w);
 						}
 					} else {
+						if (!item.source) {
+							alb.setRow(item.alb_id, 0);
+							return;
+						}
 						if (!full_alb || (ppt.mb == 1 && !item.releaseType.includes('Album') && !item.releaseType.includes('Compilation'))) { // stndAlb
 							if (!remove) this.setRow(item.alb_id, 1);
 							this.getTracks(item.alb_id, i, refresh, add, remove, x < this.x + this.icon_w, mTagsAlbum);
@@ -1105,6 +1113,10 @@ class Albums {
 						txt.paint();
 					}
 				} else if (!ppt.mb) {
+					if (!item.source) {
+						alb.setRow(item.alb_id, 0);
+						return;
+					}
 					this.setRow(item.alb_id, 4);
 					if (this.loadExisting(item, false, refresh, add, remove)) {
 						this.setRow(item.alb_id, 2)
@@ -1113,6 +1125,10 @@ class Albums {
 					if (remove) return;
 					yt_dj.do_youtube_search(item.alb_id, ppt.lfmReleaseType == 1 ? this.artist : item.artist, ppt.lfmReleaseType == 1 ? $.stripRemaster(this.names.lfm[1][i].name) : ppt.lfmReleaseType == 2 ? $.stripRemaster(this.names.lfm[2][i].title) : this.names.lfm[3][i].title, item.alb_id, 1, pl.cache(), !add ? 1 : 2);
 				} else if (ppt.mb == 2) {
+					if (!item.source) {
+						alb.setRow(item.alb_id, 0);
+						return;
+					}
 					this.setRow(item.alb_id, 4);
 					if (this.loadExisting(item, false, refresh, add, remove)) {
 						this.setRow(item.alb_id, 2)

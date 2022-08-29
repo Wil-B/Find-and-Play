@@ -5,7 +5,6 @@ class Playlists {
 		this.dj_tracks = [];
 		this.enabled = [];
 		this.menu = [];
-		this.soft_playlist = ppt.playlistTop + ppt.playlistTracks;
 
 		this.playlists_changed();
 	}
@@ -27,6 +26,10 @@ class Playlists {
 
 	getDJ() {
 		return plman.FindPlaylist(ppt.playlistDj);
+	}
+
+	getSoft() { 
+		return plman.FindPlaylist(ppt.playlistGenerator);
 	}
 
 	love() {
@@ -88,10 +91,14 @@ class Playlists {
 		return plman.FindOrCreatePlaylist(ppt.playlistSelection, false);
 	}
 
+	soft() {
+		return plman.FindOrCreatePlaylist(ppt.playlistGenerator, false);
+	}
+
 	setShortCutPl() {
-		const names = ['selection', 'dj', 'loved'];
+		const names = ['selection', 'dj', 'soft', 'loved'];
 		this.enabled = [];
-		['playlistSelection', 'playlistDj', 'playlistLoved'].forEach(v => {
+		['playlistSelection', 'playlistDj', 'playlistGenerator', 'playlistLoved'].forEach(v => {
 			const ix = plman.FindPlaylist(ppt[v]);
 			if (ix != -1) this.enabled.push({
 				name: ppt[v],

@@ -263,14 +263,14 @@ class YoutubeSearch {
 	IsGoodMatch(video_title, video_id, video_descr, video_uploader, video_len, p_done) {
 		const base_OK = [];
 		const bl_artist = $.tidy(this.ytSearch.artist);
-		const clean_artist = $.removeDiacritics($.strip(this.ytSearch.artist.replace(/&/g, '').replace(/\band\b/gi, '')));
-		const clean_title = $.removeDiacritics($.strip(this.ytSearch.title.replace(/&/g, '').replace(/\band\b/gi, '')));
+		const clean_artist = $.strip(this.ytSearch.artist.replace(/&/g, '').replace(/\band\b/gi, ''));
+		const clean_title = $.strip(this.ytSearch.title.replace(/&/g, '').replace(/\band\b/gi, ''));
 		const mv = [];
 		let i = 0;
 		let j = 0;
 		let k = 0;
 		for (i = 0; i < p_done; i++) {
-			const clean_vid_title = $.removeDiacritics($.strip(video_title[i].replace(/&/g, '').replace(/\band\b/gi, '')));
+			const clean_vid_title = $.strip(video_title[i].replace(/&/g, '').replace(/\band\b/gi, ''));
 			base_OK[i] = video_len[i] && (!this.full_alb ? video_len[i] < 1800 : video_len[i] > 1800) && !blk.blackListed(bl_artist, video_id[i]) && (!this.yt.filt ? true : !index.filter_yt(video_title[i], video_descr[i]));
 			if (clean_vid_title.includes(clean_artist) && clean_vid_title.includes(clean_title) && base_OK[i]) {
 				if (!ppt.ytPref) return i;
@@ -671,6 +671,7 @@ class LfmDjTracksSearch {
 		this.ready_callback = state_callback;
 		this.retry = false;
 		this.songHot;
+		this.tag;
 		this.timer = null;
 		this.xmlhttp = null;
 		this.dj = {}
@@ -694,7 +695,7 @@ class LfmDjTracksSearch {
 			}
 	}
 
-	search(p_djSource, p_djMode, p_djType, p_artVariety, p_songHot, p_curPop, p_ix, p_done, p_pn) {
+	search(p_djSource, p_djMode, p_djType, p_artVariety, p_songHot, p_curPop, p_ix, p_done, p_pn, p_tag) {
 		if (!this.retry) {
 			this.dj.source = p_djSource;
 			this.dj.mode = p_djMode;
@@ -705,6 +706,7 @@ class LfmDjTracksSearch {
 			this.ix = p_ix;
 			this.done = p_done;
 			this.pn = p_pn;
+			this.tag = p_tag;
 			const sp = $.clean(this.dj.source);
 			this.fo = dj.f2 + sp.substr(0, 1).toLowerCase() + '\\';
 			this.fn = this.fo + sp + (this.dj.type != 3 ? '.json' : ' [Similar Songs].json');
@@ -725,7 +727,7 @@ class LfmDjTracksSearch {
 					if (this.dj.mode != 2) ppt.trackCount = this.list.length;
 					if (this.list.length >= this.songHot || this.dj.mode == 2 && ppt.useSaved) {
 						this.list.forEach(this.stripRemaster);
-						return this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 1, this.curPop, this.artVariety);
+						return this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 1, this.curPop, this.artVariety, this.tag);
 					}
 				}
 				break;
@@ -737,7 +739,7 @@ class LfmDjTracksSearch {
 						if (this.dj.mode != 2) ppt.trackCount = this.list.length;
 						if (this.list.length >= this.songHot || this.dj.mode == 2 && ppt.useSaved) {
 							this.list.forEach(this.stripRemaster);
-							return this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 3, this.curPop, this.artVariety);
+							return this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 3, this.curPop, this.artVariety, this.tag);
 						}
 					}
 				}
@@ -749,7 +751,7 @@ class LfmDjTracksSearch {
 					if (this.curPop) {
 						if (this.list.length >= this.songHot) {
 							this.list.forEach(this.stripRemaster);
-							return this.on_search_done_callback(this.dj.source, this.list, this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety);
+							return this.on_search_done_callback(this.dj.source, this.list, this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety, this.tag);
 						}
 					} else {
 						let newOK = false;
@@ -759,14 +761,14 @@ class LfmDjTracksSearch {
 						}
 						if (newOK && this.list.length >= this.songHot || this.dj.mode == 2 && ppt.useSaved) {
 							this.list.forEach(this.stripRemaster);
-							return this.on_search_done_callback(this.dj.source, this.list, this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety);
+							return this.on_search_done_callback(this.dj.source, this.list, this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety, this.tag);
 						}
 					}
 				}
 				break;
 		}
 
-		if (this.dj.mode == 2 && ppt.useSaved) return this.on_search_done_callback('', '', this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety);
+		if (this.dj.mode == 2 && ppt.useSaved) return this.on_search_done_callback('', '', this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety, this.tag);
 		// workarounds applied as required to deal with occasional last.fm bug - list too short (doesn't start at beginning)
 		this.func = null;
 		this.xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
@@ -783,7 +785,7 @@ class LfmDjTracksSearch {
 			this.lmt = !this.retry ? this.songHot : this.songHot != 1000 ? this.songHot + 5 + Math.floor(Math.random() * 10) : this.songHot - 5;
 			URL += '&method=tag.getTopTracks&tag=' + encodeURIComponent(this.dj.source) + '&limit=' + this.lmt + '&autocorrect=1';
 		} else {
-			if (!this.dj.source.includes('|')) return this.on_search_done_callback('', '', this.ix, '', this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety);
+			if (!this.dj.source.includes('|')) return this.on_search_done_callback('', '', this.ix, '', this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety, this.tag);
 			const dj_sourc = this.dj.source.split('|');
 			this.lmt = !this.retry ? 250 : 240;
 			URL += '&method=track.getSimilar&artist=' + encodeURIComponent(dj_sourc[0].trim()) + '&track=' + encodeURIComponent(dj_sourc[1].trim()) + '&limit=' + this.lmt + '&autocorrect=1';
@@ -839,7 +841,7 @@ class LfmDjTracksSearch {
 					}));
 					this.list = $.take(data, this.songHot).map(this.tracks);
 					if (this.dj.mode != 2) ppt.trackCount = data.length;
-					this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 1, this.curPop, this.artVariety);
+					this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 1, this.curPop, this.artVariety, this.tag);
 					if (save_list.length) $.save(this.fn, JSON.stringify(save_list), true);
 					break;
 				case 3:
@@ -851,7 +853,7 @@ class LfmDjTracksSearch {
 					this.list = $.take(data, this.songHot).map(this.tracks);
 					if (this.dj.mode != 2) ppt.trackCount = data.length;
 
-					this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 3, this.curPop, this.artVariety);
+					this.on_search_done_callback(this.list, '', this.ix, '', this.pn, this.dj.mode, 3, this.curPop, this.artVariety, this.tag);
 					if (save_list.length) $.save(this.fn, JSON.stringify(save_list), true);
 					break;
 				default:
@@ -866,7 +868,7 @@ class LfmDjTracksSearch {
 						doc.close();
 						if (this.pg == 1 && this.songHot > 50) {
 							this.pg++;
-							return this.search(this.dj.source, this.dj.mode, this.dj.type, this.artVariety, this.songHot, this.curPop, this.ix, this.done, this.top50, this.pn);
+							return this.search(this.dj.source, this.dj.mode, this.dj.type, this.artVariety, this.songHot, this.curPop, this.ix, this.done, this.pn);
 						}
 						this.list = title.map((v, i) => ({
 							title: $.stripRemaster(v),
@@ -901,10 +903,10 @@ class LfmDjTracksSearch {
 						}
 						if (save_list.length) $.save(this.fn, JSON.stringify(save_list), true);
 					}
-					this.on_search_done_callback(this.dj.source, this.list, this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety);
+					this.on_search_done_callback(this.dj.source, this.list, this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety, this.tag);
 					break;
 			}
-		} else this.on_search_done_callback('', '', this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety);
+		} else this.on_search_done_callback('', '', this.ix, this.done, this.pn, this.dj.mode, this.dj.type, this.curPop, this.artVariety, this.tag);
 	}
 
 	stripRemaster(v) {
@@ -1557,7 +1559,7 @@ class AlbumNames {
 			this.timer = setTimeout(() => {
 				a.abort();
 				this.timer = null;
-			}, 7000);
+			}, ppt.mb != 2 ? 7000 : 30000);
 		}
 		this.xmlhttp.send();
 	}
@@ -1974,15 +1976,17 @@ class AutoDjTracks {
 				let timeout = this.loadTime.length ? Math.min($.average(this.loadTime), 500) : 25;
 				this.hl.Add(v.handle);
 				setTimeout(() => {
+					if (!this.hl.Count) return;
 					const pn = pl.selection()
 					if (p_alb_set) plman.ClearPlaylistSelection(pn);
 					panel.add_loc.timestamp = Date.now();
 					if (!p_alb_set || p_alb_set === 2) plman.UndoBackup(pn);
-					if (p_alb_set) plman.InsertPlaylistItems(pn, plman.PlaylistItemCount(pn), this.hl, p_alb_set);
-					else plman.InsertPlaylistItems(p_pn, plman.PlaylistItemCount(p_pn), this.hl, p_alb_set);
+					const playlistItemIndex = plman.PlaylistItemCount(p_alb_set ? pn : p_pn);
+					if (p_alb_set) plman.InsertPlaylistItems(pn, playlistItemIndex, this.hl, p_alb_set);
+					else plman.InsertPlaylistItems(p_pn, playlistItemIndex, this.hl, p_alb_set);
 					if (p_alb_set) {
 						plman.EnsurePlaylistItemVisible(pn, plman.PlaylistItemCount(pn) - 1);
-						plman.SetPlaylistFocusItemByHandle(pn, this.hl[0]);
+						plman.SetPlaylistFocusItem(pn, playlistItemIndex);
 					}
 					this.hl = new FbMetadbHandleList();
 				}, timeout);
@@ -2069,7 +2073,7 @@ class DldAlbumTracks {
 		}
 		const caption = artist + ' | ' + album;
 		const prompt = `This Album Has A Lot of Tracks: ${length}\n\nRequires ${(ppt.libAlb ? 'up to ' : '') + length} YouTube Searches\n\nContinue?`;
-		const wsh = soFeatures.gecko && soFeatures.clipboard ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
+		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));
 	}
 

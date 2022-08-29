@@ -534,7 +534,7 @@ class Images {
 			image_path = '';
 		}
 		if (!this.cur_handle || !this.cur_handle.Compare(handle) || image && this.cache().cacheHit(image_path)) return;
-		const refresh = ui.style.isBlur && panel.isVideo();
+		const refresh = ui.style.isBlur && panel.isVideo() && (ppt.theme != 4 || !art_id);
 		image_path = image_path + (!refresh ? '' : refresh);
 		if (!image) {
 			if (this.cache().cacheHit('stub' + ppt.artistView)) return;

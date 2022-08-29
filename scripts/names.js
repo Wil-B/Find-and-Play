@@ -4,15 +4,21 @@ class Names {
 	constructor() {
 		this.cur_artist = '';
 		this.lfmUID = '_[a-f0-9]{32}\\.jpg$';
-
-		const fields = ['queryArtistField', 'queryAlbumField', 'queryGenreField', 'queryTitleField'];
-		const key = ['artist', 'album', 'genre', 'title'];
-
 		this.field = {}
+
+		const fields = ['queryArtistField', 'queryAlbumField', 'queryTitleField', 'queryGenreField', 'queryLocaleField', 'queryMoodField', 'queryThemeField'];
+		const key = ['artist', 'album', 'title', 'genre', 'locale', 'mood', 'theme'];
 
 		for (let i = 0; i < key.length; i++) { // use for loop so handles empty
 			const n = ppt[fields[i]];
-			this.field[key[i]] = n && n.trim() || key[i];
+			if (i < 3) this.field[key[i]] = n && n.trim() || key[i];
+			else {
+				const fields = (n && n.trim() || key[i]).split('|');
+				this.field[key[i]] = '';
+				fields.forEach((v, j) => {
+					this.field[key[i]] += ((j ? ' OR ' : '') + v.trim() + 'QuErYnAmE');
+				});
+			}
 		}
 	}
 
