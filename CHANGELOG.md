@@ -1,4 +1,4 @@
-# v1.2.0 [unreleased]
+# v1.2.0
 ### Changed
 - [Readme](https://github.com/Wil-B/Find-and-Play/blob/main/README.md) rewritten with new screenshots to more fully reflect capabilities
 - Standard matching now ignores diacritics, e.g. a = á
@@ -12,7 +12,7 @@
 	- inbuilt support for 1,000+ genres, 350 moods & 250 themes + choose your own
 	- smart mix feature for library playlist generator
 	- browse & search dialog that offers full search options with autocomplete + 'try another' if no matches
-		- this is an html dialog supported on standard Windows installations. If you're using WINE or something else that isn't fully compliant with Spider Monkey panel features, browse & search dialog may not be available. Instead the flyout menus have an alternative 'More...' option for searching
+		- this is an html dialog that is supported on standard Windows installations. If you're using WINE or something else that isn't fully compliant with Spider Monkey panel features, browse & search dialog may not be available. Instead the flyout menus have an alternative 'More...' option for searching
 
 ### Fixed
 - Album & tracks pane with library source incorrectly allowing calls to YouTube
