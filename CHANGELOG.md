@@ -9,10 +9,10 @@
     - Easily create awesome playlists by songs, artists, genres, moods, themes, decades, locale or queries
 - AutoDJ & library playlist generator
 	- search suggestions
-	- browse & search dialog that offers full search options with autocomplete + 'try another' if no matches
-		- this is an html dialog supported on Windows. If you're using WINE or something else that isn't fully compliant with Spider Monkey panel features, browse & search dialog may not be available. Instead the flyout menus have an alternative 'More...' option for searching
 	- inbuilt support for 1,000+ genres, 350 moods & 250 themes + choose your own
 	- smart mix feature for library playlist generator
+	- browse & search dialog that offers full search options with autocomplete + 'try another' if no matches
+		- this is an html dialog supported on standard Windows installations. If you're using WINE or something else that isn't fully compliant with Spider Monkey panel features, browse & search dialog may not be available. Instead the flyout menus have an alternative 'More...' option for searching
 
 ### Fixed
 - Album & tracks pane with library source incorrectly allowing calls to YouTube
