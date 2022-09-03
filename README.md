@@ -7,7 +7,8 @@ Feature rich plug-in for [foobar2000](https://www.foobar2000.org) that works gre
 - Popularity tagger
 
 ### Screenshots
-![Album and tracks pane](https://user-images.githubusercontent.com/35600752/186192782-3e52166d-9062-42c1-adb7-bd34c2406084.png)
+![Album and tracks pane](https://user-images.githubusercontent.com/35600752/188287763-b8172327-0660-4ab5-b05d-20040787b6c9.png)
+
 Start-up logos + various modes of albums & tracks view in several themes. Middle bottom (artist photo) is using dark theme with blur settings of auto-fill enabled, level 0 & opacity 30.
 
 ## FEATURES
