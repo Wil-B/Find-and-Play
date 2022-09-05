@@ -1,3 +1,8 @@
+# v1.2.1
+- Minor update that improves compatibility with foobar2000 v2.0
+
+<br />
+
 # v1.2.0
 ### Changed
 - [Readme](https://github.com/Wil-B/Find-and-Play/blob/main/README.md) rewritten with new screenshots to more fully reflect capabilities
