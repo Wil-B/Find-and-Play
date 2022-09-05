@@ -1,5 +1,7 @@
 # v1.2.1
+### Changed
 - Minor update that improves compatibility with foobar2000 v2.0
+- Node styles used for albums reworked for improved look on foobar2000 v2.0. The previous style, now called light, can be set on the display tab\album node style
 
 <br />
 
