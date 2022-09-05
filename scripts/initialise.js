@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 let ui = new UserInterface;
 let name = new Names;

@@ -1174,13 +1174,25 @@ class AlbumTracks {
 		switch (this.mb) {
 			case 0:
 				data = $.jsonParse(this.xmlhttp.responseText, [], 'get', 'album.tracks.track');
-				list = data.map(v => ({
-					artist: this.album_artist.replace(/’/g, "'"),
-					title: $.stripRemaster(v.name.replace(/’/g, "'")),
-					album: this.album,
-					date: this.date,
-					mTags: this.mTags
-				}));
+				if (data.length) {
+					list = data.map(v => ({
+						artist: this.album_artist.replace(/’/g, "'"),
+						title: $.stripRemaster(v.name.replace(/’/g, "'")),
+						album: this.album,
+						date: this.date,
+						mTags: this.mTags
+					}));
+				} else {
+					try { // deals with 1 track releases that are in different json format: test Liam Gallagher - Wall of Glass with last.fm track source
+						list[0] = {
+							artist: this.album_artist.replace(/’/g, "'"),
+							title: $.stripRemaster(data.name.replace(/’/g, "'")),
+							album: this.album,
+							date: this.date,
+							mTags: this.mTags
+						}
+					} catch (e) {}
+				}
 				if (list.length) {
 					$.trace('album track list from last.fm');
 					return this.on_search_done_callback(this.alb_id, list, this.album_artist, this.album, this.prime, this.extra, this.date, this.add, this.mTags);
@@ -1840,8 +1852,9 @@ class AutoDjTracks {
 		this.searchParams.push(args);
 		if (!timer.yt.id) timer.yt.id = setInterval(() => {
 			if (this.searchParams.length) {
-				const [p_alb_id, p_artist, p_title, p_i, p_done, p_pn, p_alb_set] = this.searchParams[0];
-				if (this.libUsed(p_alb_id, p_alb_set)) {
+				//const [p_alb_id, p_artist, p_title, p_i, p_done, p_pn, p_alb_set] = this.searchParams[0];
+				const [p_alb_id, p_artist, p_title, p_i, p_done, p_pn, p_alb_set, p_lib_checked] = this.searchParams[0];
+				if (!p_lib_checked && this.libUsed(p_alb_id, p_alb_set)) {
 					const inLib = lib.inLibrary(p_artist, p_title, p_i, p_alb_set, false, false); // playTracks: check lib at compile: fast; guards against lib changes after album & tracks list populated; works between fb2k restarts as handles can't easily be saved
 					if (inLib || p_alb_id == 'playTracks' && ppt.libAlb == 2) {
 						if (p_alb_set) {

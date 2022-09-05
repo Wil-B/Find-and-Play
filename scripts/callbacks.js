@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 function on_char(code) {
 	filter.on_char(code);
@@ -326,6 +326,8 @@ function on_size() {
 	panel.w = window.Width;
 	panel.h = window.Height;
 	if (!panel.w || !panel.h) return;
+	const scrollBars = [alb_scrollbar, art_scrollbar];
+	const scrollPos = scrollBars.map(v => v.scroll);
 	panel.on_size();
 	ui.getFont();
 	tooltip.SetMaxWidth(Math.max(panel.w, 800));
@@ -334,5 +336,6 @@ function on_size() {
 	search.metrics();
 	if (!ui.style.textOnly || ui.style.isBlur) img.on_size();
 	dj.on_size();
+	scrollBars.forEach((v, i) => v.setScroll(scrollPos[i]));
 	txt.rp = true;
 }

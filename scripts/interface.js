@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 class UserInterface {
 	constructor() {
@@ -249,6 +249,9 @@ class UserInterface {
 		this.col.blend = this.getBlend(this.col.head, this.col.text, 0.5);
 		this.col.lineAlb = !ppt.linesEmbolden ? this.getLineCol(this.col.head) : this.col.head;
 		this.col.lineArt = !ppt.linesEmbolden ? this.getLineCol(this.col.text) : this.col.blend;
+		const colBg = this.blur.dark ? RGB(0, 0, 0) : this.blur.light ? RGB(255, 255, 255) : this.col.bg == 0 ? 0xff000000 : this.col.bg
+		this.col.node_c = !ppt.nodeStyle ? (this.blur.dark || this.blur.blend ? this.getBlend(colBg, this.col.text, 0.3) : this.getBlend(colBg, this.col.text, 0.5)) : this.col.text;
+		this.col.node_e = !ppt.nodeStyle ? (this.blur.dark || this.blur.blend ? this.col.text : this.getBlend(colBg, this.col.text, 0.1)) : this.col.text;
 
 		if (this.col.bg_h === '') {
 			this.col.bg_h = ppt.highLightRow == 3 ? (this.blur.dark ? 0x24000000 : 0x1E30AFED) : this.blur.dark ? 0x19ffffff : this.blur.light || lightBg ? 0x19000000 : 0x19ffffff;

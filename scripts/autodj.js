@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 class Favourites {
 	addCurrentStation(source, type, tag, query) {

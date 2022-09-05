@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 	<html>
 	<head>
 
@@ -190,6 +190,8 @@
 				<div id="siteBtn"></div>
 				<div class="div_text6">Source style</div>
 				<div id="sourceStyle"></div>
+				<div class="div_text6">Album node style</div>
+				<div id="styleNode"></div>
 			</div>
 					
 			<div class="column38">
@@ -668,6 +670,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				var presets = ppt.presets_internal.value.replace(/^[,\s]+|[,\s]+$/g, ''); presets = presets.split(',');
 				var lfmDataLabels = []; for (i = 0; i < presets.length; i += 2) lfmDataLabels.push(presets[i]);
 				var lfmImage = ['Lastfm button small.png', 'Lastfm text button small.png'];
+				var nodeStyleLabels = ['Regular', 'Light'];
 				var npLabels = ['Graphic + text', 'Graphic', 'Text', 'Text shadow effect', 'Graphic: prefer video', 'Title format', 'Preview'];
 				var ownDataLabels = ['Most played', 'Highest rated', 'Most popular', 'Random'];
 				var photoLabels = ['Auto-cycle', 'Auto-cycle time (seconds)', "Downloader is the same as that in Biography. If that's used, don't enable here, just ensure folder is same.", 'Save folder', 'Preview'];
@@ -737,7 +740,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 				}
 				box.all = box.display.concat(box.playlists, box.search, box.image, box.custom, box.advanced);
 				var radio = {
-					display: ['theme', 'highLightRow', 'logoText', 'showSource'],
+					display: ['theme', 'highLightRow', 'logoText', 'showSource', 'nodeStyle'],
 					playlists: ['configOwnData', 'curPop', 'genre_tracks', 'randomArtist'],
 					search: [],
 					image: ['imgSeekerDots'],
@@ -835,6 +838,7 @@ If installed the context menu has the option 'Create m-TAGS Album'. m-TAGS help 
 					i = 1; window.siteBtn.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="logoText'+i+'" name="logoText" style="'+cbox+'" type="radio" />&nbsp&nbsp<img src="file://' + ppt['styleImages_internal'].value + lfmImage[i]+'" width="'+ 75 +'" height="'+ 19 +'" class="stub"/></div>');
 					i = 0; window.sourceStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="showSource'+i+'" name="showSource" style="'+cbox+'" type="radio" /><label for="showSource'+i+'" class="checkbox_label">Hide</label></div>');
 					for (i = 1; i < 4; i++) {window.sourceStyle.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="showSource'+i+'" name="showSource" style="'+cbox+'" type="radio" />&nbsp&nbsp<img src="file://' + ppt['styleImages_internal'].value + sourceImage[i]+'"width="'+ em +'" height="'+ em +'" class="stub"/></div>');}
+					for (i = 0; i < 2; i++) {window.styleNode.insertAdjacentHTML('beforeend', '<div class="input_cnt2"><input id="nodeStyle'+i+'" name="nodeStyle" style="'+cbox+'" type="radio" /><label for="nodeStyle'+i+'" class="checkbox_label">'+nodeStyleLabels[i]+'</label></div>');}
 
 					window.sbarShow_dropdown.innerHTML = sbarShowLabels[ppt['sbarShow_internal'].value];
 					for (i = 0; i < 3; i++) {window.sbarShow.insertAdjacentHTML('beforeend', '<a onclick="setSbarShow(' + i + ');">'+sbarShowLabels[i]+'</a>');}

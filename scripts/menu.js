@@ -286,7 +286,7 @@ class MenuItems {
 			});
 		}
 
-		let j = -1;
+		let k = -1;
 		menu.newItem({
 			menuName: 'New autoDJ',
 			str: 'Suggestions:',
@@ -305,7 +305,7 @@ class MenuItems {
 		for (const [key, value] of Object.entries(this.artists)) {
 			menu.newMenu({menuName: 'artist1_' + key, str: key, appendTo: 'By artist...'});
 			value.forEach((w, i) => {
-				j++;
+				k++;
 				menu.newItem({
 					menuName: 'artist1_' + key,
 					str: w,
@@ -333,11 +333,11 @@ class MenuItems {
 
 		menu.addSeparator({menuName: 'By similar artists...'});
 
-		j = -1;
+		k = -1;
 		for (const [key, value] of Object.entries(this.artists)) {
 			menu.newMenu({menuName: 'artists1_' + key, str: key, appendTo: 'By similar artists...'});
 			value.forEach((w, i) => {
-				j++;
+				k++;
 				menu.newItem({
 					menuName: 'artists1_' + key,
 					str: w,
@@ -365,11 +365,11 @@ class MenuItems {
 
 		menu.addSeparator({menuName: 'By similar songs...'});
 
-		j = -1;
+		k = -1;
 		for (const [key, value] of Object.entries(this.songs)) {
 			menu.newMenu({menuName: 'songs1_' + key, str: key, appendTo: 'By similar songs...'});
 			value.forEach((w, i) => {
-				j++;
+				k++;
 				menu.newItem({
 					menuName: 'songs1_' + key,
 					str: w,
@@ -592,7 +592,7 @@ class MenuItems {
 			});
 		}
 
-		j = -1;
+		k = -1;
 		menu.newItem({
 			menuName: 'Generate library playlist',
 			str: 'Suggestions:',
@@ -611,7 +611,7 @@ class MenuItems {
 		for (const [key, value] of Object.entries(this.artists)) {
 			menu.newMenu({menuName: 'artist2_' + key, str: key, appendTo: 'By_artist...'});
 			value.forEach((w, i) => {
-				j++;
+				k++;
 				menu.newItem({
 					menuName: 'artist2_' + key,
 					str: w,
@@ -639,11 +639,11 @@ class MenuItems {
 
 		menu.addSeparator({menuName: 'By similar_artists...'});
 
-		j = -1;
+		k = -1;
 		for (const [key, value] of Object.entries(this.artists)) {
 			menu.newMenu({menuName: 'artists2_' + key, str: key, appendTo: 'By similar_artists...'});
 			value.forEach((w, i) => {
-				j++;
+				k++;
 				menu.newItem({
 					menuName: 'artists2_' + key,
 					str: w,
@@ -671,11 +671,11 @@ class MenuItems {
 
 		menu.addSeparator({menuName: 'By similar_songs...'});
 
-		j = -1;
+		k = -1;
 		for (const [key, value] of Object.entries(this.songs)) {
 			menu.newMenu({menuName: 'songs2_' + key, str: key, appendTo: 'By similar_songs...'});
 			value.forEach((w, i) => {
-				j++;
+				k++;
 				menu.newItem({
 					menuName: 'songs2_' + key,
 					str: w,
@@ -1442,6 +1442,7 @@ class MenuItems {
 				this.artists[init].push(name);
 			}
 		});
+		this.artists = this.pickLongest(this.artists, 30);
 		init = '';
 		cur = 'currentSong';
 		this.songs = {}
@@ -1454,6 +1455,7 @@ class MenuItems {
 				this.songs[init].push(v.replace(/&/g, '&&'));
 			}
 		});
+		this.songs = this.pickLongest(this.songs, 30);
 		this.createMenuList('countries', this.localeArr);
 		this.createMenuList('genres', this.genresMain);
 		this.createMenuList('demonyms', this.localeArr);
@@ -1522,6 +1524,20 @@ class MenuItems {
 
 			this.lastLoad = 'Last load: ' + ['last.fm: ', 'musicbrainz: ', 'chart: '][ppt.mb] + n + ': ' + search.text;
 		}
+	}
+
+	pickLongest(obj, num = 1) {
+		const requiredObj = {};
+		if (num > Object.keys(obj).length){
+		return obj;
+		}
+		const keys = [];
+		Object.keys(obj).sort((a, b) => obj[b].length - obj[a].length).forEach((key, ind) => {
+			if (ind < num) keys.push(key);
+		});
+		keys.sort((a, b) => this.collator.compare(a, b));
+		keys.forEach(key => requiredObj[key] = obj[key]);
+		return requiredObj;
 	}
 
 	rbtn_up(x, y) {

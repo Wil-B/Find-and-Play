@@ -98,6 +98,7 @@ let properties = [
 	['Album Manager MB Show Live Releases', false, 'showLive'],
 	['Album Manager Play Tracks', false, 'playTracks'],
 	['Albums Pref MB Tracks', 1, 'prefMbTracks'],
+	['Album Manager Node Style', 0, 'nodeStyle'],
 	['Album Manager Show', true, 'showAlb'],
 	['Album Manager Show MB', 0, 'mb'],
 	['Album Manager Show Artists Pane', true, 'showArtists'],

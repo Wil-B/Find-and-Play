@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 class Scrollbar {
 	constructor() {
@@ -101,7 +101,7 @@ class Scrollbar {
 			this.checkScroll(Math.round((this.scroll + dir * -this.rows_drawn * this.row_h) / this.row_h) * this.row_h, 'full');
 		}, 100);
 
-		this.scrollthrottle = $.throttle(() => {
+		this.scrollThrottle = $.throttle(() => {
 			this.delta = this.scroll;
 			this.scrollTo();
 		}, 16);
@@ -169,7 +169,7 @@ class Scrollbar {
 					this.smoothScroll();
 				}
 			} else this.scrollDrag();
-		} else this.scrollthrottle();
+		} else this.scrollThrottle();
 	}
 
 	draw(gr) {
@@ -455,6 +455,15 @@ class Scrollbar {
 				}
 				break;
 		}
+	}
+
+	setScroll(new_scroll) {
+		this.clock = 0;
+		const b = Math.max(0, Math.min(new_scroll, this.max_scroll));
+		if (b == this.scroll) return;
+		this.scroll = b;
+		this.delta = this.scroll;
+		this.bar.y = this.but_h + this.scrollbar.travel * (this.delta * this.ratio) / (this.row.count * this.row.h);
 	}
 
 	setRows(row_count) {

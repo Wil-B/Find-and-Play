@@ -671,7 +671,7 @@ class Albums {
 				if (row_y < this.names.max.y) {
 					const item = this.names.list[i];
 					const itemSel = item.name.startsWith('>>');
-					const node_col = itemSel ? ui.col.textSel : this.names.m_i == i ? ui.col.text_h : ui.col.text;
+					const node_col = itemSel ? ui.col.textSel : this.names.m_i == i ? ui.col.text_h : ui.col.node_c;
 					txt_col = itemSel ? ui.col.textSel : this.names.m_i == i && ppt.highLightText ? ui.col.text_h : ui.col.text;
 					if (this.names.m_i == i) {
 						if (ppt.highLightRow == 3) {
@@ -682,9 +682,12 @@ class Albums {
 						if (ppt.highLightRow == 1) gr.FillSolidRect(ui.style.l_w, row_y, ui.sideMarker_w, this.row.h, ui.col.sideMarker);
 					}
 					if (item.expanded) {
-						gr.GdiDrawText(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.text, this.x - this.icon_w * 0.2, row_y, w1, this.row.h, txt.l);
-						gr.GdiDrawText(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.text, this.x - this.icon_w * 0.2, row_y + 1, w1, this.row.h, txt.l);
-					} else if (drawExpand) gr.GdiDrawText('\uF105  ', this.fontawesome, node_col, this.x, row_y, w1, this.row.h, txt.l);
+						gr.GdiDrawText(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.node_e, this.x - this.icon_w * 0.2, row_y, w1, this.row.h, txt.l);
+						gr.GdiDrawText(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.node_e, this.x - this.icon_w * 0.2, row_y + 1, w1, this.row.h, txt.l);
+					} else if (drawExpand) {
+						gr.GdiDrawText('\uF105  ', this.fontawesome, node_col, this.x, row_y, w1, this.row.h, txt.l);
+						if (!ppt.nodeStyle) gr.GdiDrawText('\uF105  ', this.fontawesome, node_col, this.x + 1, row_y, w1, this.row.h, txt.l);
+					}
 					if (ppt.showSource) {
 						const im = this.img.source[item.source];
 						if (im) gr.DrawImage(im, this.x + (drawExpand ? this.icon_w : 0), row_y + this.img.y, im.Width, im.Height, 0, 0, im.Width, im.Height);
@@ -1123,7 +1126,7 @@ class Albums {
 						return;
 					}
 					if (remove) return;
-					yt_dj.do_youtube_search(item.alb_id, ppt.lfmReleaseType == 1 ? this.artist : item.artist, ppt.lfmReleaseType == 1 ? $.stripRemaster(this.names.lfm[1][i].name) : ppt.lfmReleaseType == 2 ? $.stripRemaster(this.names.lfm[2][i].title) : this.names.lfm[3][i].title, item.alb_id, 1, pl.cache(), !add ? 1 : 2);
+					yt_dj.do_youtube_search(item.alb_id, ppt.lfmReleaseType == 1 ? this.artist : item.artist, ppt.lfmReleaseType == 1 ? $.stripRemaster(this.names.lfm[1][i].name) : ppt.lfmReleaseType == 2 ? $.stripRemaster(this.names.lfm[2][i].title) : this.names.lfm[3][i].title, item.alb_id, 1, pl.cache(), !add ? 1 : 2, true);
 				} else if (ppt.mb == 2) {
 					if (!item.source) {
 						alb.setRow(item.alb_id, 0);
@@ -1135,7 +1138,7 @@ class Albums {
 						return;
 					}
 					if (remove) return;
-					yt_dj.do_youtube_search(item.alb_id, item.artist, item.title, item.alb_id, 1, pl.cache(), !add ? 1 : 2);
+					yt_dj.do_youtube_search(item.alb_id, item.artist, item.title, item.alb_id, 1, pl.cache(), !add ? 1 : 2, true);
 				}
 				break;
 			}

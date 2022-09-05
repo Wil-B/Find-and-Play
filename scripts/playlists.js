@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 class Playlists {
 	constructor() {
@@ -22,6 +22,10 @@ class Playlists {
 
 	dj() {
 		return plman.FindOrCreatePlaylist(ppt.playlistDj, false);
+	}
+	
+	getCache() {
+		return plman.FindPlaylist(ppt.playlistCache); // added to stop creating
 	}
 
 	getDJ() {

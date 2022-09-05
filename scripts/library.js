@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 
 class Library {
 	constructor() {
@@ -160,7 +160,7 @@ class Library {
 	}
 
 	getAlbumMetadb(checkLib) {
-		this.db.cache = plman.GetPlaylistItems(pl.cache());
+		this.db.cache = plman.GetPlaylistItems(pl.getCache());
 		this.db.lastUpd = 0;
 
 		alb.art.plHandleList = $.query(this.db.cache, 'artist IS ' + alb.artist);
