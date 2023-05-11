@@ -1,3 +1,53 @@
+# v1.3.0
+
+### Changed
+#### Album & tracks pane
+As flagged in features early February:
+- Improved last.fm choices through new drop down menu selectors, all playable from media library else YouTube
+	- Recommendations: standard, mix, neighbours, radio
+	- User library: scrobble history over various time periods
+	- User loved
+	- Artist: top tracks / last.fm mixes (aka stations): last 7 days, last 30 days, last 90 days, last 180 days, last 365 days, all time
+	- Tags: top tracks / last.fm mixes (aka stations): similar artists, similar songs, genres (includes styles & subgenres), moods, themes, decades, years, locales
+- Reworked buttons
+	- :arrow_forward: Play at click of button
+		- on the fly options for playback order, track ranges etc (middle click button)
+		- changed the shuffle method to use the smart shuffle method as used by autoDj, so same artists should be spread
+	- :arrows_counterclockwise: Refresh to load new recommendations, mixes or sync last.fm charts in real time
+- Source icons: choice now includes font based icons in text colour (options > display tab)
+- Moved play button action to main drop down menu
+- Reworked playlist handling to load max reasonable and preserve original track order
+- Made it easy to show album art as background
+	- Album covers
+	- Artist photos
+	- Enable on display submenu
+	- Configurable opacity
+	- Short cuts
+		- click top of pane to switch between cover & photo (can be set to double click: options > behaviour tab)
+		- mouse wheel over same area to scroll through artist photos
+#### Auto DJ
+Added last.fm radio as an alternative to inbuilt
+
+#### Search
+- Improved matching of items in library through better asymmetric searching
+- Improved search suggestions for similar songs if there are no playback statistics
+
+### Added
+
+#### Last.fm youtube links
+- Bypass searching of youtube
+- Easier to load large playlists, for tracks not in library.
+Or just play library tracks...
+
+#### Automatic retrieval of virtual tags from [biography](https://github.com/Wil-B/Biography) (requires biography 1.4.0+ installed)
+- boosts menu choices related to the current track: genres (including sub-genres & styles), moods, themes, locales
+- doesn't alter music files
+
+### Fixed
+- Add Locations to cache playlist becoming inefficient as cache size increases
+
+<br />
+
 # v1.2.1
 ### Changed
 - Minor update that improves compatibility with foobar2000 v2.0
