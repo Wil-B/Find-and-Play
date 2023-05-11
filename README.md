@@ -48,7 +48,7 @@ Feature rich media manager and browser for [foobar2000](https://www.foobar2000.o
 - **Popularity tagger**
 	- writes last.fm statistics and a popularity score as a multi-value tag, e.g.
 	- Playcount; 4,062,763; Listeners; 547,236; Score; 81
-	- see [below](https://github.com/Wil-B/FindPlay/edit/main/README.md#track-popularity-tagger-context-menu--playlists) for more info
+	- see [below](https://github.com/Wil-B/Find-and-Play#track-popularity-tagger-context-menu--playlists) for more info
 - **Search bar**
 - **Preview browser**
 	- explore what's available without interfering with playlists
