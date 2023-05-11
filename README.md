@@ -102,10 +102,10 @@ New install or update:
 7) Import the package
 
 Set up tips
-1) If **YouTube** is used, in foobar2000\preferences\shell integration, it's recommended to uncheck "Bring to front when adding new files" to ensure that foobar2000 doesn't grab focus away from other applications
+1) If **YouTube** is used, in ```foobar2000\preferences\shell integration```, it's recommended to uncheck ```Bring to front when adding new files``` to ensure that foobar2000 doesn't grab focus away from other applications
 2) **Button size**: press Ctrl and rotate the mouse wheel while hovering over buttons to change size if required.
-3) **Last.fm** recommendations require entering a last.fm user name either in ```options > maintenance``` or ```panel properties > Album Manager Lfm User Name```. That can be your own name or you can explore others. Scrobbled tracks need to be present at last.fm. It's recommended to use foo_scrobble: https://github.com/gix/foo_scrobble'. Button can be hidden in maintenance tab or with panel property 'Album Manager Lfm User Show Recommendations'.
-4) Operating system. Certain options require compliance with the full range of Spider Monkey Panel features. If you're using windows all should be supported. If you're using WINE or something else that isn't fully compliant, browse & search dialog may not be available. Instead the flyout menus have an alternative option.
+3) **Last.fm** recommendations require entering a last.fm user name either in ```options > maintenance``` or ```panel properties > Album Manager Lfm User Name```. That can be your own name or you can explore others. Scrobbled tracks need to be present at last.fm. It's recommended to use foo_scrobble: https://github.com/gix/foo_scrobble. Button can be hidden in ```maintenance tab``` or with panel property ```Album Manager Lfm User Show Recommendations```.
+4) **Operating system**. Certain options require compliance with the full range of Spider Monkey Panel features. If you're using windows all should be supported. If you're using WINE or something else that isn't fully compliant, browse & search dialog may not be available. Instead the flyout menus have an alternative option.
 <!--
 4) **ListenBrainz** site-wide statistics are available to anyone. Recommendations and personal listening data require entering a ListenBrainz user name either in options > maintenance or panel properties > 'Album Manager LB User Name'. That can be your own name or you can explore others. A placeholder name is present, so it can be seen working. Listens also need to be present at ListenBrainz. It's recommended to use foo_listenbrainz2: https://github.com/phw/foo_listenbrainz2.
 --> 
