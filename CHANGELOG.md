@@ -32,6 +32,9 @@ Added last.fm radio as an alternative to inbuilt
 - Improved matching of items in library through better asymmetric searching
 - Improved search suggestions for similar songs if there are no playback statistics
 
+#### m-TAGS
+- save folder path can now be set in panel properties ```m-TAGS Save Folder...```
+
 ### Added
 
 #### Last.fm youtube links
