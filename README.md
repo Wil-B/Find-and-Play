@@ -76,6 +76,7 @@ Feature rich media manager and browser for [foobar2000](https://www.foobar2000.o
 	- random
 - **Button size:** Ctrl + wheel over buttons to change size if required
 - **Text:** uses foobar2000 user interface setting by default or Ctrl + wheel over text to change size if required or see options > custom tab
+- **m-TAGS:** supported for album creation
 -  **Async:** web, addLocations, image loading etc
 
 ### Top tracks mode + menu options + image background
