@@ -78,7 +78,7 @@ Feature rich media manager and browser for [foobar2000](https://www.foobar2000.o
 - **Text:** uses foobar2000 user interface setting by default or Ctrl + wheel over text to change size if required or see options > custom tab
 -  **Async:** web, addLocations, image loading etc
 
-### Screenshot with image background enabled
+### Top tracks mode + menu options + image background
 <img src="https://user-images.githubusercontent.com/35600752/235265621-fb401b01-06e3-4eb0-b41e-8593a4d75edd.png" width=75%>
 
 ## REQUIREMENTS:
