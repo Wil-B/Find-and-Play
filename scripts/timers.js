@@ -35,7 +35,7 @@ class Timers {
 	image() {
 		this.clear(this.img);
 		this.img.id = setInterval(() => {
-			if (!panel.image.show || !ppt.artistView || ppt.showAlb || panel.block() || panel.video.mode && panel.isVideo() || seeker.dn || this.zoom()) return;
+			if (!panel.image.show || !ppt.artistView || ppt.showAlb && !ppt.imgBg || panel.block() || panel.video.mode && panel.isVideo() || seeker.dn || this.zoom()) return;
 			if (img.art.images.length < 2) return;
 			img.change(1);
 		}, ppt.cycleTime * 1000);

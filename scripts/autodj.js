@@ -180,10 +180,13 @@ class NewAutoDJ {
 	autoDjFound(p_q) {
 		if (this.djFound) return;
 		this.djFound = true;
+		ppt.autoRad = true;
+		window.NotifyOthers('fp_autoDj', true);
 		this.counter = 0;
 		if (dj.search) {
 			this.playedArtists = [];
-			this.playedTracks = [];
+			const lfmRadio = ppt.lfmRadio && dj.mode < 2 && dj.type != 3;
+			if (!lfmRadio) this.playedTracks = [];
 			ppt.playedArtists = JSON.stringify(this.playedArtists);
 			ppt.playedTracks = JSON.stringify(this.playedTracks);
 		}
@@ -239,6 +242,7 @@ class NewAutoDJ {
 		if (djType == 3 && djMode == 3) {
 			djMode = 2;
 		}
+		if (ppt.lfmRadio && (djMode == 2 || djMode == 3) && !ppt.playlistSoftMode) djMode = 1;
 		dj.text = 'Searching...\n For Tracks';
 		txt.repaint();
 		this.djFound = false;
@@ -255,19 +259,21 @@ class NewAutoDJ {
 		ppt.trackCount = 0;
 	}
 
-	getGenreTrack(length, list, dj_lib) {
+	getTrack(length, list, dj_lib) {
 		if (!length) return;
 		this.setBias();
-		const g_ind = this.getIndex(dj_lib, list, length, 1, 0);
-		this.playedTracks.push(g_ind);
+		const lfmRadio = ppt.lfmRadio && dj.mode < 2 && dj.type != 3;
+		const artistType = lfmRadio ? (dj.type ? 1 : 0) : 1;
+		const t_ind = this.getIndex(dj_lib, list, length, artistType, 0);
+		if (!lfmRadio) this.playedTracks.push(t_ind);
 		if (this.playedTracks.length > length - 1) this.playedTracks.splice(0, 1);
 		ppt.playedTracks = JSON.stringify(this.playedTracks);
-		if (!dj_lib) {
-			this.playedArtists.push($.strip(list[g_ind].artist));
+		if (!dj_lib && artistType) {
+			this.playedArtists.push($.strip(list[t_ind].artist));
 			if (this.playedArtists.length > 6) this.playedArtists.splice(0, 1);
 			ppt.playedArtists = JSON.stringify(this.playedArtists);
 		}
-		return g_ind;
+		return t_ind;
 	}
 
 	getIndex(dj_lib, list, listLength, artistType, titleType) {
@@ -298,7 +304,8 @@ class NewAutoDJ {
 		return ind;
 	}
 
-	getRange(djType, r) {
+	getRange(djType, r, djMode) {
+		if (djType == 3 && ppt.lfmRadio && djMode < 2) return 250;
 		r = $.clamp(r, 0, this.pool.length - 1);
 		let range = 50;
 		if (djType != 1 && djType != 3) {
@@ -318,6 +325,7 @@ class NewAutoDJ {
 	}
 
 	load(djSource, djMode, djType, djVariety, djRange, djFavourite, djQuery, djTag) {
+		// lfmRadio doesn't need info traces & they're not called: djMode always 1
 		const logName = !ppt.playlistSoftMode ? this.n[djMode] + this.nm[djMode] + ': ' : '';
 		if (djMode == 3 && ppt.autoDJFilter) $.trace(this.n[djMode] + this.nm[djMode] + (dj.filter.length ? ': ' + 'Library Tracks Skipped: ' + dj.filter : ''));
 		if (djMode < 2 || (djType == 2 || djType == 4)) {
@@ -346,7 +354,7 @@ class NewAutoDJ {
 				count = items.length;
 				if (count < this.limit + 2) return;
 				for (let i = 0; i < no; i++) {
-					h_ind = djType != 1 && djType != 3 ? this.getIndex(1, items, count, djType ? 1 : 0, 1) : this.getGenreTrack(count, items, 1);
+					h_ind = djType != 1 && djType != 3 ? this.getIndex(1, items, count, djType ? 1 : 0, 1) : this.getTrack(count, items, 1);
 					if (!list || !list.Count) return;
 					handleList.Add(list[items[h_ind].id]);
 					if (count) {
@@ -397,7 +405,7 @@ class NewAutoDJ {
 
 	reset_add_loc() {
 		panel.add_loc.std = [];
-		panel.add_loc.ix = 0;
+		yt_dj.added = 'init';
 		yt_dj.received = 0;
 		yt_dj.hl = new FbMetadbHandleList();
 		yt_dj.searchParams = [];
@@ -495,6 +503,7 @@ class NewAutoDJ {
 
 class AutoDJ {
 	constructor() {
+		this.artists = {libHandles: new FbMetadbHandleList(), plHandles: new FbMetadbHandleList()}
 		this.artVariety = index.cur_dj_type == 2 || index.cur_dj_type == 4 ? index.cur_lfm_variety : 'N/A';
 		this.curPop = ppt.curPop;
 		this.cur_text = '';
@@ -514,7 +523,7 @@ class AutoDJ {
 		this.timer = null;
 		this.search;
 		this.sim1Set = false;
-		this.songHot = index.getRange(this.type, index.cur_dj_range);
+		this.songHot = index.getRange(this.type, index.cur_dj_range, this.mode);
 		this.stndLmt = Math.min(this.stndLmt, 25);
 		this.sync = false;
 		this.text = '';
@@ -536,13 +545,12 @@ class AutoDJ {
 			y: 0
 		}
 
-		if (!ppt.v) ppt.djPlaylistLimit = $.clamp(ppt.djPlaylistLimit, 2, 25);
+		if (!ppt.v) ppt.djPlaylistLimit = $.clamp(ppt.djPlaylistLimit, 2, 50);
 		this.limit = ppt.djPlaylistLimit;
 		if (!ppt.removePlayed) this.limit = 0;
 		ppt.djSearchTimeout = Math.max(ppt.djSearchTimeout, 30000);
 		if (ppt.nowPlayingStyle == 1) panel.image.size = 1;
-
-		ppt.autoDJFilter = panel.id.local ? ppt.autoDJFilter.replace('%rating%', '%_autorating%').trim() : ppt.autoDJFilter.trim();
+		ppt.autoDJFilter = panel.id.local ? ppt.autoDJFilter.replace('%rating% IS 1', '%_autorating% LESS 20 AND NOT %_autorating% EQUAL 0').trim() : ppt.autoDJFilter.trim();
 		if (ppt.autoDJFilterUse && ppt.autoDJFilter.length) this.filter = ppt.autoDJFilter;
 
 		this.f2 = `${panel.cachePath}lastfm\\`;
@@ -578,10 +586,13 @@ class AutoDJ {
 							if (!fb.IsMetadbInMediaLibrary(handleList[i])) affectedItems.push(i);
 						plman.ClearPlaylistSelection(pn);
 						plman.SetPlaylistSelection(pn, affectedItems, true);
+						plman.UndoBackup(pn);
 						plman.RemovePlaylistSelection(pn, false);
 					} else {
 						plman.ActivePlaylist = pl.dj();
-						if (ppt.removePlayed) pl.clear(plman.ActivePlaylist);
+						if (ppt.removePlayed) {
+							pl.clear(plman.ActivePlaylist);
+						}
 					}
 					index.libDjLoad(this.list.items, p_djType, p_djMode, this.list.query);
 					this.partLoad = true;
@@ -621,7 +632,7 @@ class AutoDJ {
 					count = !list ? 0 : list.length;
 					no = Math.min(ppt.playlistSoftModeLimit, count);
 					for (let i = 0; i < no; i++) {
-						h_ind = type != 1 && type != 3 ? index.getIndex(1, list, count, type ? 1 : 0, 0) : index.getGenreTrack(count, list, 0);
+						h_ind = type != 1 && type != 3 ? index.getIndex(1, list, count, type ? 1 : 0, 0) : index.getTrack(count, list, 0);
 						if (!this.list.query || !this.list.query.Count) return;
 						handleList.Add(this.list.query[list[h_ind].id]);
 						if (count) {
@@ -690,53 +701,74 @@ class AutoDJ {
 					return tracks.length == this.get_no(false, plman.PlaylistItemCount(pl.dj()));
 				});
 				ppt.playTracksLoaded = JSON.stringify(playTracksLoaded);
-				tracks.forEach((v, i) => yt_dj.do_youtube_search('playTracks', v.artist, v.title, i, tracks.length, pl.dj()));
+				tracks.forEach((v, i) => yt_dj.do_youtube_search('playTracks', v.artist, v.title, i, tracks.length, pl.dj(), '', '', v.vid, v.length, v.thumbnail));
 				break;
 			}
 			default: {
 				const tracks = this.get_no(this.limit, plman.PlaylistItemCount(pl.dj()));
+				const lfmRadio = ppt.lfmRadio && this.mode < 2 && this.type != 3;
 				switch (this.type == 4 ? 2 : this.type) {
 					case 0:
 						for (let i = 0; i < tracks; i++) {
-							const t_ind = index.track(this.list.items, true, '', this.mode, this.list.isCurPop);
-							yt_dj.do_youtube_search('', this.param, this.list.items[t_ind].title, i, tracks, pl.dj());
+							if (this.list.items.length) {
+								const t_ind = lfmRadio ? index.getTrack(this.list.items.length, this.list.items, 0) : index.track(this.list.items, true, '', this.mode, this.list.isCurPop);
+								const v = this.list.items[t_ind];
+								yt_dj.do_youtube_search('', this.param, v.title, i, tracks, pl.dj(), '', '', v.vid, v.length, v.thumbnail);
+								if (lfmRadio) this.list.items.splice(t_ind, 1);
+							}
 						}
 						break;
 					case 1:
 					case 3:
 						for (let i = 0; i < tracks; i++) {
-							const g_ind = index.getGenreTrack(this.list.items.length, this.list.items, 0);
-							yt_dj.do_youtube_search('', this.list.items[g_ind].artist, this.list.items[g_ind].title, i, tracks, pl.dj());
+							if (this.list.items.length) {
+								const g_ind = index.getTrack(this.list.items.length, this.list.items, 0);
+								const v = this.list.items[g_ind];
+								yt_dj.do_youtube_search('', v.artist, v.title, i, tracks, pl.dj(), '', '', v.vid, v.length, v.thumbnail);
+								if (this.type == 1 && lfmRadio) this.list.items.splice(g_ind, 1);
+							}
 						}
 						ppt.trackCount = this.list.items.length;
 						break;
 					case 2:
-						if (!ppt.useSaved)
-							for (let i = 0; i < tracks; i++) {
-								const s_ind = index.artist(this.list.items.length);
-								yt_dj.do_lfm_dj_tracks_search(this.type != 4 ? this.list.items[s_ind].name : this.list.items[s_ind], this.mode, this.type == 4 ? 2 : this.type, this.artVariety, this.songHot, this.curPop, i, tracks, pl.dj());
-							}
-						else {
-							let ft;
-							for (let l = 0; l < tracks; l++) {
-								this.list.items.some(() => {
+						if (!lfmRadio) {
+							if (!ppt.useSaved)
+								for (let i = 0; i < tracks; i++) {
 									const s_ind = index.artist(this.list.items.length);
-									const lp = this.type != 4 && $.objHasOwnProperty(this.list.items[0], 'name') ? $.clean(this.list.items[s_ind].name) : $.clean(this.list.items[s_ind]);
-									ft = this.f2 + lp.substr(0, 1).toLowerCase() + '\\' + lp + (this.curPop ? ' [curr]' : '') + '.json';
-									if (!$.file(ft)) ft = this.f2 + lp.substr(0, 1).toLowerCase() + '\\' + lp + (!this.curPop ? ' [curr]' : '') + '.json';
-									return $.file(ft);
-								});
-								if (!$.file(ft)) return this.on_dld_dj_tracks_done(false);
-								const data = $.jsonParse(ft, false, 'file');
-								if (!data) return this.on_dld_dj_tracks_done(false);
-								const cur = ft.includes(' [curr]');
-								if ($.objHasOwnProperty(data[0], 'artist')) data.shift();
-								const list = $.take(data, this.songHot).map(yt_dj.titles);
-								const art_nm = fso.GetBaseName(ft).replace(' [curr]', '');
-								if (list.length) {
-									$.sort(list, 'playcount', 'numRev');
-									const t_ind = index.track(list, false, art_nm, this.mode, cur);
-									yt_dj.do_youtube_search('', art_nm, list[t_ind].title, l, tracks, pl.dj());
+									yt_dj.do_lfm_dj_tracks_search(this.type != 4 ? this.list.items[s_ind].name : this.list.items[s_ind], this.mode, this.type == 4 ? 2 : this.type, this.artVariety, this.songHot, this.curPop, i, tracks, pl.dj());
+								}
+							else {
+								let ft;
+								for (let l = 0; l < tracks; l++) {
+									this.list.items.some(() => {
+										const s_ind = index.artist(this.list.items.length);
+										const lp = this.type != 4 && $.objHasOwnProperty(this.list.items[0], 'name') ? $.clean(this.list.items[s_ind].name) : $.clean(this.list.items[s_ind]);
+										ft = this.f2 + lp.substr(0, 1).toLowerCase() + '\\' + lp + (this.curPop ? ' [curr]' : '') + '.json';
+										if (!$.file(ft)) ft = this.f2 + lp.substr(0, 1).toLowerCase() + '\\' + lp + (!this.curPop ? ' [curr]' : '') + '.json';
+										return $.file(ft);
+									});
+									if (!$.file(ft)) return this.on_dld_dj_tracks_done(false);
+									const data = $.jsonParse(ft, false, 'file');
+									if (!data) return this.on_dld_dj_tracks_done(false);
+									const cur = ft.includes(' [curr]');
+									if ($.objHasOwnProperty(data[0], 'artist')) data.shift();
+									const list = $.take(data, this.songHot).map(yt_dj.titles);
+									const art_nm = fso.GetBaseName(ft).replace(' [curr]', '');
+									if (list.length) {
+										$.sort(list, 'playcount', 'numRev');
+										const t_ind = index.track(list, false, art_nm, this.mode, cur);
+										const v = list[t_ind];
+										yt_dj.do_youtube_search('', art_nm, v.title, l, tracks, pl.dj(), '', '', v.vid, v.length, v.thumbnail);
+									}
+								}
+							}
+						} else {
+							for (let i = 0; i < tracks; i++) {
+								if (this.list.items.length) {
+									const g_ind = index.getTrack(this.list.items.length, this.list.items, 0);
+									const v = this.list.items[g_ind];
+									yt_dj.do_youtube_search('', v.artist, v.title, i, tracks, pl.dj(), '', '', v.vid, v.length, v.thumbnail);
+									this.list.items.splice(g_ind, 1);
 								}
 							}
 						}
@@ -759,14 +791,29 @@ class AutoDJ {
 			if (ppt.npTextInfo) {
 				if (isSoftMode) {
 					const count = plman.PlaylistItemCount(plman.ActivePlaylist);
-					this.text = index.cur_find.str ? (plman.PlayingPlaylist == pl.getSoft() ? index.cur_find.str + '\n' : 'Active Playlist' + index.nm[4] + index.cur_find.str + '\n') + (index.n[2] + (count ? index.nm[4] + count + ' Tracks' : '')) : $.eval(ppt.tfNowplaying);
+					this.text = index.cur_find.str ? (plman.PlayingPlaylist == pl.getSoft() ? index.cur_find.str + '\n' : 'Active Playlist' + index.nm[4] + index.cur_find.str + '\n') + (ppt.playlistGenerator + (count ? index.nm[4] + count + ' Tracks' : '')) : $.eval(ppt.tfNowplaying);
 					if (ppt.cur_dj_mode != 3 && !ppt.playTracks) {
 						gr.GdiDrawText('\uF202', but.font.awesome, ui.col.lfmNowplaying, 3, 0, panel.w, panel.h);
 					}
 				} else {
 					const source = index.cur_dj_tag != 'locale' ? this.source : men.getDemonym(this.source) +  ' Artists';
+					const lfmRadio = ppt.lfmRadio && this.mode < 2;
 					this.text = source ? 
-					(!ppt.playTracks ? (plman.PlayingPlaylist == pl.getDJ() ? source + (this.type == 2 ? ' And Similar Artists' : '') + '\n' : 'Active Playlist' + index.nm[4] + source + (this.type == 2 ? ' And Similar Artists' : '') + '\n') + (index.n[this.mode] + index.nm[this.mode] + (ppt.trackCount ? index.nm[4] + 'Pool ' + ppt.trackCount + ' Tracks' : '')) : source) : $.eval(ppt.tfNowplaying);
+					(
+						!ppt.playTracks ? (
+							plman.PlayingPlaylist == pl.getDJ() ? 
+							source + (this.type == 2 ? ' and Similar Artists' : '') + '\n' : 
+							'Active Playlist' + index.nm[4] + source + (this.type == 2 ? ' and Similar Artists' : '') + '\n'
+						) + 
+						(
+						lfmRadio ? ppt.lfmRadioName : 
+							(
+								index.n[this.mode] + index.nm[this.mode] + 
+								(ppt.trackCount ? index.nm[4] + 'Pool ' +  ppt.trackCount + ' Tracks' : '')
+							)
+						) :
+					source /*<ppt.playTracks*/
+					) : $.eval(ppt.tfNowplaying);
 					if (ppt.cur_dj_mode != 3 && !ppt.playTracks) {
 						gr.GdiDrawText('\uF202', but.font.awesome, ui.col.lfmNowplaying, 3, 0, panel.w, panel.h);
 					}
@@ -816,7 +863,9 @@ class AutoDJ {
 		if (get_list) {
 			if (!mode) this.loadnPlay();
 			else this.searchForArtist(this.source, mode, this.type, this.artVariety, this.songHot, this.type != 1 && this.type != 3 && this.songHot < 101 && this.curPop ? true : false);
-		} else this.getNextTrack();
+		} else {
+			if (mode || !timer.yt.id) this.getNextTrack();
+		}
 	}
 
 	loadnPlay() {
@@ -826,20 +875,30 @@ class AutoDJ {
 			type = 'reload';
 		}
 		ppt.playTracks = alb.playlist.length ? true : false;
-		if (ppt.playTracks) yt_dj.execute(this.on_dld_dj_tracks_done.bind(this), '', 0, type, '', '', Math.max(this.limit, 5), '', pl.dj());
+		if (ppt.playTracks) {
+			const q = lib.partialMatch.artist && lib.partialMatch.type[1] != 0 ? ' HAS ' : ' IS ';
+			this.artists = $.getArtists(alb.playlist, q, true);
+			yt_dj.execute(this.on_dld_dj_tracks_done.bind(this), '', 0, type, '', '', Math.max(alb.limit, 5), '', pl.dj());
+			window.NotifyOthers('fp_playTracks', true);
+		}
 	}
 
 	loadSoftplaylist(handleList, source, mode, type, tag, lfmData, query, smartMix) {
-		const pln = !ppt.findSavePlaylists ? pl.soft() : plman.FindOrCreatePlaylist(`${smartMix ? ppt.playlistSmartMix : ppt.playlistGenerator}: ${source + (type == 2 ? ' And Similar Artists' : '')}`, false);
+		let pln = pl.soft();
 		pl.clear(pln);
 		plman.InsertPlaylistItems(pln, 0, handleList, false);
 		plman.ActivePlaylist = pln;
+		if (ppt.findSavePlaylists) {
+			pln = plman.FindOrCreatePlaylist(`${smartMix ? ppt.playlistSmartMix : ppt.playlistGenerator}: ${source + (type == 2 ? ' and Similar Artists' : '')}`, false);
+			pl.clear(pln);
+			plman.InsertPlaylistItems(pln, 0, handleList, false);	
+		}
 		source = tag != 'locale' ? source : men.getDemonym(source) + ' Artists';
 		index.cur_find = {
 			mode: mode,
 			query: query,
 			source: source,
-			str: source + (type == 2 ? ' And Similar Artists' : ''),
+			str: source + (type == 2 ? ' and Similar Artists' : ''),
 			tag: tag,
 			type: type
 		}
@@ -894,7 +953,7 @@ class AutoDJ {
 			case 2:
 				switch (this.type) {
 					case 0:
-						if (lib.inLibraryArt(this.source)) {
+						if (lib.inLibraryArt(this.source.toLowerCase())) {
 							this.do_lfm_lib_dj_tracks_search(this.source, this.mode, this.type, this.artVariety, this.songHot, false, this.id, 0, 0, p_tag);
 						} else return this.on_dld_dj_tracks_done(false);
 						break;
@@ -908,6 +967,7 @@ class AutoDJ {
 						j = 0;
 						data.some(v => {
 							a = this.type != 4 && $.objHasOwnProperty(data[0], 'name') ? v.name : v;
+							a = a.toLowerCase();
 							const query = q_t == ' IS ' ? name.field.artist + q_t + a : $.queryArtist(a);
 							if (lib.inLibraryArt(a)) {
 								q += (j ? ' OR ' : '') + query;
@@ -935,7 +995,7 @@ class AutoDJ {
 						timer.yt.id = setInterval(() => {
 							if (i < data.length && j < this.artVariety) {
 								a = this.type != 4 && $.objHasOwnProperty(data[0], 'name') ? data[i].name : data[i];
-								if (lib.inLibraryArt(a)) {
+								if (lib.inLibraryArt(a.toLowerCase())) {
 									this.do_lfm_lib_dj_tracks_search(a, this.mode, this.type == 4 ? 2 : this.type, this.artVariety, this.songHot, false, this.id, done, 0, p_tag);
 									j++;
 								}
@@ -949,23 +1009,25 @@ class AutoDJ {
 			case 3: {
 				if (this.type > 1 && !data) return this.on_dld_dj_tracks_done(false, '', 0, true);
 				let q = '';
+				const source = this.source.toLowerCase();
 				switch (this.type) {
 					case 0:
-						q += q_t == ' IS ' ? name.field.artist + q_t + this.source : $.queryArtist(this.source);
+						q += q_t == ' IS ' ? name.field.artist + q_t + source : $.queryArtist(source);
 						break;
 					case 1: {
 						let qAlt = '';
 						if (p_tag == 'locale') {
-							const altSource = men.getDemonym(this.source);
+							const altSource = men.getDemonym(this.source).toLowerCase();
 							qAlt = ' OR ' + name.field[p_tag].replace(/QuErY/g, ' IS ').replace(/nAmE/g, altSource)
 						}
-						q = !this.query ? name.field[p_tag].replace(/QuErY/g, ' IS ').replace(/nAmE/g, this.source) + qAlt : this.source;
+						q = !this.query ? name.field[p_tag].replace(/QuErY/g, ' IS ').replace(/nAmE/g, source) + qAlt : source;
 						break;
 					}
 					default:
 						j = 0;
 						data.some(v => {
 							a = this.type != 4 && $.objHasOwnProperty(data[0], 'name') ? v.name : v;
+							a = a.toLowerCase();
 							const query = q_t == ' IS ' ? name.field.artist + q_t + a : $.queryArtist(a);
 							if (lib.inLibraryArt(a)) {
 								q += (j ? ' OR ' : '') + query;
@@ -1049,7 +1111,7 @@ class AutoDJ {
 						this.source = index.cur_dj_source = ppt.cur_dj_source;
 						index.cur_dj_tag = ppt.cur_dj_tag;
 						this.type = index.cur_dj_type = ppt.cur_dj_type;
-						this.songHot = this.mode ? index.getRange(this.type, ppt.cur_dj_range) : '';
+						this.songHot = this.mode ? index.getRange(this.type, ppt.cur_dj_range, this.mode) : '';
 						ppt.trackCount = this.list.origCount;
 						this.text = cancel ? index.n[2] + '\nSearch Cancelled' : 'Unable To Open Auto DJ\n' + (lib_na ? 'Media Library N/A' : (p_djMode < 2 || lfm_na ? 'Unrecognised Source or Last.fm N/A' : 'Insufficient Matching Tracks In Library'));
 						txt.repaint();
@@ -1071,7 +1133,7 @@ class AutoDJ {
 					this.source = index.cur_dj_source = ppt.cur_dj_source;
 					index.cur_dj_tag = ppt.cur_dj_tag;
 					this.type = index.cur_dj_type = ppt.cur_dj_type;
-					this.songHot = this.mode ? index.getRange(this.type, ppt.cur_dj_range) : '';
+					this.songHot = this.mode ? index.getRange(this.type, ppt.cur_dj_range, this.mode) : '';
 					ppt.trackCount = this.list.origCount;
 					this.list.items = $.isArray(this.list.origItems) ? this.list.origItems.slice() : this.list.origItems.Clone();
 					this.list.index = this.list.origIndex;
@@ -1106,7 +1168,8 @@ class AutoDJ {
 				$.sort(p_title, 'playcount', 'numRev');
 				$.take(p_title, this.songHot);
 				q = '(NOT %path% HAS !!.tags) AND (';
-				const query = q_t == ' IS ' ? name.field.artist + q_t + p_artist : $.queryArtist(p_artist);
+				const a = p_artist.toLowerCase();
+				const query = q_t == ' IS ' ? name.field.artist + q_t + a : $.queryArtist(a);
 				q += query + ')';
 				if (ppt.refineLastfm) {
 					const pool = index.track(p_title, true, '', 2, false);
@@ -1212,22 +1275,15 @@ class AutoDJ {
 	}
 
 	removePlayed() {
-		if (plman.PlayingPlaylist != pl.getDJ() || ppt.playTracks) return;
-		const np = plman.GetPlayingItemLocation();
 		const pn_dj = pl.getDJ();
-		let pid;
-		if (np.IsValid) {
-			pid = np.PlaylistItemIndex;
-			if (ppt.djSaveTracks) {
-				plman.SetPlaylistSelectionSingle(pn_dj, pid, true);
-				pl.saveAutoDjTracks(pn_dj, plman.GetPlaylistSelectedItems(pn_dj));
-			}
-		}
+		if (plman.PlayingPlaylist != pn_dj || ppt.playTracks) return;
+		const np = plman.GetPlayingItemLocation();
 		if (!ppt.autoRad || !this.limit || plman.PlayingPlaylist != pn_dj) return;
 		if (plman.PlaylistItemCount(pn_dj) > this.limit - 1) {
 			if (np.IsValid) {
 				plman.ClearPlaylistSelection(pn_dj);
-				for (let i = 0; i < pid; i++) plman.SetPlaylistSelectionSingle(pn_dj, i, true);
+				for (let i = 0; i < np.PlaylistItemIndex; i++) plman.SetPlaylistSelectionSingle(pn_dj, i, true);
+				plman.UndoBackup(pn_dj);
 				plman.RemovePlaylistSelection(pn_dj, false);
 			}
 		}
@@ -1246,7 +1302,8 @@ class AutoDJ {
 	}
 
 	setDjSelection(pn) {
-		if (Date.now() - panel.add_loc.timestamp > 5000) return;
+		const play = !alb.playlist.length ? false : ppt.playTracks && ppt.playButtonPlay && alb.playlist[0].executedPlay === false && this.on();
+		if (Date.now() - panel.add_loc.timestamp > 5000 && !play) return;
 		const np = plman.GetPlayingItemLocation();
 		let pid = 0;
 		if (plman.PlayingPlaylist == pn && np.IsValid) pid = np.PlaylistItemIndex;
@@ -1257,6 +1314,11 @@ class AutoDJ {
 		plman.SetPlaylistFocusItem(pn, pid);
 		plman.ClearPlaylistSelection(pn);
 		plman.SetPlaylistSelectionSingle(pn, pid, true);
+		if (play) {
+			plman.ExecutePlaylistDefaultAction(pn, 0);
+			alb.playlist[0].executedPlay = true;
+			ppt.playTracksList = JSON.stringify(alb.playlist);
+		}
 	}
 
 	setText(p_done) {

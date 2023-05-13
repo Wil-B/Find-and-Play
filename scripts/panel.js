@@ -8,13 +8,18 @@ class Panel {
 		this.w = 0;
 		this.showLogo = ppt.btn_mode ? false : ppt.showLogo;
 		this.cachePath = `${this.storageFolder}find-&-play-cache\\`;
+		this.database = `${this.cachePath}database.db`;
+
+		this.notifyTimestamp = Date.now();
+		window.NotifyOthers('fp_notProcessor', this.notifyTimestamp);
 
 		ppt.get('Find & Play Dialog Box', JSON.stringify({
 			w: 85,
 			h: 60,
 			def_w: 85,
 			def_h: 60,
-			page: 'display'
+			page: 'display',
+			version: `v${window.ScriptInfo.Version}`
 		}));
 
 		if (!ppt.butCustIconFont.length) ppt.butCustIconFont = 'Segoe UI Symbol';
@@ -23,7 +28,6 @@ class Panel {
 		this.add_loc = {
 			alb: {},
 			idx: 0,
-			ix: 0,
 			mtags: {},
 			std: [],
 			timestamp: 0
@@ -72,11 +76,12 @@ class Panel {
 
 		if (!ppt.imgArtPth) ppt.imgArtPth = `${this.cachePath}\\art_img\\$lower($cut($meta(artist,0),1))\\$meta(artist,0)`;
 		ppt.vid_full_ctrl = $.value(ppt.vid_full_ctrl, 0, 1);
-
-		ppt.lfmReleaseType = $.value(ppt.lfmReleaseType, 0, 2);
-		ppt.mbReleaseType = $.clamp(ppt.mbReleaseType, 0, 4);
+		ppt.lfmReleaseType = $.clamp(ppt.lfmReleaseType, 0, 5);
+		ppt.mbReleaseType = $.clamp(ppt.mbReleaseType, 0, 5);
 		if (!ppt.playlistSoftModeLimit || ppt.playlistSoftModeLimit < 1) ppt.playlistSoftModeLimit = 50;
 		ppt.prefMbTracks = $.value(ppt.prefMbTracks, 1, 1);
+		if (!ppt.showSource) ppt.showYouTubeLinkSource = false;
+		if (!this.id.local) ppt.themed = false;
 
 		$.buildPth(this.storageFolder);
 		$.create(this.cachePath);
@@ -116,9 +121,9 @@ class Panel {
 		else ppt.chartDate = $.clamp(ppt.chartDate, 19521114, now);
 	}
 
-	cleanPth(pth, handle) {
+	cleanPth(pth, handle, noEval) {
 		pth = pth.trim().replace(/\//g, '\\').replace(/^%profile%\\?/i, $.tfEscape(fb.ProfilePath));
-		pth = !handle ? $.eval(pth) : FbTitleFormat(pth).EvalWithMetadb(handle);
+		if (!noEval) pth = !handle ? $.eval(pth) : FbTitleFormat(pth).EvalWithMetadb(handle);
 		if (!pth) return '';
 
 		let UNC = pth.startsWith('\\\\');
@@ -138,6 +143,10 @@ class Panel {
 		if (x < 0 || y < 0 || x > this.w || y > this.h) return;
 		alb.load(x, y, mask);
 		if (ppt.touchControl && !ppt.dblClickToggle && Math.sqrt((Math.pow(this.id.last_pressed_coord.x - x, 2) + Math.pow(this.id.last_pressed_coord.y - y, 2))) > 3 * $.scale && !ui.style.textOnly) return;
+		if (ppt.showAlb && ppt.imgBg && !ppt.btn_mode && y < search.y && !but.trace) {
+			ppt.toggle('artistView');
+			img.setBg();
+		}
 		if (txt.clickable(x, y)) {
 			this.clicked = true;
 			dj.toggleText(x, y);
@@ -146,11 +155,11 @@ class Panel {
 	}
 
 	displayLogo() {
-		return this.showLogo && !panel.halt() && ppt.showLogo;
+		return this.showLogo && !this.halt() && ppt.showLogo;
 	}
 
 	draw(gr) {
-		if (!panel.displayLogo()) return;
+		if (!this.displayLogo()) return;
 		let font = ui.font.main;
 		let str = 'POWERED by last.fm music discovery, musicbrainz, official charts, youtube and your own music.\nClick to continue. Middle click to not show again.';
 		let textHeight2;
@@ -191,7 +200,7 @@ class Panel {
 	}
 
 	getLogo() {
-		if (!panel.displayLogo()) return;
+		if (!this.displayLogo()) return;
 		this.logo.img = my_utils.getImageAsset('Logo.png');
 		if (!this.logo.img) return;
 		let scale = this.getScale(this.logo.img, this.w * Math.min(this.h * 0.8 / this.w, 0.9), this.h * 0.66);
@@ -264,12 +273,11 @@ class Panel {
 		}
 
 		let dialogWindow = ppt.get('Find & Play Dialog Box');
-		if (page !== undefined) {
-			dialogWindow = $.jsonParse(dialogWindow);
-			dialogWindow.page = page;
-			dialogWindow = JSON.stringify(dialogWindow);
-			ppt.set('Find & Play Dialog Box', dialogWindow);
-		}
+		dialogWindow = $.jsonParse(dialogWindow);
+		if (page !== undefined) dialogWindow.page = page;
+		dialogWindow.version = `v${window.ScriptInfo.Version}`;
+		dialogWindow = JSON.stringify(dialogWindow);
+		ppt.set('Find & Play Dialog Box', dialogWindow);
 		
 		if (popUpBox.isHtmlDialogSupported()) popUpBox.config(JSON.stringify(ppt), dialogWindow, ok_callback);
 		else {
@@ -281,6 +289,82 @@ class Panel {
 	on_size() {
 		this.sbar.x = this.w - this.sbar.sp;
 		this.getLogo();
+	}
+
+	processBioTags(biographyTags) {
+		if (!$.processor) return;
+		delete biographyTags.selectionMode;
+		delete biographyTags.handle;
+		
+		const artist = biographyTags.artist;
+		const album = biographyTags.album;
+
+		const db = $.jsonParse(this.database, {}, 'file');
+		const bioTags = $.getProp(biographyTags, `tags`, {});
+
+		let artistUpdated = false;
+		let albumUpdated = false;
+
+		if (artist) {
+			const curArtist = $.getProp(db, `${artist}.ARTIST TAGS`, {});
+
+			//for (const [key_, value] of Object.entries(bioTags)) { // insert missing
+			for (const key_ of Object.keys(bioTags)) { // insert missing
+				if (!/Album/.test(key_)) {
+					if (!curArtist[key_]) {
+						curArtist[key_] = bioTags[key_];
+						artistUpdated = true;
+					}
+				}
+			}
+
+			for (const [key_, value] of Object.entries(curArtist)) { // check cur up to date
+				if (!/Album/.test(key_)) {
+					if ($.isArray(value) && !$.equal(value, bioTags[key_]) || typeof value === 'string' && value != bioTags[key_]) {
+						curArtist[key_] = bioTags[key_];
+						artistUpdated = true;
+					}
+				}
+			}
+			
+			if (artistUpdated) {
+				if (db[artist] === undefined) db[artist] = {}
+				db[artist]['ARTIST TAGS'] = $.sortKeys(curArtist);
+			}
+		}
+
+		if (album) {
+			const curAlbum = $.getProp(db, `${artist}.ALBUM TAGS.${album}`, {});
+
+			//for (const [key_, value] of Object.entries(bioTags)) { // insert missing
+			for (const key_ of Object.keys(bioTags)) { // insert missing
+				if (/Album/.test(key_)) {
+					if (!curAlbum[key_]) {
+						curAlbum[key_] = bioTags[key_];
+						albumUpdated = true;
+					}
+				}
+			}
+
+			for (const [key_, value] of Object.entries(curAlbum)) { // check cur up to date
+				if (/Album/.test(key_)) {
+					if ($.isArray(value) && !$.equal(value, bioTags[key_]) || typeof value === 'string' && value != bioTags[key_]) {
+						curAlbum[key_] = bioTags[key_];
+						albumUpdated = true;
+					}
+				}
+			}
+			
+			if (albumUpdated) {
+				if (db[artist] === undefined) db[artist] = {}
+				if (db[artist]['ALBUM TAGS'] === undefined) db[artist]['ALBUM TAGS'] = {}
+				db[artist]['ALBUM TAGS'][album] = $.sortKeys(curAlbum);
+			}
+		}
+
+		if (artistUpdated || albumUpdated) {
+			$.save(this.database, JSON.stringify($.sortKeys(db), null, 1), true);
+		}
 	}
 
 	replaceAt(str, pos, chr) {
@@ -301,6 +385,7 @@ class Panel {
 
 		this.url.chart = `https://www.officialcharts.com/charts/singles-chart/`;
 		this.url.lfm = `http://ws.audioscrobbler.com/2.0/?format=json${lfm}`;
+		this.url.lfmPlayer = `https://www.last.fm/player/station/`;
 		this.url.mb = `https://musicbrainz.org/ws/2/`;
 		this.url.yt_api = `https://www.googleapis.com/youtube/v3/`;
 		this.url.yt_web1 = `https://www.youtube.com/youtubei/v1/search?${yt}`;

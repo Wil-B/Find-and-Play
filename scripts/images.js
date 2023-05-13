@@ -3,10 +3,12 @@
 class Images {
 	constructor() {
 		this.artist = '';
+		this.bg = null;
 		this.blur = null;
 		this.cur_handle = null;
 		this.cur = null;
 		this.get = true;
+		this.imgBgOpacity = ppt.imgBgOpacity / 100 * 255;
 		this.init = true;
 		this.nh = 10;
 		this.noimg = [];
@@ -77,6 +79,15 @@ class Images {
 		this.style = {
 			alpha: 255,
 			circular: false
+		}
+
+		this.themedImg = {
+			cur: null,
+			h: 0,
+			id: [],
+			w: 0,
+			wh: 0,
+			ww: 0
 		}
 
 		this.touch = {
@@ -151,7 +162,7 @@ class Images {
 	}
 
 	blurCheck() {
-		if (!(ppt.covBlur && ui.style.isBlur) && !ppt.imgSmoothTrans) return;
+		if (!(ppt.covBlur && ui.style.isBlur) && !ppt.imgSmoothTrans || ppt.themed) return;
 		this.id.cur_blur = this.id.blur;
 		this.id.blur = !$.eval('[%album%]') ? $.eval('%album artist%%path%') : $.eval('%album artist%%album%%discnumber%%date%');
 		if (this.id.blur != this.id.cur_blur) this.cov.newBlur = true;
@@ -167,7 +178,7 @@ class Images {
 			this.cov.newBlur = false;
 			if (this.cov.blur && !ppt.blurAutofill) this.cov.blur = this.cov.blur.Resize(panel.w, panel.h);
 		}
-		if (ppt.covBlur && ui.style.isBlur && ppt.artistView && this.cov.blur) image = this.cov.blur;
+		if (ppt.covBlur && ui.style.isBlur && ppt.artistView && this.cov.blur) image = this.cov.blur.Clone(0, 0, this.cov.blur.Width, this.cov.blur.Height); // clone to stop blurring same img more than once
 		image = ppt.blurAutofill ? this.format(image, 'crop', panel.w, panel.h, 'blurAutofill', o) : this.format(image, 'stretch', panel.w, panel.h, 'blurStretch', o);
 		const blurImg = $.gr(panel.w, panel.h, true, (g, gi) => {
 			g.SetInterpolationMode(0);
@@ -191,6 +202,7 @@ class Images {
 				}
 			}
 		});
+		
 		return blurImg;
 	}
 
@@ -234,7 +246,7 @@ class Images {
 		const font2 = gdi.Font('Segoe UI', 120, 1);
 		const font3 = gdi.Font('Segoe UI', 200, 1);
 		const font4 = gdi.Font('Segoe UI', 90, 1);
-		const tcol = !ui.blur.dark && !ui.blur.light || !ppt.imgBorder ? ui.col.text : ui.dui ? window.GetColourDUI(0) : window.GetColourCUI(0);
+		const tcol = ui.col.text;
 		const sz = 600;
 		for (let i = 0; i < 3; i++) {
 			this.noimg[i] = $.gr(sz, sz, true, g => {
@@ -263,9 +275,13 @@ class Images {
 
 	draw(gr) {
 		if (this.get && panel.video.mode && !ppt.showAlb) panel.setVideo();
-		if (!panel.image.show || ppt.showAlb && !ui.style.isBlur) return;
-		if (ui.style.isBlur && this.blur) gr.DrawImage(this.blur, 0, 0, this.blur.Width, this.blur.Height, 0, 0, this.blur.Width, this.blur.Height);
+		if (!panel.image.show || ppt.showAlb && !ui.style.isBlur && !ppt.imgBg) return;
+		if (ui.style.isBlur) {
+			const bImg = !this.themed ? this.blur : this.themed;
+			if (bImg) gr.DrawImage(bImg, 0, 0, bImg.Width, bImg.Height, 0, 0, bImg.Width, bImg.Height);
+		}
 		if (this.get) return this.getImgFallback();
+		if (ppt.imgBg && this.bg && ppt.showAlb) gr.DrawImage(this.bg, 0, 0, this.bg.Width, this.bg.Height, 0, 0, this.bg.Width, this.bg.Height, 0, this.imgBgOpacity);
 		if (!ppt.showAlb && (!panel.video.show || !panel.isVideo()) && this.cur && !ui.style.textOnly) gr.DrawImage(this.cur, this.x, this.y, this.cur.Width, this.cur.Height, 0, 0, this.cur.Width, this.cur.Height, 0, this.style.alpha);
 	}
 
@@ -275,6 +291,7 @@ class Images {
 		let iw = image.Width;
 		let ih = image.Height
 		switch (type) {
+			case 'bg':
 			case 'circular':
 			case 'crop': {				
 				const s1 = iw / w;
@@ -287,6 +304,10 @@ class Images {
 					iy = Math.round((image.Height - ih) / 8);
 				}
 				image = image.Clone(ix, iy, iw, ih);
+				if (type == 'bg') {
+					image = image.Resize(w, h, 2);
+					return image;
+				}
 				if (caller == 'blurAutofill') return image;
 				if (type == 'circular') this.circularMask(image, image.Width, image.Height);
 				if (!border) image = image.Resize(w, h, 2);
@@ -447,7 +468,7 @@ class Images {
 			freqTot += v.freq;
 		});
 		const avgCol = [$.clamp(Math.round(Math.sqrt(rTot / freqTot)), 0, 255), $.clamp(Math.round(Math.sqrt(gTot / freqTot)), 0, 255), $.clamp(Math.round(Math.sqrt(bTot / freqTot)), 0, 255)];
-		return ui.getSelCol(avgCol, true, true) == 50 ? true : false;
+		return ui.isLightCol(avgCol, true) ? true : false;
 	}
 
 	isColOk(c) {
@@ -571,7 +592,7 @@ class Images {
 
 	on_playback_new_track() {
 		panel.checkVideo();
-		if (ui.style.textOnly && !ui.style.isBlur || ppt.showAlb && !ui.style.isBlur || panel.block()) {
+		if (ui.style.textOnly && !ui.style.isBlur || ppt.showAlb && !ui.style.isBlur && !ppt.imgBg || panel.block()) {
 			this.get = true;
 		} else {
 			if (panel.video.mode && !ppt.showAlb) panel.setVideo();
@@ -588,7 +609,7 @@ class Images {
 
 	on_playback_dynamic_track() {
 		timer.clear(timer.vid);
-		if (!panel.image.show || ppt.showAlb && !ui.style.isBlur || panel.block()) this.get = true;
+		if (!panel.image.show || ppt.showAlb && !ui.style.isBlur && !ppt.imgBg || panel.block()) this.get = true;
 		else {
 			if (ppt.artistView && ppt.cycPhoto) {
 				timer.image();
@@ -638,9 +659,13 @@ class Images {
 		});
 	}
 
-	process(image, o) {
-		let type = !this.style.circular ? 'default' : 'circular';
+	process(image, o, bg) {
+		let type = !bg ? (!this.style.circular ? 'default' : 'circular') : 'bg';
 		switch (type) {
+			case 'bg':
+				this.im.w = panel.w;
+				this.im.h = panel.h;
+				break;
 			case 'circular':
 				this.im.w = this.im.h = Math.min(this.nw, this.nh);
 				break;
@@ -649,7 +674,7 @@ class Images {
 				this.im.h = this.nh;
 				break;
 		}
-		return this.format(image, type, this.im.w, this.im.h, 'img', o, this.isBlur(image), ppt.imgBorder || ppt.imgShadow, ppt.imgReflection);
+		return this.format(image, type, this.im.w, this.im.h, 'img', o, !ppt.themed ? this.isBlur(image) : false, ppt.imgBorder || ppt.imgShadow, ppt.imgReflection);
 	}
 
 	reflImage(image, x, y, w, h, o) {
@@ -681,6 +706,19 @@ class Images {
 
 	set() {
 		this.style.circular = ppt.artistView && ppt.artCirc || !ppt.artistView && ppt.covCirc;
+	}
+
+	setBg() {
+		this.set('circular');
+		if (ppt.artistView && ppt.cycPhoto) {
+			this.art.done = false;
+			this.getArtImg(this.artistReset());
+			timer.image();
+		} else {
+			this.getFbImg();
+			timer.clear(timer.img);
+		}
+		this.updSeeker();
 	}
 
 	setReflStrength(n) {
@@ -739,6 +777,7 @@ class ImageCache {
 			if (this.type && this.memoryLimit()) this.checkCache();
 			const start = Date.now();
 			const o = this.cache[key] = {};
+			if (ppt.imgBg) o.bg = img.bg = img.process(image, o, 'bg');
 			o.img = img.cur = img.process(image, o);
 			o.time = Date.now() - start;
 			this.pth = key;
@@ -757,6 +796,7 @@ class ImageCache {
 		img.y = o.y;
 		if (ui.style.isBlur && o.blur) img.blur = o.blur;
 		img.cur = o.img;
+		img.bg = o.bg;
 		this.pth = key;
 		img.paint();
 		return true;
@@ -875,7 +915,7 @@ class Seeker {
 		}
 	}
 
-	lbtn_dn(p_x, p_y) {
+	lbtn_dn(p_x) {
 		this.dn = false;
 		this.down = true;
 		if (this.imgSeeker) {

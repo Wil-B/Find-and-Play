@@ -7,6 +7,7 @@ class Search {
 		this.end = 0;
 		this.font = gdi.Font('Segoe UI', 16, 0);
 		this.lg = [];
+		this.ctrl = false;
 		this.cursor = false;
 		this.cx = 0;
 		this.lbtnDn = false;
@@ -21,6 +22,7 @@ class Search {
 		this.y = ppt.bor * 0.625 + 8;
 		this.w1 = 75;
 		this.w2 = 75;
+		this.w3 = 75;
 		this.h = 16;
 
 		this.bg = {
@@ -51,11 +53,12 @@ class Search {
 				this.offset = this.start = this.end = this.cx = 0;
 				this.text = '';
 				if (!ppt.mb) alb.sortLfm();
-				alb.setNames([alb.names.lfm[ppt.lfmReleaseType], alb.names.mb[ppt.mbReleaseType], alb.names.chart][ppt.mb]);
-				if (!ppt.mb) alb.names.list.forEach(v => v.playcount = alb.numFormat(v.playcount));
+				alb.setNames([alb.names.lfm[alb.lfmType(ppt.lfmReleaseType)], alb.names.mb[ppt.mbReleaseType], alb.names.chart, alb.names.lfm[alb.lfmType(ppt.lfmReleaseType)]][ppt.mb]);
+				if (!ppt.mb && (ppt.lfmReleaseType < 2 || ppt.lfmReleaseType == 3 && alb.lfmTagType == 5)) alb.names.list.forEach(v => v.playcount = alb.numFormat(v.playcount));
 				break;
 			case 'search':
 				if (ppt.mb == 2) return;
+				alb.lastItemId = '';
 				if (this.text) {
 					alb.art.search = false;
 					this.offset = this.start = this.end = this.cx = 0;
@@ -63,7 +66,7 @@ class Search {
 					this.cursorTimer(true);
 					this.text = '';
 				} else {
-					this.text = !alb.songsMode() ? alb.artist : alb.artist_title;
+					this.text = this.setText();
 					alb.clearAlbums()
 					alb.on_playback_new_track();
 				}
@@ -92,6 +95,7 @@ class Search {
 
 	drawSearch(gr) {
 		if (panel.halt()) return;
+		this.text = this.text || '';
 		this.start = $.clamp(this.start, 0, this.text.length);
 		this.end = $.clamp(this.end, 0, this.text.length);
 		this.cx = $.clamp(this.cx, 0, this.text.length);
@@ -102,7 +106,7 @@ class Search {
 		this.getOffset(gr);
 		gr.GdiDrawText(this.text.substr(this.offset), this.font, ui.col.head, this.x + this.releaseWidth(), font_y, this.w1 - this.releaseWidth(), alb.row.h, ppt.mb == 2 ? txt.l : txt.ls);
 		this.drawcursor(gr);
-		gr.DrawLine(this.x, alb.names.line.y, this.x + this.w2 - [alb.names.item.w.lfm + (ppt.showSource ? alb.names.item.w.pos : 0), 0, alb.names.item.w.chart][ppt.mb], alb.names.line.y, ui.style.l_w, ui.col.lineAlb);
+		gr.DrawLine(this.x, alb.names.line.y, this.x + this.w3, alb.names.line.y, ui.style.l_w, ui.col.lineAlb);
 	}
 
 	drawcursor(gr) {
@@ -160,7 +164,7 @@ class Search {
 	}
 
 	lbtn_dn(x, y) {
-		if (!ppt.showAlb || panel.halt() || ppt.mb == 2 && this.type == 'search') return;
+		if (!ppt.showAlb || panel.halt() || ppt.mb == 2 && this.type == 'search' || !ppt.mb && ppt.lfmReleaseType > 3 && this.type == 'search') return;
 		this.repaint();
 		this.active = this.lbtnDn = (y > this.y && y < this.y + this.h && x >= this.bg.x && x < this.bg.x + this.bg.w);
 		if (ppt.touchControl) ui.touch_dn_id = alb.get_ix(x, y);
@@ -276,6 +280,27 @@ class Search {
 					this.start = this.cx;
 					this.end = this.start;
 					break;
+				case vk.ctrlBackspace:
+					this.record();
+					if (this.start != this.end) this.cx = this.end = this.start;
+					if (this.cx > 0) {
+						const initial = this.text.length;
+						const leftSide = this.text.slice(0, this.cx).trimEnd();
+						let boundary = 0;
+						for (let k = 0; k < leftSide.length; k++) {
+							if (this.text[k] == ' ' && this.text[k + 1] != ' ') boundary = k + 1;
+						}
+						this.text = leftSide.slice(0, boundary) + this.text.slice(this.cx).trimStart()
+						this.cx = boundary;
+						
+						if (this.offset > 0) {
+							this.offset -= initial - this.text.length;
+						}
+					}
+					this.offset = this.offset >= this.end - this.start ? this.offset - this.end + this.start : 0;
+					this.start = this.cx;
+					this.end = this.start;
+					break;
 				case 'delete':
 					this.record();
 					if (this.start == this.end) {
@@ -318,19 +343,19 @@ class Search {
 						this.text = this.text.substring(0, this.start) + input + this.text.substring(this.end);
 						this.offset = this.offset >= this.end - this.start ? this.offset - this.end + this.start : 0;
 						this.cx = this.start + input.length;
-						this.start = this.cx;
-						this.end = this.start;
+						this.end = this.start = this.cx;
 					} else {
 						this.text = this.text.substring(0, this.end) + input + this.text.substring(this.start);
 						this.offset = this.offset < this.end - this.start ? this.offset - this.end + this.start : 0;
 						this.cx = this.end + input.length;
-						this.start = this.cx;
-						this.end = this.start;
+						this.end = this.start = this.cx;
 					}
 					break;
 			}
-			if (this.type == 'search') alb.chooseArtist(this.text);
-			else {
+			if (this.type == 'search') {
+				if (ppt.mb == 3) ppt.lfmUserName = this.text;
+				alb.chooseArtist(this.text);
+			} else {
 				but.setSearchBtnsHide();
 				alb.setFilter(this.text);
 			}
@@ -346,19 +371,48 @@ class Search {
 				this.shift = true;
 				this.shift_x = this.cx;
 				break;
+			case vk.ctrl:	
+				this.ctrl = true;
+				break;
 			case vk.left:
 			case vk.right:
 				if (!this.active) break;
 				if (vkey == vk.left) {
-					if (this.offset > 0) {
-						if (this.cx <= this.offset) {
-							this.offset--;
-							this.cx--;
-						} else this.cx--;
-					} else if (this.cx > 0) this.cx--;
-					this.start = this.end = this.cx
+					if (!this.ctrl) {
+						if (this.offset > 0) {
+							if (this.cx <= this.offset) {
+								this.offset--;
+								this.cx--;
+							} else this.cx--;
+						} else if (this.cx > 0) this.cx--;
+					} else {
+						let boundary = 0;
+						for (let k = this.cx - 1; k > 0; k--) {
+							if (this.text[k] != ' ' && this.text[k - 1] == ' ') {
+								boundary = k;
+								break;
+							}
+						}
+						if (this.offset > 0) {
+							this.offset -= (this.cx - boundary);
+						}
+						this.cx = boundary;
+						this.offset = this.offset >= this.end - this.start ? this.offset - this.end + this.start : 0;
+					}
 				}
-				if (vkey == vk.right && this.cx < this.text.length) this.cx++;
+				if (vkey == vk.right && this.cx < this.text.length) {
+					if (!this.ctrl) this.cx++;
+					else {
+						let boundary = this.text.length;
+						for (let k = this.cx; k < this.text.length; k++) {
+							if (this.text[k] == ' ' && this.text[k + 1] != ' ') {
+								boundary = k + 1;
+								break;
+							}
+						}
+						this.cx = boundary;
+					}
+				}
 				this.start = this.end = this.cx;
 				if (this.shift) {
 					this.start = Math.min(this.cx, this.shift_x);
@@ -383,7 +437,23 @@ class Search {
 				}
 				break;
 			case vk.del:
-				this.on_char('delete');
+				if (this.ctrl && !this.shift && this.start == this.end) {
+					this.record();
+					const initial = this.text.length;
+					const leftSide = this.text.slice(0, this.cx);
+					const rightSide = this.text.slice(this.cx, this.text.length).trimStart();
+					const idx = rightSide.search(/ \b/);
+					const boundary = idx == -1 ? rightSide.length : idx + 1;
+					let newRightSide = rightSide.slice(boundary);
+					if (newRightSide.length && !/\s$/.test(leftSide) && !/^\s/.test(newRightSide)) newRightSide = ' ' + newRightSide;
+					this.text = leftSide + newRightSide;
+					this.cx = !/\s$/.test(leftSide) ? leftSide.length + 1 : leftSide.length;
+					if (this.offset > 0) {
+						this.offset -= initial - this.text.length;
+					}
+					this.offset = this.offset >= this.end - this.start ? this.offset - this.end + this.start : 0;
+					this.start = this.end = this.cx;
+				} else this.on_char('delete');
 				break;
 		}
 		this.repaint();
@@ -400,6 +470,9 @@ class Search {
 
 	on_key_up(vkey) {
 		if (!ppt.showAlb || panel.halt()) return;
+		if (vkey == vk.ctrl) {
+			this.ctrl = false;
+		}
 		if (vkey == vk.shift) {
 			this.shift = false;
 			this.shift_x = this.cx;
@@ -409,7 +482,7 @@ class Search {
 	metrics() {
 		switch (this.type) {
 			case 'filter': {
-				const paddingRight = [but.b.x - but.b.w1 * 4.64, but.b.x - but.b.w1 * 6.45, but.b.x - but.b.w1 * 5.52][ppt.mb];
+				const paddingRight = [but.b.x - but.b.w1 * 8.23 - but.tagOffset - but.userOffset, but.b.x - but.b.w1 * 9.77 - but.lbOffset, but.b.x - but.b.w1 * 6.06][ppt.mb];
 				this.font = ui.font.filterB;
 				this.x = paddingRight - but.b.w1 * 2.75 + but.b.w1 * 0.1;
 				this.y = but.b.y2;
@@ -428,7 +501,10 @@ class Search {
 				this.x = alb.x;
 				this.w2 = alb.w;
 				this.h = alb.row.h;
-				
+				this.w3 = this.w2 - [
+					alb.statistics.show(ppt.lfmReleaseType) ? alb.names.item.w.lfm + (ppt.showSource ? alb.names.item.w.pos : 0) : alb.names.item.w.chart, 
+					ppt.mbReleaseType != 5 ? 0 : alb.statistics.show(6) ? alb.names.item.w.lfm + (ppt.showSource ? alb.names.item.w.pos : 0) : alb.names.item.w.chart, 
+					alb.names.item.w.chart][ppt.mb];
 				this.bg.x = this.x;
 				this.bg.w = this.w2;
 				break;
@@ -447,11 +523,11 @@ class Search {
 	}
 
 	releaseType() {
-		return [alb.type.lfm[ppt.lfmReleaseType], alb.type.mb[ppt.mbReleaseType], 'Singles Chart'][ppt.mb] + ':';
+		return [alb.type.lfm[ppt.lfmReleaseType] + (ppt.lfmReleaseType != 4 ? ':' : ''), alb.type.mb[ppt.mbReleaseType] + (ppt.mbReleaseType != 5 ? ':' : ''), 'Singles Chart', 'User Name'][ppt.mb];
 	}
 
 	releaseWidth() {
-		return this.type == 'filter' ? 0 : [this.lfm_rel.w[ppt.lfmReleaseType], this.mb_rel.w[ppt.mbReleaseType], this.chart_rel_w][ppt.mb] + alb.names.item.w.sp;
+		return this.type == 'filter' ? 0 : [this.lfm_rel.w[ppt.lfmReleaseType], this.mb_rel.w[ppt.mbReleaseType], this.chart_rel_w, this.user_rel_w][ppt.mb] + alb.names.item.w.sp;
 	}
 
 	repaint() {
@@ -460,7 +536,7 @@ class Search {
 	}
 
 	setText(ns) {
-		this.text = ns ? ns : alb.songsMode() ? alb.artist_title : ppt.mb == 2 ? `${alb.chartDate}` : alb.artist;
+		this.text = ns ? ns : alb.searchText();
 		if (!ns) {
 			this.active = false;
 			this.offset = this.start = this.end = this.cx = 0;

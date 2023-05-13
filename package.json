@@ -1,9 +1,9 @@
 ﻿{
   "author": "WilB",
-  "description": "Feature rich plug-in that finds and plays music. Works great with youtube and your own media library.\r\n\r\nPOWERED by last.fm music discovery, MusicBrainz, Official Charts, YouTube & your own media library.\r\n\r\n• Media library and YouTube track manager\r\n\r\n• Intelligent playlist generator\r\n\r\n• AutoDJ\r\n\r\n• Popularity tagger",
+  "description": "Feature rich media manager and browser for foobar2000 that integrates your music library with web resources.",
   "enableDragDrop": false,
   "id": "{F5E9D9EB-42AD-4A47-B8EE-C9877A8E7851}",
   "name": "Find & Play",
   "shouldGrabFocus": true,
-  "version": "1.2.1"
+  "version": "1.4.0"
 }

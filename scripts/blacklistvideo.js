@@ -5,6 +5,9 @@ class BlacklistVideo {
 		this.artist = '';
 		this.black_list = [];
 		this.fn = `${panel.storageFolder}blacklist_video.json`;
+		
+		this.id = [];
+		
 		this.remove = true;
 		this.undo = [];
 	}
@@ -24,5 +27,11 @@ class BlacklistVideo {
 		this.list(clean_artist);
 		if (!this.black_list.length || !this.black_list.includes(id)) return false;
 		return true;
+	}
+	
+	blackListedIds() {
+		if (!$.file(this.fn)) return this.id = [];
+		const bl = $.open(this.fn);
+		return [...bl.matchAll(/v=[a-zA-Z0-9-_]{11}/g)].flat();
 	}
 }

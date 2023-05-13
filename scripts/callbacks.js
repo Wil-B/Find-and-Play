@@ -67,8 +67,19 @@ function on_item_focus_change() {
 }
 
 function on_library_items_added(handleList) {
-	lib.update.artists = true;
+	lib.update.artists = true; 
 	lib.update.library = true;
+	if (alb.v2_init) {
+		alb.v2_init = false;
+		if (ppt.mtagsInstalled) {
+			lib.getArtistTracks(name.artist());
+		}
+		lib.getAlbumMetadb();
+		ml.execute();
+		alb.get = true;
+		alb.getAlbumsFallback();
+		return;
+	}
 	handleList.Convert().some(h => {
 		if (h.Path.endsWith('!!.tags')) {
 			lib.getAlbumMetadb(true);
@@ -103,7 +114,7 @@ function on_metadb_changed() {
 		img.focusLoad();
 		img.focusServer();
 	}
-	alb.metadbServer(); 
+	alb.metadbServer(true); 
 }
 
 function on_mouse_lbtn_dblclk(x, y, mask) {
@@ -174,17 +185,22 @@ function on_mouse_leave() {
 }
 
 function on_mouse_mbtn_down(x, y) {
-	if (panel.displayLogo()) return;
+	if (panel.displayLogo() || but.btns['play'].trace(x, y)) return;
 	alb.mbtn_dn(x, y);
 }
 
 function on_mouse_mbtn_up(x, y, mask) {
+	// hacks at default settings blocks on_mouse_mbtn_up, at least in windows; workaround configure hacks: main window > move with > caption only & ensure pseudo-caption doesn't overlap buttons
 	if (panel.showLogo) {
 		ppt.showLogo = false;
 		window.Repaint();
 		return;
 	}
 	if (panel.displayLogo()) return;
+	if (but.btns['play'].trace(x, y)) {
+		alb.mbtn_up(x, y);
+	}
+	alb.move(x, y);
 	alb.load(x, y, mask, true);
 	dj.mbtn_up(x, y);
 }
@@ -222,7 +238,7 @@ function on_mouse_wheel(step) {
 	switch (utils.IsKeyPressed(0x11)) {
 		case false:
 			if (panel.halt()) break;
-			if (!ppt.showAlb && panel.image.show) img.wheel(step);
+			if (!ppt.showAlb && panel.image.show || ppt.showAlb && ppt.imgBg && !ppt.btn_mode && panel.m.y < search.y && !but.trace) img.wheel(step);
 			if (!ppt.showAlb && panel.image.show || !alb.scrollbarType()) break;
 			alb.scrollbarType().wheel(step, false);
 			break;
@@ -237,6 +253,48 @@ function on_notify_data(name, info) {
 	if (info == 'bio_blacklist') {
 		img.blackList.artist = '';
 		img.chkArtImg();
+	} else switch (name) {
+		case 'fp_autoDj':
+		case 'fp_playTracks':
+			ppt.autoRad = false;
+			ppt.playTracks = false;
+			break;
+		case 'fp_notProcessor': {
+			const recTimestamp = info;
+			if (recTimestamp >= panel.notifyTimestamp) {
+				$.processor = false;
+			}
+			break;
+		}
+		case 'fp_scriptUnload':
+			$.processor = true;
+			panel.notifyTimestamp = Date.now();
+			window.NotifyOthers('fp_notProcessor', panel.notifyTimestamp);
+			break;
+		case 'newThemeColours':
+			if (!ppt.themed) break;
+			ppt.theme = info.theme;
+			ppt.themeBgImage = info.themeBgImage;
+			ppt.themeColour = info.themeColour;
+			on_colours_changed();
+			break;
+		case 'Sync col': {
+			if (!ppt.themed) break;
+			const themeLight = ppt.themeLight;
+			if (themeLight != info.themeLight) {
+				ppt.themeLight = info.themeLight;		
+				on_colours_changed();
+			}
+			break;
+		}
+		case'Sync image':
+			if (!ppt.themed) break;
+			sync.image(new GdiBitmap(info.image), info.id);
+			break;
+		case 'biographyTags':
+			if (!ppt.integrateBio) break;
+			panel.processBioTags(JSON.parse(JSON.stringify(info).replace(/Last\.fm/g, 'Lastfm')));
+			break;
 	}
 }
 
@@ -296,31 +354,33 @@ function on_playback_time(pbt) {
 }
 
 function on_playlist_items_added(pn) {
-	if (Object.keys(yt_dj.start).length && (pn == pl.getDJ() || pl.selection())) {
-		const handleList = plman.GetPlaylistItems(pn);
-		handleList.Convert().forEach((h) => {
-			let key = h.Path.slice(-11);
-			if (yt_dj.start[key]) {
-				yt_dj.loadTime.push(Date.now() - yt_dj.start[key]);
-				delete yt_dj.start[key];
-				if (yt_dj.loadTime.length > 10) yt_dj.loadTime.shift();
-			}
-		});
+	if (pn == pl.getDJ()) {
+		yt_dj.added = true;
+		if (!yt_dj.timer) yt_dj.runAddLoc(panel.add_loc.std);
+		dj.setDjSelection(pn);
+		pl.saveDjTracks(pn);
 	}
-	if (pn == pl.getDJ()) dj.setDjSelection(pn);
-	on_item_focus_change();
+	if (pn == pl.selection()) yt_dj.added = true;
 	if (pn == pl.cache()) lib.getAlbumMetadb();
+	else on_item_focus_change();
 }
 
 function on_playlist_items_removed(pn) {
-	on_item_focus_change();
 	if (pn == pl.cache()) lib.getAlbumMetadb();
+	else on_item_focus_change();
 }
 
 function on_playlist_switch() {
 	on_item_focus_change();
 }
 
+function on_script_unload() {
+	if ($.processor) {
+		window.NotifyOthers('fp_scriptUnload', 0);
+	}
+}
+
+const windowMetricsPath = `${fb.ProfilePath}settings\\themed\\windowMetrics.json`;
 function on_size() {
 	txt.rp = false;
 	panel.w = window.Width;
@@ -329,7 +389,11 @@ function on_size() {
 	const scrollBars = [alb_scrollbar, art_scrollbar];
 	const scrollPos = scrollBars.map(v => v.scroll);
 	panel.on_size();
-	ui.getFont();
+	ui.getParams();
+	if (ppt.themed && ppt.theme) {
+		const themed_image = `${fb.ProfilePath}settings\\themed\\themed_image.bmp`;	
+		if ($.file(themed_image)) sync.image(gdi.Image(themed_image));
+	}
 	tooltip.SetMaxWidth(Math.max(panel.w, 800));
 	but.refresh(true);
 	filter.metrics();
@@ -338,4 +402,12 @@ function on_size() {
 	dj.on_size();
 	scrollBars.forEach((v, i) => v.setScroll(scrollPos[i]));
 	txt.rp = true;
+	
+	if (!ppt.themed) return;
+	const windowMetrics = $.jsonParse(windowMetricsPath, {}, 'file');
+	windowMetrics[window.Name] = {
+		w: panel.w,
+		h: panel.h
+	}
+	$.save(windowMetricsPath, JSON.stringify(windowMetrics, null, 3), true);
 }

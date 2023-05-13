@@ -20,6 +20,7 @@ const WshShell = new ActiveXObject('WScript.Shell');
 class Helpers {
 	constructor() {
 		this.diacriticsMap = {};
+		this.processor = true;
 		this.scale = this.getDpi();
 
 		this.createDiacriticsMap();
@@ -74,7 +75,12 @@ class Helpers {
 		var o,u,a,c,v,f,d=0,m=!1,j=!1,n=!0;if('function'!=typeof e)throw new TypeError('debounce: invalid function');function T(i){var n=o,t=u;return o=u=void 0,d=i,c=e.apply(t,n)}function b(i){var n=i-f;return void 0===f||r<=n||n<0||j&&a<=i-d}function l(){var i,n,t=Date.now();if(b(t))return w(t);v=setTimeout(l,(n=r-((i=t)-f),j?Math.min(n,a-(i-d)):n))}function w(i){return v=void 0,n&&o?T(i):(o=u=void 0,c)}function t(){var i,n=Date.now(),t=b(n);if(o=arguments,u=this,f=n,t){if(void 0===v)return d=i=f,v=setTimeout(l,r),m?T(i):c;if(j)return v=setTimeout(l,r),T(f)}return void 0===v&&(v=setTimeout(l,r)),c}return r=parseFloat(r)||0,this.isObject(i)&&(m=!!i.leading,a=((j='maxWait'in i))?Math.max(parseFloat(i.maxWait)||0,r):a,n='trailing'in i?!!i.trailing:n),t.cancel=function(){void 0!==v&&clearTimeout(v),o=f=u=v=void(d=0)},t.flush=function(){return void 0===v?c:w(Date.now())},t;
 	}
 
+	difference(arr1, arr2) {
+		return arr1.filter(v => !arr2.includes(v));
+	}
+
 	equal(arr1, arr2) {
+		if (!this.isArray(arr1) || !this.isArray(arr2)) return false;
 		let i = arr1.length;
 		if (i != arr2.length) return false;
 		while (i--)
@@ -87,16 +93,30 @@ class Helpers {
 		const tfo = FbTitleFormat(n);
 		if (panel.isRadio()) return tfo.Eval();
 		if (focus === undefined) focus = ppt.focus;
-		const handle = $.handle(focus);
+		const handle = this.handle(focus);
 		return handle ? tfo.EvalWithMetadb(handle) : '';
 	}
 
 	file(f) {
-		return fso.FileExists(f);
+		return typeof f === 'string' && fso.FileExists(f);
 	}
 
 	folder(fo) {
-		return fso.FolderExists(fo);
+		return typeof fo === 'string' && fso.FolderExists(fo);
+	}
+
+	getArtists(list, q, pl) {
+		let libQuery = '';
+		let plQuery = '';
+		[...new Set(list.map(v => v.artist.toLowerCase()))].forEach((v, i) => {
+			const query = q == ' IS ' ? name.field.artist + q + v : this.queryArtist(v);
+			libQuery += (i ? ' OR ' : '') + query;
+			if (pl) plQuery += (i ? ' OR ' : '') + name.field.artist + q + v;
+		});
+		return {
+			...pl && {plHandles: this.query(lib.db.cache, plQuery)},
+			libHandles: this.query(lib.getLibItems(), libQuery)
+		}
 	}
 
 	getClipboardData() {
@@ -120,7 +140,7 @@ class Helpers {
 	}
 
 	getProp(n, keys, defaultVal) {
-		keys = $.isArray(keys) ? keys : keys.split('.');
+		keys = this.isArray(keys) ? keys : keys.split('.');
 		n = n[keys[0]];
 		if (n && keys.length > 1) {
 			return this.getProp(n, keys.slice(1), defaultVal);
@@ -211,7 +231,7 @@ class Helpers {
 	}
 
 	open(f) {
-		try { // handle locked files
+		try {
 			return this.file(f) ? utils.ReadTextFile(f) : '';
 		} catch (e) {
 			return '';
@@ -232,10 +252,15 @@ class Helpers {
 	}
 
 	queryArtist(artist) {
-		let names = [artist, artist.replace(/^(The\s|A\s)/i, ''), artist.replace(/^(The\s|A\s)/i, '').replace(/\sand\s/i, ' & '), artist.replace(/^(The\s|A\s)/i, '').replace(/\s&\s/i, ' and ')];
+		let names = [artist, artist.replace(/^(The\s|A\s)/i, ''), artist.replace(/^(The\s|A\s)/i, '').replace(/\sand\s/i, ' & '), artist.replace(/^(The\s|A\s)/i, '').replace(/\s&\s/i, ' and '), artist.replace(/^[.'-*]/g, '')];
 		let query = '';
 		[...new Set(names)].forEach((v, i) => query += (i ? ' OR ' : '') + name.field.artist + ' HAS ' + v);
 		return query;
+	}
+
+	range(start, stop, step) {
+		step = step || 1;
+		return Array.from({length: (stop - start) / step + 1}, (_, i) => start + i * step);
 	}
 
 	regexEscape(n) {
@@ -243,11 +268,11 @@ class Helpers {
 	}
 
 	removeDiacritics(str) {
-		return str.replace(/[^\u0000-\u007E]/g, n => $.diacriticsMap[n] || n);
+		return str.replace(/[^\u0000-\u007E]/g, n => this.diacriticsMap[n] || n);
 	}
 
 	removeNulls(o) {
-		const isArray = $.isArray(o);
+		const isArray = this.isArray(o);
 		Object.keys(o).forEach(v => {
 			if (o[v].length == 0) isArray ? o.splice(v, 1) : delete o[v];
 			else if (typeof o[v] == 'object') this.removeNulls(o[v]);
@@ -273,6 +298,10 @@ class Helpers {
 		return RGB(nR, nG, nB);
 	}
 
+	RGBtoRGBA(rgb, a) {
+		return a << 24 | rgb & 0x00FFFFFF;
+	}
+
 	run(c, w) {
 		try {
 			w === undefined ? WshShell.Run(c) : WshShell.Run(c, w);
@@ -287,6 +316,14 @@ class Helpers {
 			utils.WriteTextFile(fn, text, bom)
 		} catch (e) {
 			this.trace('Error saving: ' + fn);
+		}
+	}
+
+	secs(n) {
+		const re = /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/;
+		if (re.test(n)) {
+			const m = re.exec(n);
+			return (Number(m[1]) * 3600 || 0) + (Number(m[2]) || 0) * 60 + (Number(m[3]) || 0);
 		}
 	}
 
@@ -376,7 +413,7 @@ class Helpers {
 	}
 
 	throttle(e,i,t) {
-		var n=!0,r=!0;if('function'!=typeof e)throw new TypeError('throttle: invalid function');return this.isObject(t)&&(n='leading'in t?!!txt.leading:n,r='trailing'in t?!!txt.trailing:r),this.debounce(e,i,{leading:n,maxWait:i,trailing:r})
+		var n=!0,r=!0;if('function'!=typeof e)throw new TypeError('throttle: invalid function');return this.isObject(t)&&(n='leading'in t?!!txt.leading:n,r='trailing'in t?!!txt.trailing:r),this.debounce(e,i,{leading:n,maxWait:i,trailing:r});
 	}
 
 	toRGB(c) {
@@ -402,6 +439,7 @@ class Helpers {
 		timer.clear(timer.img);
 		
 		const showLogo = panel.showLogo;
+		this.processor = true;
 
 		ui = new UserInterface;
 		name = new Names;
@@ -435,7 +473,7 @@ class Helpers {
 
 		if (!ui.style.textOnly) {
 			if (!ppt.showAlb) panel.setVideo();
-		} else if ($.eval('%video_popup_status%') == 'visible') fb.RunMainMenuCommand('View/Visualizations/Video');
+		} else if (this.eval('%video_popup_status%') == 'visible') fb.RunMainMenuCommand('View/Visualizations/Video');
 		if (ppt.btn_mode) {
 			panel.image.show == false;
 			panel.video.show = false;
@@ -454,6 +492,10 @@ class Helpers {
 		panel.on_size();
 		ui.getFont();
 		but.refresh(true);
+		if (ppt.themed && ppt.theme) {
+			const themed_image = `${fb.ProfilePath}settings\\themed\\themed_image.bmp`;	
+			if (this.file(themed_image)) sync.image(gdi.Image(themed_image));
+		}
 		img.on_size();
 		dj.on_size();
 		txt.rp = true;

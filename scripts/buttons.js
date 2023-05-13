@@ -51,6 +51,10 @@ class Buttons {
 
 	// Methods
 
+	animation(b) {
+		if (this.btns && this.btns[b]) this.btns[b].repaint();
+	}
+
 	checkScrollBtns(x, y, hover_btn) {
 		const arr = alb_scrollbar.timer_but ? this.scr.albBtns : art_scrollbar.timer_but ? this.scr.artBtns : false;
 		if (arr) {
@@ -226,9 +230,17 @@ class Buttons {
 	refresh(upd) {
 		this.font.awesome = gdi.Font('FontAwesome', this.zoomBut > 1.05 ? Math.floor(15 * this.scale) : 15 * this.scale, 0);
 		if (upd) {
+			this.recommendation = ['Mix', 'Recommendations', 'Neighbours', 'Library', 'Loved', 'Library'][ppt.lfmUserType];
+			this.lb = 'ListenBrainz';
+			this.tag = ['Similar', 'Song', 'Genre', 'Mood', 'Theme', 'Decade', 'Year', 'Locale'][alb.lfmTagType]
 			$.gr(1, 1, false, g => {
 				this.icon_w = g.CalcTextWidth('\uF107', this.font.awesome);
+				this.tagOffset = g.CalcTextWidth(this.tag, ui.font.filterB) - g.CalcTextWidth('Year', ui.font.filterB);
+				this.userOffset = g.CalcTextWidth(this.recommendation, ui.font.filterB) - g.CalcTextWidth('Mix', ui.font.filterB);
+				this.lbWidth = g.CalcTextWidth(this.lb + '  ', ui.font.filterB);
 			});
+			this.lbOffset = ppt.lbUserBtn ? 0 : this.b.w1 * -2.35;
+			if (!ppt.lfmUserBtn) this.userOffset -= this.b.w1 * 1.22 + this.userOffset;
 			this.b.x = ppt.btn_mode ? 0 : alb.x + alb.w - this.icon_w;
 			this.b.y1 = ppt.btn_mode ? 0 : ppt.bor * 0.625;
 			this.b.y2 = Math.round(this.b.y1);
@@ -261,31 +273,44 @@ class Buttons {
 			this.offset = Math.min(Math.round(21 * this.scale / 8), ppt.bor);
 			filter.metrics();
 
-			this.max_w = [this.b.x - this.b.w1 * 4.64, this.b.x - this.b.w1 * 6.45, this.b.x - this.b.w1 * 5.52][ppt.mb];
+			this.max_w = [this.b.x - this.b.w1 * 8.23 - this.tagOffset - this.userOffset, this.b.x - this.b.w1 * 9.77 - this.lbOffset, this.b.x - this.b.w1 * 6.06][ppt.mb];
+			this.font.refresh = gdi.Font('FontAwesome', 10 * this.scale, 0);
+			this.font.play = gdi.Font('FontAwesome', 10 * this.scale, 0);
 			this.font.search = gdi.Font('FontAwesome', 11 * this.scale, 0);
 			this.font.clear = gdi.Font('Segoe UI Symbol', 11 * this.scale, 0);
+			this.recTooltip = ['Last.fm user recommended mix', 'Last.fm user recommendations', 'Last.fm user neighbours', 'Last.fm user library', 'Last.fm user loved', 'Last.fm user library'][ppt.lfmUserType];
 		}
 		this.btns = {
-			all: new Btn(this.b.x - this.b.w1 * 6.75, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'All', 0, '', !ppt.showAlb || !ppt.mb || ppt.mb == 2, '', () => alb.getReleases('mb', 0), () => alb.type.mb[0], true, 'all'),
-			album: new Btn(this.b.x - this.b.w1 * 5.75, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Album', 1, '', !ppt.showAlb || !ppt.mb || ppt.mb == 2, '', () => alb.getReleases('mb', 1), () => alb.type.mb[1], true, 'album'),
-			comp: new Btn(this.b.x - this.b.w1 * 4.75, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Comp', 2, '', !ppt.showAlb || !ppt.mb || ppt.mb == 2, '', () => alb.getReleases('mb', 2), () => alb.type.mb[2], true, 'comp'),
-			single: new Btn(this.b.x - this.b.w1 * 3.75, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Single', 3, '', !ppt.showAlb || !ppt.mb || ppt.mb == 2, '', () => alb.getReleases('mb', 3), () => alb.type.mb[3], true, 'single'),
-			remix: new Btn(this.b.x - this.b.w1 * 2.75, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Remix', 4, '', !ppt.showAlb || !ppt.mb || ppt.mb == 2, '', () => alb.getReleases('mb', 4), () => alb.type.mb[4], true, 'remix'),
+			all: new Btn(this.b.x - this.b.w1 * 10.06 - this.lbOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'All', 0, '', !ppt.showAlb || ppt.mb != 1, '', () => alb.getReleases('mb', 0), () => alb.type.mb[0], true, 'all'),
+			album: new Btn(this.b.x - this.b.w1 * 9.12 - this.lbOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Album', 1, '', !ppt.showAlb || ppt.mb != 1, '', () => alb.getReleases('mb', 1), () => alb.type.mb[1], true, 'album'),
+			comp: new Btn(this.b.x - this.b.w1 * 7.92 - this.lbOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Comp', 2, '', !ppt.showAlb || ppt.mb != 1, '', () => alb.getReleases('mb', 2), () => alb.type.mb[2], true, 'comp'),
+			single: new Btn(this.b.x - this.b.w1 * 6.77 - this.lbOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Single', 3, '', !ppt.showAlb || ppt.mb != 1, '', () => alb.getReleases('mb', 3), () => alb.type.mb[3], true, 'single'),
+			remix: new Btn(this.b.x - this.b.w1 * 5.62 - this.lbOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Remix', 4, '', !ppt.showAlb || ppt.mb != 1, '', () => alb.getReleases('mb', 4), () => alb.type.mb[4], true, 'remix'),
+			listenbrainz: new Btn(this.b.x - this.b.w1 * 4.52, this.b.y2, this.lbWidth, this.b.h1, 0, ui.font.filterB, this.lb, 5, '', !ppt.showAlb || ppt.mb != 1 || !ppt.lbUserBtn, '', () => alb.getReleases('mb', 5), () => this.recTooltip, true, 'listenbrainz'),
+			lbstats: new Btn(this.b.x - this.b.w1 * 2.8, this.b.y2 + 1, 18 * this.scale, this.b.h1, 0, this.font.search, '  \uF0D7', 201, '', !ppt.showAlb || ppt.mb != 1 || !ppt.lbUserBtn, '', () => {
+			lMenu.load(this.b.x - this.b.w1 * 2.8, this.b.y2 + this.b.h1 * 1.5)}, () => 'LisenBrainz menu', true, 'lbstats'),
 
-			topalbums: new Btn(this.b.x - this.b.w1 * 4.64, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Album', 0, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 0), () => 'Top albums', true, 'topalbums'),
-			toptracks: new Btn(this.b.x - this.b.w1 * 3.64, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Track', 1, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 1), () => 'Top tracks', true, 'toptracks'),
-			topsongs: new Btn(this.b.x - this.b.w1 * 2.64, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Song', 2, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 2), () => 'Top similar songs', true, 'topsongs'),
+			topalbums: new Btn(this.b.x - this.b.w1 * 8.23 - this.tagOffset - this.userOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Album', 0, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 0), () => 'Top albums', true, 'topalbums'),
 
-			changedate: new Btn(this.b.x - this.b.w1 * 5.52, this.b.y2, this.b.w2 * 2, this.b.h1, 7, ui.font.filterB, 'Change date:', 0, '', !ppt.showAlb || ppt.mb != 2, '', '', () => '', false, 'changedate'),
-			day: new Btn(this.b.x - this.b.w1 * 3.42, this.b.y2, this.b.w2 * 0.4, this.b.h1, 7, ui.font.filterB, $.padNumber(men.chart.day, 2), 1, '', !ppt.showAlb || ppt.mb != 2, '', () => dMenu.load(this.b.x - this.b.w1 * 6, this.b.y2 + this.b.h1), () => 'Day', true, 'day'),
-			month: new Btn(this.b.x - this.b.w1 * 2.92, this.b.y2, this.b.w2 * 0.4, this.b.h1, 7, ui.font.filterB, $.padNumber(men.chart.month, 2), 2, '', !ppt.showAlb || ppt.mb != 2, '', () => mMenu.load(this.b.x - this.b.w1 * 5, this.b.y2 + this.b.h1), () => 'Month', true, 'month'),
-			year: new Btn(this.b.x - this.b.w1 * 2.52, this.b.y2, this.b.w2 * 0.8, this.b.h1, 7, ui.font.filterB, men.chart.year, 3, '', !ppt.showAlb || ppt.mb != 2, '', () => yMenu.load(this.b.x - this.b.w1 * 4, this.b.y2 + this.b.h1), () => 'Year', true, 'year'),
+			toptracks: new Btn(this.b.x - this.b.w1 * 7.16 - this.tagOffset - this.userOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Track', 1, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 1), () => !ppt.lfmMixTrack ? 'Top tracks' : 'Last.fm Mix', true, 'toptracks'),
+			tracks: new Btn(this.b.x - this.b.w1 * 6.31 - this.tagOffset  - this.userOffset, this.b.y2 + 1, 18 * this.scale, this.b.h1, 0, this.font.search, '  \uF0D7', 100, '', !ppt.showAlb || ppt.mb, '', () => {trMenu.load(this.b.x - this.b.w1 * 6.31 - this.tagOffset - this.userOffset, this.b.y2 + this.b.h1 * 1.5)}, () => 'Track menu', true, 'tracks'),
 
-			lock: new Btn(this.b.x - this.b.w1 * 1.55, this.b.y2 + 1, 16 * this.scale, this.b.h1, 0, this.font.search, '\uF13E', 5, '', !ppt.showAlb, '', () => alb.lockArtist(), () => ppt.lock ? 'Unlock' : 'Lock: stop track change updates', true, 'lock'),
-			add: new Btn(this.b.x - this.b.w1 * 1.06, this.b.y2 - 1, 16 * this.scale, this.b.h1, 0, this.font.bold15, '+', '6', '', !ppt.showAlb, '', () => {
-				pMenu.load(this.b.x - this.b.w1, this.b.y2 + this.b.h1)
-			}, () => alb.handleList.Count ? 'Load' : 'Load local album tracks: none found', true, 'add'),
-			toggle: new Btn(this.b.x - 11 * this.scale - this.icon_w, this.b.y2 - 1, 16 * this.scale, this.b.h1, 0, this.font.bold15, '\u2261', '7', '', !ppt.showAlb, '', () => {
+			tag: new Btn(this.b.x - this.b.w1 * 5.66 - this.tagOffset - this.userOffset, this.b.y2, this.b.w2 * 0.8 + this.tagOffset, this.b.h1, 0, ui.font.filterB, this.tag, 2, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 2), () => alb.lfmTagType ? (!ppt.lfmMixTag ? 'Top tracks' : 'Last.fm Mix') : 'Last.fm Mix: Similar artists tracks', true, 'tag'),
+			tags: new Btn(this.b.x - this.b.w1 * 4.98 - this.userOffset, this.b.y2 + 1, 18 * this.scale, this.b.h1, 0, this.font.search, '  \uF0D7', 100, '', !ppt.showAlb || ppt.mb, '', () => {tMenu.load(this.b.x - this.b.w1 * 4.98 - this.userOffset, this.b.y2 + this.b.h1 * 1.5)}, () => 'Tag menu', true, 'tags'),
+	
+			chart: new Btn(this.b.x - this.b.w1 * 4.43 - this.userOffset, this.b.y2, this.b.w2, this.b.h1, 0, ui.font.filterB, 'Chart', 3, '', !ppt.showAlb || ppt.mb, '', () => alb.getReleases('lfm', 3), () => 'Chart', true, 'chart'),
+			recommended: new Btn(this.b.x - this.b.w1 * 3.38 - this.userOffset, this.b.y2, this.b.w2 * 0.8 + this.userOffset, this.b.h1, 0, ui.font.filterB, this.recommendation, 4, '', !ppt.showAlb || ppt.mb || !ppt.lfmUserBtn, '', () => {if (!ppt.lfmUserName) {fb.ShowPopupMessage('This feature requires a lastfm user name, your own or another. Enter in:\n\noptions > maintenance tab\n\nor\n\npanel properties > Album Manager Lfm User Name\n\n\n\nScrobbled tracks also need to be present at last.fm\n\nfoo_scrobble is available at: https://github.com/gix/foo_scrobble', 'Find & Play'); return}; alb.getReleases('lfm', 4)}, () => this.recTooltip, true, 'recommended'),
+			rec: new Btn(this.b.x - this.b.w1 * 2.7, this.b.y2 + 1, 18 * this.scale, this.b.h1, 0, this.font.search, '  \uF0D7', 101, '', !ppt.showAlb || ppt.mb || !ppt.lfmUserBtn, '', () => {
+			rMenu.load(this.b.x - this.b.w1 * 2.7, this.b.y2 + this.b.h1 * 1.5)}, () => 'Recommendation menu', true, 'rec'),
+
+			changedate: new Btn(this.b.x - this.b.w1 * 6.06, this.b.y2, this.b.w2 * 2, this.b.h1, 7, ui.font.filterB, 'Change date:', 0, '', !ppt.showAlb || ppt.mb != 2, '', '', () => '', false, 'changedate'),
+			day: new Btn(this.b.x - this.b.w1 * 3.96, this.b.y2, this.b.w2 * 0.4, this.b.h1, 7, ui.font.filterB, $.padNumber(men.chart.day, 2), 1, '', !ppt.showAlb || ppt.mb != 2, '', () => dMenu.load(this.b.x - this.b.w1 * 3.96, this.b.y2 + this.b.h1 * 1.5), () => 'Day', true, 'day'),
+			month: new Btn(this.b.x - this.b.w1 * 3.46, this.b.y2, this.b.w2 * 0.4, this.b.h1, 7, ui.font.filterB, $.padNumber(men.chart.month, 2), 2, '', !ppt.showAlb || ppt.mb != 2, '', () => mMenu.load(this.b.x - this.b.w1 * 3.46, this.b.y2 + this.b.h1 * 1.5), () => 'Month', true, 'month'),
+			year: new Btn(this.b.x - this.b.w1 * 3.06, this.b.y2, this.b.w2 * 0.8, this.b.h1, 7, ui.font.filterB, men.chart.year, 3, '', !ppt.showAlb || ppt.mb != 2, '', () => yMenu.load(this.b.x - this.b.w1 * 3.06, this.b.y2 + this.b.h1 * 1.5), () => 'Year', true, 'year'),
+
+			lock: new Btn(this.b.x - this.b.w1 * 2.14, this.b.y2 + 1, 16 * this.scale, this.b.h1, 0, this.font.search, '\uF13E', 6, '', !ppt.showAlb, '', () => alb.lockArtist(), () => ppt.lock ? 'Unlock' : 'Lock: stop track change updates', true, 'lock'),
+			play: new Btn(this.b.x - this.b.w1 * 1.62, this.b.y2, 16 * this.scale, this.b.h1, 0, this.font.refresh, ppt.playButtonPlay ? '\uF04B' : '\uF1D8', 7, '', !ppt.showAlb, '', () => men.loadnPlay(), () => this.playTiptext(), true, 'play'),
+			toggle: new Btn(this.b.x - 29 * this.scale - this.icon_w, this.b.y2, 16 * this.scale, this.b.h1, 0, this.font.refresh, '\uF0C9', 8, '', !ppt.showAlb, '', () => {
 				if (!ppt.showArtists) alb.toggle('showArtists');
 				else {
 					if (!alb.expanded) ppt.toggle('showSimilar');
@@ -296,7 +321,8 @@ class Buttons {
 				}
 				txt.paint();
 			}, () => !alb.expanded ? (ppt.showSimilar ? 'Show related artists' : 'Show similar artists') : (ppt.showSimilar ? 'Show similar artists' : 'Show related artists'), true, 'toggle'),
-			more: new Btn(this.b.x, this.b.y2, this.icon_w, this.b.h1, 0, this.font.awesome, '\uF107', '8', '', !ppt.showAlb, '', () => bMenu.load(this.b.x - this.b.w2, this.b.y2 + this.b.h1), () => 'Album manager settings', true, 'more'),
+			refresh: new Btn(this.b.x - 11 * this.scale - this.icon_w, this.b.y2, 16 * this.scale, this.b.h1, 0, this.font.refresh, '\uF021', 9, '', !ppt.showAlb, '', () => window.Reload(), () => 'Refresh list', true, 'refresh'),
+			more: new Btn(this.b.x, this.b.y2, this.icon_w, this.b.h1, 0, this.font.awesome, '\uF107', 10, '', !ppt.showAlb, '', () => bMenu.load(this.b.x - this.b.w2, this.b.y2 + this.b.h1 * 1.5), () => 'Album manager settings', true, 'more'),
 
 			mode: new Btn(
 				!ppt.logoText ? this.b.x2 - this.offset : this.b.x2,
@@ -310,7 +336,7 @@ class Buttons {
 					normal: [RGB(225, 225, 245), RGB(96, 73, 139)],
 					hover: [RGB(225, 225, 245), RGB(52, 23, 107)]
 				},
-				!ppt.showAlb, '', () => sMenu.load(this.b.x2, this.b.y2 + this.b.h1), () => 'Change Site', true, 'mode'
+				!ppt.showAlb, '', () => sMenu.load(this.b.x2, this.b.y2 + this.b.h1 * 1.5), () => 'Change Site', true, 'mode'
 			),
 
 			cross: new Btn(alb.x + alb.w - this.b.h2 * 0.56, search.y - this.b.h2 * 0.06, this.b.h2, this.b.h2, 3, '', '', '', {
@@ -366,6 +392,27 @@ class Buttons {
 		this.transition.stop();
 	}
 
+	playTiptext() {
+		if (yt_dj.timer) return 'Loading...';
+		const numberTopTracks = [10, 20, 30, 40, 50, 75, 100][ppt.topTracksIX];
+		const prefix = ppt.playButtonPlay ? 'Play' : 'Send to playlist:';
+		let tracks = true;
+		let tiptxt = alb.isAlbum() ? [`${prefix} albums in library`, `${prefix} albums in library or cached`][ppt.playbackOrderAlbums] : 
+		[`${prefix} all tracks`, `${prefix} tracks in library`, `${prefix} tracks in library or cached`, `${prefix} top ${numberTopTracks}`, `${prefix} top ${numberTopTracks}: reverse`, `${prefix} top ${numberTopTracks}: shuffle`][ppt.playbackOrderTracks];
+		if (alb.isAlbum()) {
+			if (!alb.libHandleList.Count && !ppt.playbackOrderAlbums || !alb.handleList.Count && ppt.playbackOrderAlbums) {
+				tracks = false;
+				tiptxt = (alb.names.list.length ? tiptxt + '\nNo matches' : 'No tracks');
+			}
+		} else {
+			if (!alb.libHandleList.Count && ppt.playbackOrderTracks == 1 || !alb.handleList.Count && ppt.playbackOrderTracks > 1 ) {
+				tracks = false;
+				tiptxt = (alb.names.list.length ? tiptxt + '\nNo matches' : 'No tracks');
+			}
+		}
+		return tracks ? prefix : tiptxt;
+	}
+
 	resetZoom() {
 		ppt.zoomFont = 100;
 		ppt.zoomTooltip = 100;
@@ -394,16 +441,16 @@ class Buttons {
 	setBtnsHide() {
 		Object.values(this.btns).forEach((v, i) => {
 			switch (true) {
-				case i < 5:
-					v.hide = !ppt.showAlb || !ppt.mb || ppt.mb == 2;
+				case i < 7: // mb
+					v.hide =  i != 5 && i != 6 ? !ppt.showAlb || ppt.mb != 1 : !ppt.showAlb || ppt.mb != 1 || !ppt.lbUserBtn;
 					break;
-				case i < 8:
-					v.hide = !ppt.showAlb || ppt.mb;
+				case i < 15: // lfm
+					v.hide = i != 13 && i != 14 ? !ppt.showAlb || ppt.mb : !ppt.showAlb || ppt.mb || !ppt.lfmUserBtn;
 					break;
-				case i < 12:
+				case i < 19:
 					v.hide = !ppt.showAlb || ppt.mb != 2;
 					break;
-				case i < 18:
+				case i < 26:
 					v.hide = !ppt.showAlb;
 					break;
 			}
@@ -579,18 +626,18 @@ class Btn {
 	}
 
 	drawNames(gr) {
-		const chk = (ppt.mb ? ppt.mbReleaseType : ppt.lfmReleaseType) == this.p3 || ppt.lock && this.p3 == 5 || this.state === 'down' && this.p3 != 6 && this.p3 != 7;
-		if ((ppt.mb ? ppt.mbReleaseType : ppt.lfmReleaseType) == this.p3 || this.state === 'down' && this.p3 < 5 && this.p3 > 8) {
+		const chk = [ppt.lfmReleaseType, ppt.mbReleaseType, false][ppt.mb] == this.p3 || ppt.lock && this.p3 == 6 || this.state === 'down' && this.p3 != 7 && this.p3 != 8;
+		if ((ppt.mb ? ppt.mbReleaseType : ppt.lfmReleaseType) == this.p3) {
 			gr.SetSmoothingMode(2);
 			gr.FillRoundRect(this.x, this.y, this.w, this.h, 6 * but.scale, 6 * but.scale, ui.col.butBg);
 		}
 		const col = !chk ? ui.getBlend(ui.col.blend, ui.col.text, this.transition_factor) : ui.col.blend;
-		if (this.p3 == 5)  this.p2 = ppt.lock ? '\uF023' : '\uF13E';
-		if (this.p3 == 6) {
-			this.p2 = !alb.handleList.Count && !alb.topTracksAvailable ? '-' : '+';
-			this.p1 = !alb.handleList.Count && !alb.topTracksAvailable ? but.font.regular15 : but.font.bold15;
+		if (this.p3 == 6)  this.p2 = ppt.lock ? '\uF023' : '\uF13E';
+		if (this.p3 == 7) {
+			this.p2 = !alb.handleList.Count && !alb.topTracksAvailable || yt_dj.timer ? '\uF04D' : ppt.playButtonPlay ? '\uF04B' : '\uF1D8';
+			this.p1 = !alb.handleList.Count && !alb.topTracksAvailable || yt_dj.timer ? but.font.refresh : but.font.play;
 		}
-		gr.GdiDrawText(this.p2, this.p1, col, this.x, this.y, this.w, this.h, txt.cc);
+		gr.GdiDrawText(this.p2, this.p1, col, this.x, this.y, this.w, this.h, this.name == 'rec' || this.name == 'tags' || this.name == 'tracks' ? txt.l : txt.cc);
 		if (this.name == 'more' && this.state === 'hover') gr.GdiDrawText(this.p2, this.p1, col, this.x, this.y + 1, this.w, this.h, txt.cc);
 	}
 

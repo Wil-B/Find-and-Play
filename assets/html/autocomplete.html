@@ -96,7 +96,7 @@ button:hover {
 <!--Make sure the form has the autocomplete function switched off:-->
 <div id="buttonsHolder"></div>
 <div style="clear:both;"></div>
-<div id="info" style="font-size:90%; padding-top:0.5em; color:#0066CC;">Use the nowplaying view for search feedback</div>
+<div id="info" style="font-size:90%; padding-top:0.5em; color:#0066CC;">Use the main panel nowplaying view for search feedback</div>
 <span class="dropdown" style="margin-bottom:0.6em;"><a id="type_dropdown" class="dropbtn" href="#" onclick="toggle('selectType');"></a>
 <span id="selectType" class="dropdown-content"></span>
 </span>
@@ -112,16 +112,16 @@ catch(e) {
 }
 var items = [];
 var caption = ['Enter any artist & click load', 'Enter any artist as seed & click load', 'Enter any song (artist | title) as seed & click load', 'Enter any genre & click load', 'Enter any mood & click load', 'Enter any theme & click load', 'Enter a decade from list & click load', 'Enter a locale from list & click load'];
+var msg = '';
 if (parsed_args) {
 	var mode = parsed_args[0];
-	var msg = parsed_args[1]
+	msg = parsed_args[1]
 	callback = parsed_args[2];
 	var lastType = parsed_args[3];
 	var lastName = parsed_args[4];
 	var arrays = JSON.parse(parsed_args[5]);
 	var autocompleteType = arrays.pop();
-
-	document.title = (!mode ? 'AutoDJ | ' : 'Library playlist generator | ') + caption[autocompleteType];
+	document.title = (mode === false ? 'AutoDJ | ' : mode === true ? 'Library playlist generator | ' : '') + caption[autocompleteType];
 	items = arrays[autocompleteType];
 	var isSongs = autocompleteType == 2;
 }
@@ -131,15 +131,16 @@ var window_w = screen.width * 0.34;
 var window_h = screen.height * 0.781;
 var left = (screen.width - window_w) / 2;
 var top = (screen.height - window_h) / 2;
-var typeLabels = ['By artist...', 'By similar artists...', 'By similar songs...', 'By genre...', 'By mood...', 'By theme...', 'By decade...', 'By locale...'];
+var typeLabels = ['By artist...', 'By similar artists...', 'By sounds like...', 'By genre...', 'By mood...', 'By theme...', 'By decade...', 'By locale...'];
 window.resizeTo(window_w, window_h);
 window.moveTo(left, top);
 
 window.type_dropdown.innerHTML = typeLabels[autocompleteType];
 for (i = 0; i < 8; i++) {window.selectType.insertAdjacentHTML('beforeend', '<a onclick="setType(' + i + ');">'+typeLabels[i]+'</a>');}
 window.input.insertAdjacentHTML('beforeend', '<form autocomplete="off" ><div class="autocomplete"><input id="myInput" type="text" value="' + lastName + '"></div><input type="submit" value="Load"></form>');
-window.info.innerHTML = msg || 'Use the nowplaying view for search feedback';
-if (msg) window.info.style.color = 'red';
+msg = msg || 'Use the main panel nowplaying view for search feedback';
+window.info.innerHTML = msg;
+if (msg && !/automatically/.test(msg) && !/nowplaying/.test(msg)) window.info.style.color = 'red';
 var inp = document.getElementById("myInput");
 if (autocompleteType != lastType) setLetter(lastType != 6 ? lastName.charAt() : '#');
 
@@ -150,7 +151,6 @@ function addActive(x) {
 	if (currentFocus < 0) currentFocus = (x.length - 1);
 	x[currentFocus].classList.add("autocomplete-active");
 }
- 
 
 function autocomplete() {
 	inp.addEventListener("input", parse );
@@ -220,7 +220,7 @@ function parse() {
 		}
 	}
 	window.info.style.color = '#0066CC';
-	window.info.innerHTML = matches.length > 1000 && isSongs ? "To show songs, click artist or type..." : "Use the nowplaying view for search feedback";
+	window.info.innerHTML = matches.length > 1000 && isSongs ? "To show songs, click artist or type..." : (msg && !/automatically/.test(msg) ? "Use the main panel nowplaying view for search feedback" : msg);
 	var needItem = true;
 	var curArtist = '';
 	var j = 0;
@@ -271,7 +271,7 @@ function setType(n) {
 	items = arrays[autocompleteType];
 	var chr = inp.value.charAt()
 	inp.innerHtml = '';
-	document.title = (!mode ? 'AutoDJ | ' : 'Library playlist generator | ') + caption[autocompleteType];
+	document.title = (mode === false ? 'AutoDJ | ' : mode === true ? 'Library playlist generator | ' : '') + caption[autocompleteType];
 	closeAllLists();
 	isSongs = autocompleteType == 2;
 	inp.removeEventListener("input", parse );

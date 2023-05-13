@@ -5,7 +5,6 @@ class Albums {
 		this.ar_mbid = false;
 		this.ar_mbid_done = false;
 		this.artist = '';
-		this.artist_title = '';
 		this.chartDate = '';
 		this.cur = [];
 		this.dld;
@@ -13,8 +12,14 @@ class Albums {
 		this.get = true;
 		this.handleList = new FbMetadbHandleList();
 		this.init = true;
+		this.lastItemId = '';
+		this.libHandleList = new FbMetadbHandleList();
 		this.playlist = [];
+		this.lfmTagType = ppt.lfmTagType;
+		this.limit = 5;
+		this.tag = {similar: '', song: '', genre: '', mood: '', theme: '', decade: '', year: '', locale: ''};
 		this.topTracksAvailable = false;
+		this.v2_init = fb.Version.startsWith('2') && fb.IsLibraryEnabled();
 		this.x = 25;
 		this.w = 100;
 
@@ -67,22 +72,20 @@ class Albums {
 			sp: 0
 		}
 
+		this.loaded = {
+			artists: [],
+			tracks: []
+		}
+
 		this.names = {
-			chart: [],
-			cur: [],
 			cur_m_i: 0,
 			data: [],
-			done: [false, false, false, false],
+			done: [false, false, false, false, false, false, false],
 			drawn: 10,
 			h: 100,
 			item: {
 				w: {}
 			},
-			lfm: [
-				[],
-				[],
-				[]
-			],
 			lfm_alb: {
 				w: 70
 			},
@@ -93,20 +96,12 @@ class Albums {
 			line: {
 				y: 40
 			},
-			lfm_pc: 'Last.fm playcount',
 			lfm_track: {
 				w: 60
 			},
 			max: {
 				y: 100
 			},
-			mb: [
-				[],
-				[],
-				[],
-				[],
-				[]
-			],
 			mb_rel: {
 				w: []
 			},
@@ -116,14 +111,11 @@ class Albums {
 				x: 45,
 				w: 100
 			},
+			pc: 'Last.fm playcount',
 			rows: 10,
 			row_ix: {},
 			y: 40,
 			validPrime: false
-		}
-
-		this.playcount = {
-			h: 15
 		}
 
 		this.row = {
@@ -135,9 +127,15 @@ class Albums {
 			w: 100
 		}
 
+		this.statistics = {
+			h: 15,
+			show: (mode) => !mode || mode == 1 && !ppt.lfmMixTrack || !ppt.lfmMixTag && mode == 2 && this.lfmTagType == 1 || mode == 4 && ppt.lfmUserType == 5 || mode == 6 && ppt.mbReleaseType == 5 && ppt.lbUserType > 4,
+			sortable: !ppt.mb && (!ppt.lfmReleaseType || ppt.lfmReleaseType == 1 && ppt.lfmTopTrackSpan == 6 || ppt.lfmReleaseType == 2 && !ppt.lfmMixTag)
+		}
+
 		this.type = {
-			lfm: ['Top Albums', 'Top Tracks', 'Top Songs'],
-			mb: [ppt.showLive ? 'All Releases' : 'Releases', 'Albums', 'Compilations', 'Singles and EPs', 'Remixes'],
+			lfm: ['Top Albums', 'Top Tracks', 'Top Songs', 'Top Tracks', 'Charts: Top Tracks & Most Loved', 'Recommendations'],
+			mb: [ppt.showLive ? 'All Releases' : 'Releases', 'Albums', 'Compilations', 'Singles and EPs', 'Remixes', 'Recommendations'],
 			active: 0
 		}
 
@@ -148,34 +146,36 @@ class Albums {
 		if (isNaN(ppt.verticalPad)) ppt.verticalPad = 0;
 		ppt.verticalPad = $.clamp(ppt.verticalPad, 0, 100);
 
+		this.setSiteDefaults();
+
 		this.focusServer = $.debounce(() => {
 			if (!plman.PlaylistItemCount(plman.ActivePlaylist)) return;
-			if (!ppt.lock && !this.art.search) this.orig_artist = this.artist = name.artist();
-			if (ppt.showAlb) this.focusLoad();
+			if (ppt.showAlb) this.on_playback_new_track();
 			else if (!this.artist) this.clearAlbums();
 		}, 1000, {
 			'leading': true,
 			'trailing': true
 		});
 
-		this.metadbServer = $.debounce(() => {
-			this.focusLoad();
+		this.metadbServer = $.debounce((on_metadb_changed) => {
+			this.on_playback_new_track(on_metadb_changed);
 		}, 500);
 
 		this.chooseArtist = $.debounce((ns) => {
-			if (ppt.mb == 2) return;
-			if (!ns) return;
-			ns = $.titlecase(ns);
-			ns = ns.trim();
-			search.setText(ns);
-			this.art.search = true;
-			this.artist = !this.songsMode() ? ns : ns.split('|')[0].trim();
-			if (this.songsMode()) {
-				this.artist_title = ns;
-				ns = this.artist;
-			}
-			if (ppt.showAlb) this.searchForAlbumNames(0, [ppt.lfmReleaseType, 4, 3][ppt.mb], ns);
+			this.chooseItem(ns);
 		}, 1500);
+		
+		this.clearAlb = $.debounce(() => {
+			const mode = this.getMode();
+			const recheck = this.getSearchItem(mode);
+			if (!recheck) { // delay to stop unwanted refresh when transiently no handle
+				this.clearAlbums();
+			}
+		}, 1000);
+
+		this.tagSet = $.debounce((on_metadb_changed) => {
+			this.setTags(on_metadb_changed); // delay to stop unwanted refresh when transiently no handle
+		}, 1000);
 
 		this.alb_id = 0;
 	}
@@ -198,160 +198,224 @@ class Albums {
 		}
 		const caption = artist + ' | ' + album;
 		const prompt = 'This Album Exists In Library As:' + (orig_alb ? '\n\nOriginal Library Album' : '') + (orig_alb && mtags_alb ? '\n\nAND' : '') + (mtags_alb ? '\n\nAlbum Built With m-TAGS' : '') + '\n\nContinue?';
-		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'Yes', 'No', continue_confirmation) : true;
+		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'Yes', 'No', '', '', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));		
 		return albumDone;
 	}
 
 	analyse(list, mode) {
 		let prime, extra;
+		const a = this.artist.toLowerCase();
 		const q = lib.partialMatch.artist && lib.partialMatch.type[1] != 0 ? ' HAS ' : ' IS ';
-		const query = q == ' IS ' ? name.field.artist + q + this.artist : $.queryArtist(this.artist);
+		const query = q == ' IS ' ? name.field.artist + q + a : $.queryArtist(a);
 		this.art.libHandleList = $.query(lib.getLibItems(), query);
-		this.art.plHandleList = $.query(lib.db.cache, 'artist IS ' + this.artist);
+		this.art.plHandleList = $.query(lib.db.cache, 'artist IS ' + a);
 		this.art.libHandleList.OrderByFormat(tf.albumSortOrder, 1);
 		this.art.plHandleList.OrderByFormat(tf.albumSortOrder, 1);
 
-		if (mode == 4) {
-			if (!this.names.data.length) return this.names.validPrime = false;
-			this.names.mb[ppt.mbReleaseType] = [];
-			this.names.data.forEach(v => {
-				prime = v['primary-type'];
-				extra = v['secondary-types'].join('').toLowerCase();
-				if (!this.names.validPrime) this.names.validPrime = prime ? true : false;
-				const comp = extra.includes('compilation');
-				const live = extra.includes('live');
-				const primary = prime == 'Album' || prime == 'EP' || prime == 'Single';
-				const remix = extra.includes('remix');
-				let filter, type;
-				switch (ppt.mbReleaseType) {
-					case 0:
-						filter = ppt.showLive ? (live || primary) : primary && !live;
-						break;
-					case 1:
-						filter = prime == 'Album' && !live && !comp && !remix;
-						break;
-					case 2:
-						filter = comp && !live && !remix;
-						break;
-					case 3:
-						filter = (prime == 'EP' || prime == 'Single') && !live && !comp && !remix;
-						break;
-					case 4:
-						filter = primary && remix;
-						break;
-				}
-				if (filter) {
-					switch (true) {
-						case remix:
-							type = 'Remix ' + prime;
+		if (mode == 6) {
+			if (ppt.mbReleaseType < 5) {
+				if (!this.names.data.length) return this.names.validPrime = false;
+				this.names.mb[ppt.mbReleaseType] = [];
+				this.names.data.forEach(v => {
+					prime = v['primary-type'];
+					extra = v['secondary-types'].join('').toLowerCase();
+					if (!this.names.validPrime) this.names.validPrime = prime ? true : false;
+					const comp = extra.includes('compilation');
+					const live = extra.includes('live');
+					const primary = prime == 'Album' || prime == 'EP' || prime == 'Single';
+					const remix = extra.includes('remix');
+					let filter, type;
+					switch (ppt.mbReleaseType) {
+						case 0:
+							filter = ppt.showLive ? (live || primary) : primary && !live;
 							break;
-						case comp:
-							type = 'Compilation';
+						case 1:
+							filter = prime == 'Album' && !live && !comp && !remix;
 							break;
-						case live:
-							type = 'Live' + (prime ? (' ' + prime) : '');
+						case 2:
+							filter = comp && !live && !remix;
 							break;
-						default:
-							type = prime;
+						case 3:
+							filter = (prime == 'EP' || prime == 'Single') && !live && !comp && !remix;
+							break;
+						case 4:
+							filter = primary && remix;
 							break;
 					}
-				} else if (ppt.showLive && !ppt.mbReleaseType) {
-					type = 'Other';
-					filter = true;
-				}
+					if (filter) {
+						switch (true) {
+							case remix:
+								type = 'Remix ' + prime;
+								break;
+							case comp:
+								type = 'Compilation';
+								break;
+							case live:
+								type = 'Live' + (prime ? (' ' + prime) : '');
+								break;
+							default:
+								type = prime;
+								break;
+						}
+					} else if (ppt.showLive && !ppt.mbReleaseType) {
+						type = 'Other';
+						filter = true;
+					}
 
-				if (filter) {
-					this.names.mb[ppt.mbReleaseType].push({
-						date: v['first-release-date'].substring(0, 4),
-						name: v.title.replace(/’/g, "'"),
-						artist: this.artist,
-						title: v.title,
-						releaseType: type,
-						rg_mbid: v.id,
-						prime: prime,
-						extra: extra,
-						type: ppt.mbReleaseType,
-						alb_id: ++this.alb_id
-					});
-				}
-			});
-			this.names.mb[ppt.mbReleaseType].forEach((v, i) => this.getSource(v, i));
-			this.mbSort();
-			this.setNames(this.names.mb[ppt.mbReleaseType]);
+					if (filter) {
+						this.names.mb[ppt.mbReleaseType].push({
+							date: v['first-release-date'].substring(0, 4),
+							name: v.title.replace(/’/g, "'"),
+							artist: this.artist,
+							title: v.title.replace(/’/g, "'").toLowerCase(),
+							releaseType: type,
+							rg_mbid: v.id,
+							prime: prime,
+							extra: extra,
+							type: ppt.mbReleaseType,
+							id: this.artist,
+							alb_id: ++this.alb_id
+						});
+					}
+				});
+				this.names.mb[ppt.mbReleaseType].forEach((v, i) => this.getSource(v, i));
+				this.mbSort();
+				this.setNames(this.names.mb[ppt.mbReleaseType]);
+			} else {
+				this.names.mb[this.lbType() + ppt.lbUserMix] = list.map((v, i) => ({
+					name: v.artist + ' - ' + v.title,
+					artist: v.artist,
+					title: v.title.replace(/’/g, "'"),
+					releaseType: 'Single',
+					playcount: v.playcount || '',
+					rank: i,
+					type: this.lbType(),
+					id: this.lbType() + ppt.lbUserMix,
+					alb_id: ++this.alb_id
+				}));
+				const artists = $.getArtists(this.names.mb[this.lbType() + ppt.lbUserMix], q, true);
+				this.names.mb[this.lbType() + ppt.lbUserMix].forEach((v, i) => this.getSource(v, i, artists.libHandles, artists.plHandles));
+				this.setNames(this.names.mb[this.lbType() + ppt.lbUserMix]);
+				this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount));
+				
+			}
 		} else if (list.length) {
 			switch (mode) {
 				case 0:
-					this.names.lfm[0] = list.map((v, i) => ({
+					this.names.lfm.album = list.map((v, i) => ({
 						name: v.name,
 						artist: this.artist,
-						title: v.name,
+						title: v.name.toLowerCase(),
 						releaseType: 'Album',
 						rg_mbid: v.mbid,
 						playcount: v.playcount,
 						rank: i,
-						type: 6,
+						type: 'album',
+						id: this.artist,
 						alb_id: ++this.alb_id
 					}));
-					this.names.lfm[0].forEach((v, i) => this.getSource(v, i));
+					this.names.lfm.album.forEach((v, i) => this.getSource(v, i));
 					break;
 				case 1:
-					this.names.lfm[1] = list.map((v, i) => ({
+					this.names.lfm[this.curTrackSpan()] = list.map((v, i) => ({
 						name: v.title,
 						artist: this.artist,
 						title: v.title,
 						releaseType: 'Single',
 						playcount: v.playcount,
 						rank: i,
-						type: 7,
+						type: 'track',
+						id: this.artist + this.curTrackSpan(),
+						length: v.length,
+						vid: v.vid,
+						thumbnail: v.thumbnail,
 						alb_id: ++this.alb_id
 					}));
-					this.names.lfm[1].forEach((v, i) => this.getSource(v, i));
+					this.names.lfm[this.curTrackSpan()].forEach((v, i) => this.getSource(v, i));
 					break;
 				case 2: {
-					this.names.lfm[2] = list.map((v, i) => ({
+					this.names.lfm[this.curTag() + ppt.lfmMixTag] = list.map((v, i) => ({
 						name: v.artist + ' - ' + v.title,
 						artist: v.artist,
 						title: v.title,
 						releaseType: 'Single',
-						playcount: v.playcount,
+						playcount: v.playcount || '', 
 						rank: i,
-						type: 8,
+						type: this.curTag(),
+						id: this.tag[this.curTag()],
+						length: v.length,
+						vid: v.vid,
+						thumbnail: v.thumbnail,
 						alb_id: ++this.alb_id
 					}));
-					const artists = this.getArtists(this.names.lfm[2], q);
-					this.names.lfm[2].forEach((v, i) => this.getSource(v, i, artists.libHandles, artists.plHandles));
+					const artists = $.getArtists(this.names.lfm[this.curTag() + ppt.lfmMixTag], q, true);
+					this.names.lfm[this.curTag() + ppt.lfmMixTag].forEach((v, i) => this.getSource(v, i, artists.libHandles, artists.plHandles));
 					break;
 				}
 				case 3: {
+					this.names.lfm.chart = list.map((v, i) => ({
+						name: v.artist + ' - ' + v.title,
+						artist: v.artist,
+						title: v.title,
+						releaseType: 'Single',
+						rank: i,
+						track: i < 20 ? '#' : '\u2665',
+						type: 'chart',
+						id: 'chart',
+						length: v.length,
+						vid: v.vid,
+						thumbnail: v.thumbnail,
+						alb_id: ++this.alb_id
+					}));
+					const artists = $.getArtists(this.names.lfm.chart, q, true);
+					this.names.lfm.chart.forEach((v, i) => this.getSource(v, i, artists.libHandles, artists.plHandles));
+					break;
+				}
+				case 4: {
+					this.names.lfm[this.userType()] = list.map((v, i) => ({
+						name: v.artist + ' - ' + v.title,
+						artist: v.artist,
+						title: v.title,
+						releaseType: 'Single',
+						playcount: v.playcount || '',
+						rank: i,
+						type: this.userType(),
+						id: this.userType(),
+						length: v.length,
+						vid: v.vid,
+						thumbnail: v.thumbnail,
+						alb_id: ++this.alb_id
+					}));
+					const artists = $.getArtists(this.names.lfm[this.userType()], q, true);
+					this.names.lfm[this.userType()].forEach((v, i) => this.getSource(v, i, artists.libHandles, artists.plHandles));
+					break;
+				}
+				case 5: {
 					this.names.chart = list.map((v, i) => ({
 						name: v.artist + ' - ' + v.title.replace(/\{(19|20)\d{2}}/, '').trim(),
 						artist: v.artist,
 						title: v.title.replace(/\{(19|20)\d{2}}/, '').trim(),
 						releaseType: 'Single',
 						rank: i,
-						type: 9,
+						type: 'officialChart',
+						id: list[0].date ? `${list[0].date}` : '',
 						alb_id: ++this.alb_id
 					}));
-					const artists = this.getArtists(this.names.chart, q);
+					const artists = $.getArtists(this.names.chart, q, true);
 					this.names.chart.forEach((v, i) => this.getSource(v, i, artists.libHandles, artists.plHandles));
 					this.chartDate = list[0].date ? `${list[0].date}` : '';
-					this.names.cur[3] = `${this.chartDate}`;
 					search.setText();
 					break;
 				}
 			}
-			const li = mode < 3 ? this.names.lfm[mode] : this.names.chart;
+			const li = mode < 5 ? this.names.lfm[this.lfmType(mode)] : this.names.chart;
+			
 			if (li.length) {
-				this.setNames(ppt.lfmSortPC && mode != 3 ? $.sort(li, 'playcount', 'numRev') : li);
-				if (mode != 3) this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount));
+				this.setNames(ppt.lfmSortPC && this.statistics.sortable ? $.sort(li, 'playcount', 'numRev') : li);
+				if (this.statistics.show(mode)) this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount));
 			} else this.names.list = [];
 		} else this.names.list = [];
-	}
-
-	artistRecognised() {
-		if (ppt.mb == 2) return this.artist && !this.names.done[3] ? 'Searching...' : (!filter.text ? 'Error retrieving this chart, please try again later.' : 'Search List: Nothing Found');
-		return this.artist && !this.names.done[ppt.mb ? 4 : ppt.lfmReleaseType] ? 'Searching...' : !filter.text ? !this.ar_mbid || this.songsMode() ? 'Unrecognised ' + (!this.songsMode() ? 'Artist' : 'Song') : ppt.mb == 1 && (ppt.showLive ? !this.names.data.length : !this.names.validPrime) || !ppt.mb ? 'Nothing Found' : 'Nothing Found For Release Type:\n' + this.type.mb[ppt.mbReleaseType] : 'Search List: Nothing Found';
 	}
 
 	butTooltipFont() {
@@ -423,9 +487,12 @@ class Albums {
 
 	calcText() {
 		if (!panel.w || !panel.h) return;
-		const rel_name = ['Remix Album  ', 'Album ', 'Compilation ', 'Single ', 'Remix Album '];
-		this.names.lfm_pc = ui.font.main.Size / ui.font.playCount.Size > 2 ? 'Last.fm playcount ' : 'Last.fm playcount';
-		const sp_arr = ['0000  ', '  ', '00', ' 10,000,000', ' Score', `   ${this.names.lfm_pc}`, ppt.showSource ? '   Pos' : ''];
+		const rel_name = ['Remix Album  ', 'Album ', 'Compilation ', 'Single ', 'Remix Album ',
+		this.lbDisplay()
+		
+		];
+		this.names.pc = !ppt.mb ? ppt.lfmReleaseType == 1 && ppt.lfmTopTrackSpan < 6 ? ui.font.main.Size / ui.font.playCount.Size > 2 ? 'Last.fm listeners ' : 'Last.fm listeners' :  ui.font.main.Size / ui.font.playCount.Size > 2 ? 'Last.fm playcount ' : 'Last.fm playcount' : ppt.mb == 1 && ppt.mbReleaseType == 5 && ppt.lbUserType > 2 ? 'ListenBrainz listens' : '';
+		const sp_arr = ['0000  ', '  ', '00', ppt.lfmReleaseType != 3 ? ' 10,000,000' : '10', ' Score', `   ${this.names.pc}`, ppt.showSource ? '   Pos' : ''];
 		let h;
 		this.row.h = 0;
 		ppt.bor = Math.max(ppt.bor, 0);
@@ -433,15 +500,27 @@ class Albums {
 		$.gr(1, 1, false, g => {
 			for (let j = 0; j < 2; j++) {
 				h = g.CalcTextHeight('String', !j ? ui.font.main : ui.font.playCount);
-				!j ? this.row.h = h + ppt.verticalPad : this.playcount.h = h;
+				!j ? this.row.h = h + ppt.verticalPad : this.statistics.h = h;
 			}
 			['date', 'sp', 'rank', 'playcount', 'score', 'lfm', 'chart'].forEach((v, i) => this.names.item.w[v] = g.CalcTextWidth(sp_arr[i], i == 2 ? ui.font.small : i == 4 ? ui.font.head : i == 5 || i == 6 ? ui.font.playCount : ui.font.main));
 			const getWidth = v => g.CalcTextWidth(v, ui.font.main);
 			this.names.item.w.pos = this.names.item.w.rank + this.names.item.w.sp;
+			this.type.lfm = ['Top Albums', ppt.lfmMixTrack ? 'Last.fm Mix' : 'Top Tracks' +  [' Last 7 Days', ' Last 30 Days', ' Last 90 Days', ' Last 180 Days', ' Last 365 Days', ' All Time', ' All Time'][ppt.lfmTopTrackSpan], !this.lfmTagType ? 'Last.fm Mix: Similar Artists: Seed' : this.lfmTagType == 1 ? (ppt.lfmMixTag ? 'Last.fm Mix: Sounds Like' : 'Top Songs Sounds Like') : (ppt.lfmMixTag ? 'Last.fm Mix' : 'Top Tracks'), 'Charts: Top Tracks & Most Loved', this.userDisplay()],
+			this.type.mb[5] = this.lbDisplay();
 			search.lfm_rel.w = this.type.lfm.map(getWidth);
 			search.chart_rel_w = g.CalcTextWidth('Singles Chart', ui.font.main);
 			search.mb_rel.w = this.type.mb.map(getWidth);
 			this.names.mb_rel.w = rel_name.map(getWidth);
+			this.statistics.sortable = !ppt.mb && (!ppt.lfmReleaseType || ppt.lfmReleaseType == 1 && ppt.lfmTopTrackSpan == 6 || ppt.lfmReleaseType == 2 && !ppt.lfmMixTag);
+			this.fontawesome = gdi.Font('FontAwesome', ui.font.main.Size, 0);
+			this.icon_w = g.CalcTextWidth('\uF105  ', this.fontawesome);
+			this.fontAwe = gdi.Font('FontAwesome', Math.max(Math.round(this.row.h * 0.4), 9), 0);
+			this.fontSeg6 = gdi.Font('Segoe UI Symbol', Math.max(Math.round((ui.font.main.Size * 0.6), 11)), 0);
+			this.fontSeg8 = gdi.Font('Segoe UI Symbol', Math.max(Math.round((ui.font.main.Size * 0.8), 11)), 0);
+			this.ft = [this.fontAwe, this.fontAwe, this.fontSeg6, this.fontSeg8, this.fontAwe];
+			this.icon = ['\uF05E', '\uF144\uF202', '\uE142', '\u266B', '\uF05E'];
+			this.icon_h = this.icon.map((v, i) => {return Math.ceil(g.MeasureString(v, this.ft[i], 0, 0, panel.w, this.row.h).Height) + (i < 2 || i == 4 ? 1 : 0)});
+			this.icon_y = this.icon_h.map((v, i) => [(this.row.h - v) / 1.7, (this.row.h - v) / 1.7, (this.row.h - v) / 1.35, (this.row.h - v) / 2, (this.row.h - v) / 1.7][i]);
 		});
 
 		this.w = panel.w - this.x * 2 - (!this.extra_sbar.w ? 0 : panel.sbar.sp);
@@ -451,13 +530,7 @@ class Albums {
 		this.artists.name.w = ppt.showSimilar ? this.w - this.names.item.w.score - this.names.item.w.sp : this.w * 2 / 3 - this.names.item.w.sp;
 		this.artists.name.track_w = this.w - this.names.item.w.pos;
 		this.artists.item.w = ppt.showSimilar ? this.names.item.w.score : this.w / 3;
-
-		this.fontawesome = gdi.Font('FontAwesome', ui.font.main.Size, 0);
-		$.gr(1, 1, false, g => {
-			this.icon_w = g.CalcTextWidth('\uF105  ', this.fontawesome);
-		});
-
-		this.names.lfm_track.w = this.w - this.names.item.w.sp - this.names.item.w.playcount - this.img.sp;
+		this.names.lfm_track.w = this.w - this.names.item.w.sp - (this.statistics.show(this.getMode()) || ppt.lfmReleaseType == 3 ? this.names.item.w.playcount : 0) - this.img.sp;
 		this.names.lfm_chart.w = this.w - this.names.item.w.sp - this.img.sp;
 		this.names.name.x = this.x + this.img.sp;
 		this.names.name.w = this.siteNameWidth();
@@ -480,6 +553,34 @@ class Albums {
 		}
 		this.activateTooltip(text, type);
 		timer.tooltip();
+	}
+
+	checkLfmTagType() {
+		if (ppt.lfmTagType > 1/*disallow fallback to songs*/ && this.tag[this.defTag()] == 'N/A') {
+			const arr = ['similar', 'song', 'genre', 'mood', 'theme', 'decade', 'year', 'locale'];
+			this.lfmTagType = -1;
+			for (let i = ppt.lfmTagType; i >= 0; --i) {
+				if (this.tag[arr[i]] != 'N/A' && i !== 1) {
+					this.lfmTagType = i;
+					break;
+				}
+			}
+			if (this.lfmTagType == -1) {
+				for (let i = ppt.lfmTagType; i < arr.length; i++) {
+					if (this.tag[arr[i]] != 'N/A' && i !== 1) {
+						this.lfmTagType = i;
+						break;
+					}
+				}
+			}
+			if (this.lfmTagType == -1) this.lfmTagType = ppt.lfmTagType;
+			this.calcText();
+			but.refresh(true);
+		} else if (this.lfmTagType != ppt.lfmTagType) {
+			this.lfmTagType = ppt.lfmTagType
+			this.calcText();
+			but.refresh(true);
+		}
 	}
 
 	checkTooltip(item, x, y, txt_w, w) {
@@ -542,7 +643,7 @@ class Albums {
 		this.artists.list.forEach((v, i) => {
 			if (v.source == 1 || v.source == 2) {
 				let handleList = lib.inPlaylist(v.artist, v.name.replace(/^(x |> |>> )/, ''), i, true, false, true);
-				handleList = $.query(handleList, 'album IS ' + v.album);
+				handleList = $.query(handleList, 'album IS ' + v.album.toLowerCase());
 				v.handleList = handleList;
 				v.source = handleList.Count ? 2 : 1;
 			}
@@ -561,18 +662,38 @@ class Albums {
 		}
 	}
 
+	chooseItem(ns) {
+		if (ppt.mb == 2) return;
+			if (!ns) return;
+			ns = $.titlecase(ns.replace(/&&/g, '&')); 
+			ns = ns.trim();
+			this.calcText();
+			search.setText(ns);
+			this.art.search = true;
+			if (!this.tagMode()) this.tag.similar = this.artist = !this.songsMode() ? ns : ns.split('|')[0].trim();
+			if (this.tagMode()) {
+				this.tag[this.curTag()] = ns;
+				this.artist = this.tag.similar
+			}
+			if (ppt.lock) {
+				ppt.lockArtist = this.artist;
+				ppt.lockDecade = this.tag.decade;
+				ppt.lockGenre = this.tag.genre;
+				ppt.lockLocale = this.tag.locale;
+				ppt.lockMood = this.tag.mood;
+				ppt.lockSong = this.tag.song;
+				ppt.lockTheme = this.tag.theme;
+				ppt.lockYear = this.tag.year;
+			}
+			if (ppt.showAlb) this.searchForAlbumNames(0, [ppt.lfmReleaseType, 6, 5][ppt.mb], ns);
+	}
+
 	clearAlbums() {
 		this.names.list = [];
 		this.handleList = new FbMetadbHandleList();
-		this.names.mb = [
-			[],
-			[],
-			[],
-			[],
-			[]
-		];
+		this.libHandleList = new FbMetadbHandleList();
+		this.setSiteDefaults();
 		this.names.data = [];
-		this.names.cur = [];
 		search.text = '';
 		this.art.related = [];
 		this.art.similar = [];
@@ -587,17 +708,24 @@ class Albums {
 
 	clearIcon() {
 		for (let i = 0; i < 4; i++) this.names.mb[i].forEach(v => v.expanded = '');
-		this.names.lfm[0].forEach(v => v.expanded = '');
+		this.names.lfm.album.forEach(v => v.expanded = '');
 		this.names.list.forEach(v => v.expanded = '');
 	}
 
 	createImages() {
-		if (!ppt.showSource) return;
-		const lightBg = ui.blur.dark ? false : ui.blur.light ? true : ui.getSelCol(ui.col.bg == 0 ? 0xff000000 : ui.col.bg, true) == 50;
-
+		if (!ppt.showSource || ppt.showSource == 4) return;
+		const lightBg = ui.blur.dark ? false : ui.blur.light ? true : ui.isLightCol(ui.col.bg == 0 ? 0xff000000 : ui.col.bg);
 		this.img.source = [
 			ppt.showSource == 3 ? (lightBg ? 'Not available dark.png' : 'Not available light.png') : 'Not available.png',
 			['', 'Source red.png', 'Source green.png', 'Source neutral.png'][ppt.showSource],
+			ppt.showSource == 3 ? (lightBg ? 'Cache neutral [dark].png' : 'Cache neutral [light].png') : (lightBg ? 'Cache dark.png' : 'Cache light.png'),
+			ppt.showSource == 3 ? 'Library neutral.png' : 'Library.png'
+		]
+		.map(v => my_utils.getImageAsset(v).Resize(this.img.w, this.img.w, 7));
+
+		this.img.sourceLfm = [
+			ppt.showSource == 3 ? (lightBg ? 'Not available dark.png' : 'Not available light.png') : 'Not available.png',
+			['', 'Source green.png', 'Source red.png', 'Source green.png'][ppt.showSource],
 			ppt.showSource == 3 ? (lightBg ? 'Cache neutral [dark].png' : 'Cache neutral [light].png') : (lightBg ? 'Cache dark.png' : 'Cache light.png'),
 			ppt.showSource == 3 ? 'Library neutral.png' : 'Library.png'
 		]
@@ -607,11 +735,23 @@ class Albums {
 		this.img.source[4] = this.img.source[0];
 	}
 
+	curTag() {
+		return ['similar', 'song', 'genre', 'mood', 'theme', 'decade', 'year', 'locale'][this.lfmTagType];
+	}
+
+	curTrackSpan() {
+		return ppt.lfmMixTrack ? 'mix' : ['7days', '30days', '90days', '180days', '365days', 'alltime', 'alltimeAPI'][ppt.lfmTopTrackSpan];
+	}
+
 	deactivateTooltip() {
 		if (!tooltip.Text || but.trace) return;
 		tooltip.Text = '';
 		but.tooltip.delay = false;
 		tooltip.Deactivate();
+	}
+
+	defTag() {
+		return ['similar', 'song', 'genre', 'mood', 'theme', 'decade', 'year', 'locale'][ppt.lfmTagType];
 	}
 
 	do_youtube_search(p_alb_id, p_artist, p_title, p_date, p_add, p_mTags) {
@@ -626,9 +766,22 @@ class Albums {
 		yt.search(p_alb_id, p_artist, p_title, p_ix, '', '', 'fb2k_tracknumber=' + p_ix + '&fb2k_album=' + encodeURIComponent(p_album) + (p_date ? ('&fb2k_date=' + encodeURIComponent(p_date)) : ''), '', '', '', '', p_album, p_date);
 	}
 
-	done(new_artist) {
-		if (this.names.cur[[ppt.lfmReleaseType, 4, 3][ppt.mb]] == (this.songsMode() ? this.artist_title : ppt.mb == 2 ? this.chartDate : new_artist)) return true;
-		else return false;
+	done(new_artist, mode) {
+		const newItem = [new_artist, new_artist + this.curTrackSpan(), this.tag[this.curTag()], 'chart', this.userType(), this.chartDate, ppt.mbReleaseType < 5 ? new_artist : this.lbType() + ppt.lbUserMix][mode];
+		let curMb = 'Unknown';
+		if (mode == 6) {
+			if (ppt.mbReleaseType < 5) {
+				for (let i = 0; i < 5; i++) {
+					const prop = $.getProp(this.names.mb, `${i}.0.id`, '');
+					if (prop) {
+						curMb = prop;
+						break;
+					}
+				}
+			} else curMb = $.getProp(this.names.mb, `${this.lbType() + ppt.lbUserMix}.0.id`, 'N/A');
+		}
+		const existingItem = mode < 5 ? $.getProp(this.names.lfm, `${this.lfmType(mode)}.0.id`, 'N/A') : mode == 5 ? $.getProp(this.names.chart, `0.id`, 'N/A') : curMb;
+		return newItem == existingItem;
 	}
 
 	draw(gr) {
@@ -638,16 +791,16 @@ class Albums {
 		let b = 0;
 		let f = 0;
 		let i = 0;
-		let rank_w = ppt.mb == 1 || !ppt.showSource ? 0 : this.names.item.w.pos;
+		let rank_w = ppt.mb == 1 && ppt.mbReleaseType != 5 || !ppt.showSource ? 0 : this.names.item.w.pos;
 		let row_y = 0;
 		let txt_col, x = this.names.name.x;
 		let w1 = this.names.name.w - rank_w - (drawExpand ? this.icon_w : 0);
 		let w2 = this.w - rank_w - this.img.sp;
 
-		if (ppt.mb != 1) {
-			gr.GdiDrawText(ppt.mb != 2 ? this.names.lfm_pc : '', ui.font.playCount, ui.col.head, this.x, Math.round(this.names.line.y - ui.font.playCount.Size + 1), this.w - rank_w, this.playcount.h, txt.r);
-			gr.GdiDrawText(ppt.showSource ? 'Pos' : '', ui.font.playCount, ui.col.head, this.x, Math.round(this.names.line.y - ui.font.playCount.Size + 1), this.w, this.playcount.h, txt.r);
-		}
+		const statisticsShow = this.statistics.show(this.getMode());
+		if (statisticsShow) gr.GdiDrawText(this.names.pc, ui.font.playCount, ui.col.head, this.x, Math.round(this.names.line.y - ui.font.playCount.Size + 1), this.w - rank_w, this.statistics.h, txt.r);
+		if (ppt.mb != 1 || ppt.mbReleaseType == 5) gr.GdiDrawText(ppt.showSource ? 'Pos' : '', ui.font.playCount, ui.col.head, this.x, Math.round(this.names.line.y - ui.font.playCount.Size + 1), this.w, this.statistics.h, txt.r);
+
 		this.names.drawn = 0;
 		if (this.names.list.length) {
 			b = Math.max(Math.round(alb_scrollbar.delta / this.row.h + 0.4), 0);
@@ -681,34 +834,45 @@ class Albums {
 						if (ppt.highLightRow == 2) gr.FillSolidRect(this.sel.x, row_y, this.sel.w + 1, this.row.h + (!itemSel ? 0 : 1), !itemSel ? ui.col.bg_h : ui.col.bgSel_h);
 						if (ppt.highLightRow == 1) gr.FillSolidRect(ui.style.l_w, row_y, ui.sideMarker_w, this.row.h, ui.col.sideMarker);
 					}
+					gr.SetTextRenderingHint(5);
 					if (item.expanded) {
-						gr.GdiDrawText(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.node_e, this.x - this.icon_w * 0.2, row_y, w1, this.row.h, txt.l);
-						gr.GdiDrawText(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.node_e, this.x - this.icon_w * 0.2, row_y + 1, w1, this.row.h, txt.l);
+						gr.DrawString(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.node_e, this.x - this.icon_w * 0.2, row_y, w1, this.row.h, StringFormat(0, 1));
+						gr.DrawString(item.expanded, this.fontawesome, this.names.m_i == i ? ui.col.text_h : ui.col.node_e, this.x - this.icon_w * 0.2, row_y + 1, w1, this.row.h, StringFormat(0, 1));
 					} else if (drawExpand) {
-						gr.GdiDrawText('\uF105  ', this.fontawesome, node_col, this.x, row_y, w1, this.row.h, txt.l);
-						if (!ppt.nodeStyle) gr.GdiDrawText('\uF105  ', this.fontawesome, node_col, this.x + 1, row_y, w1, this.row.h, txt.l);
+						gr.DrawString('\uF105  ', this.fontawesome, node_col, this.x, row_y, w1, this.row.h, StringFormat(0, 1));
+						if (!ppt.nodeStyle) gr.DrawString('\uF105  ', this.fontawesome, node_col, this.x + 1, row_y, w1, this.row.h, StringFormat(0, 1));
 					}
 					if (ppt.showSource) {
-						const im = this.img.source[item.source];
-						if (im) gr.DrawImage(im, this.x + (drawExpand ? this.icon_w : 0), row_y + this.img.y, im.Width, im.Height, 0, 0, im.Width, im.Height);
+						if (ppt.showSource != 4) {
+							const im = !item.vid || !ppt.showYouTubeLinkSource ? this.img.source[item.source] : this.img.sourceLfm[item.source];
+							if (im) gr.DrawImage(im, this.x + (drawExpand ? this.icon_w : 0), row_y + this.img.y, im.Width, im.Height, 0, 0, im.Width, im.Height);
+						} else {
+							gr.GdiDrawText(['\uF05E', !item.vid || !ppt.showYouTubeLinkSource ? '\uF144' : '\uF202', '\uE142', '\u266B', '\uF05E'][item.source], this.ft[item.source], txt_col, this.x + [1, 1, -1, 0, 1][item.source] + (drawExpand ? this.icon_w : 0), row_y + this.icon_y[item.source], x - this.x, this.icon_h[item.source]);
+						}
 					}
 					const nm = !ppt.showSource && !this.isAlbum() ? `${(i < 9 ? '0' : '') + (i + 1)}  ${item.name}` : item.name;
 					const name_w = gr.CalcTextWidth(nm, ui.font.main);
 					gr.GdiDrawText(nm, ui.font.main, txt_col, x + (drawExpand ? this.icon_w : 0), row_y, w1, this.row.h, txt.l);
 					this.checkTooltip(item, x + (drawExpand ? this.icon_w : 0), row_y, name_w, w1);
+					if (statisticsShow) gr.GdiDrawText(item.playcount, ui.font.main, txt_col, x + this.names.lfm_track.w - rank_w + this.names.item.w.sp, row_y, this.names.item.w.playcount, this.row.h, txt.r);
 					if (ppt.mb == 1) {
-						gr.GdiDrawText(item.releaseType, ui.font.main, txt_col, x + rank_w, row_y, w2 - this.names.item.w.date, this.row.h, txt.r);
-						gr.GdiDrawText(item.date, ui.font.main, txt_col, x, row_y, w2, this.row.h, txt.r);
+						if (ppt.mbReleaseType != 5) {
+							gr.GdiDrawText(item.releaseType, ui.font.main, txt_col, x + rank_w, row_y, w2 - this.names.item.w.date, this.row.h, txt.r);
+							gr.GdiDrawText(item.date, ui.font.main, txt_col, x, row_y, w2, this.row.h, txt.r);
+						} else {
+							if (ppt.showSource) gr.GdiDrawText(i + 1, ui.font.small, ui.col.count, this.x + this.w - rank_w, row_y, rank_w, this.row.h, txt.r);
+						}
 					} else {
-						if (ppt.mb != 2) gr.GdiDrawText(item.playcount, ui.font.main, txt_col, x + this.names.lfm_track.w - rank_w + this.names.item.w.sp, row_y, this.names.item.w.playcount, this.row.h, txt.r);
-						if (ppt.showSource) gr.GdiDrawText(i + 1, ui.font.small, ui.col.count, this.x + this.w - rank_w, row_y, rank_w, this.row.h, txt.r);
+						if (ppt.mb != 2 && ppt.lfmReleaseType == 3) gr.GdiDrawText(item.track, ui.font.loved, txt_col, x + this.names.lfm_track.w - rank_w + this.names.item.w.sp, row_y, this.names.item.w.playcount, this.row.h, txt.r);
+						const ix = ppt.lfmReleaseType == 3 && i > 19 ? i - 20 : i;
+						if (ppt.showSource) gr.GdiDrawText(ix + 1, ui.font.small, ui.col.count, this.x + this.w - rank_w, row_y, rank_w, this.row.h, txt.r);
 					}
 				}
 			}
-		} else gr.GdiDrawText(this.artistRecognised(), ui.font.main, ui.col.text, this.x, Math.round(this.names.y), this.w, this.row.h * 2, txt.lm);
+		} else gr.GdiDrawText(this.itemRecognised(), ui.font.main, ui.col.text, this.x, Math.round(this.names.y), this.w, this.row.h * 2, txt.lm);
 		if (panel.sbar.show && alb_scrollbar.scrollable_lines > 0) alb_scrollbar.draw(gr);
 		this.artists.drawn = 0;
-		if (this.artists.list.length) {
+		if (this.artists.rows && this.artists.list.length) {
 			b = Math.max(Math.round(art_scrollbar.delta / this.row.h + 0.4), 0);
 			f = Math.min(b + this.artists.rows, this.artists.list.length);
 			for (i = b; i < f; i++) {
@@ -745,9 +909,14 @@ class Albums {
 						if (ppt.highLightRow == 1) gr.FillSolidRect(ui.style.l_w, row_y, ui.sideMarker_w, this.row.h, ui.col.sideMarker);
 					}
 					let im = null;
-					if (ppt.showSource) {
-						im = this.img.source[item.source];
-						if (im) gr.DrawImage(im, this.x, row_y + this.img.y, im.Width, im.Height, 0, 0, im.Width, im.Height);
+					if (ppt.showSource && item.source) {
+						if (ppt.showSource != 4) {
+							im = !item.vid || !ppt.showYouTubeLinkSource ? this.img.source[item.source] : this.img.sourceLfm[item.source];
+							if (im) gr.DrawImage(im, this.x, row_y + this.img.y, im.Width, im.Height, 0, 0, im.Width, im.Height);
+						} else {
+							im = true;
+							gr.GdiDrawText(['\uF05E', !item.vid || !ppt.showYouTubeLinkSource ? '\uF144' : '\uF202', '\uE142', '\u266B', '\uF05E'][item.source], this.ft[item.source], txt_col, this.x + [1, 1, -1, 0, 1][item.source], row_y + this.icon_y[item.source], x - this.x, this.icon_h[item.source]);
+						}
 					}
 					const iw = !this.expanded ? this.artists.name.w : this.artists.name.track_w;
 					const item_w = !im ? iw : iw - this.img.sp;
@@ -766,16 +935,6 @@ class Albums {
 		if (panel.sbar.show && art_scrollbar.scrollable_lines > 0) art_scrollbar.draw(gr);
 	}
 
-	focusLoad() {
-		if (fb.IsPlaying && this.orig_artist != this.artist) return;
-		if (!ppt.lock && !this.art.search) this.orig_artist = this.artist = name.artist();
-		if (!this.artist) {
-			this.clearAlbums();
-			return;
-		}
-		this.on_playback_new_track();
-	}
-
 	get_ix(x, y) {
 		let ix;
 		if (y > art_scrollbar.item_y && y < art_scrollbar.item_y + this.artists.drawn * this.row.h && x >= this.sel.x && x < this.sel.x + this.sel.w) ix = Math.round((y + art_scrollbar.delta - this.artists.y - this.row.h * 0.5) / this.row.h);
@@ -785,42 +944,67 @@ class Albums {
 	}
 
 	getAlbumsFallback() {
+		if (this.v2_init && !lib.getLibItems().Count) return;
 		if (!this.get || (ppt.lock && this.artist && !this.init)) return;
 		if (ppt.lock && this.init) {
-			this.orig_artist = this.artist = ppt.lockArtist;
-			this.artist_title = ppt.lockTrack;
+			this.tag.similar = this.orig_artist = this.artist = ppt.lockArtist;
+			this.tag.decade = ppt.lockDecade;
+			this.tag.genre = ppt.lockGenre;
+			this.tag.locale = ppt.lockLocale;
+			this.tag.mood = ppt.lockMood;
+			this.tag.song = ppt.lockSong;
+			this.tag.theme = ppt.lockTheme;
+			this.tag.year = ppt.lockYear;
 		} else if (!ppt.lock) {
-			if (!this.artist) this.orig_artist = this.artist = name.artist();
-			this.artist_title = name.artist_title();
+			this.setTags();
 		}
-		this.init = false;
 		search.setText();
 		if (dj.pss && !dj.force_refresh) dj.force_refresh = 2;
 		filter.clearTimer(filter.timer);
 		search.clearTimer(search.timer);
-		this.searchForAlbumNames(0, [ppt.lfmReleaseType, 4, 3][ppt.mb]);
-	}
-
-	getArtists(list, q) {
-		let libQuery = '';
-		let plQuery = '';
-		[...new Set(list.map(v => v.artist))].forEach((v, i) => {
-			const query = q == ' IS ' ? name.field.artist + q + v : $.queryArtist(v);
-			libQuery += (i ? ' OR ' : '') + query;
-			plQuery += (i ? ' OR ' : '') + name.field.artist + q + v;
-		});
-		return {
-			libHandles: $.query(lib.getLibItems(), libQuery),
-			plHandles: $.query(lib.db.cache, plQuery)
-		}
+		const mode = this.getMode();
+		this.searchForAlbumNames(0, mode, this.getSearchItem(mode));
+		this.init = false;
 	}
 
 	getHandleList(items) {
 		this.handleList = new FbMetadbHandleList();
+		this.libHandleList = new FbMetadbHandleList();
 		this.topTracksAvailable = false;
 		if (!items || !items.length) return;
-		items.forEach(v => this.handleList.AddRange(v.handleList));
+		items.forEach(v => {
+			this.handleList.AddRange(v.handleList);
+			if (v.source == 3) this.libHandleList.AddRange(v.handleList);
+		});
 		this.topTracksAvailable = this.isAlbum() ? false : items.some(v => v.source);
+	}
+
+	getId(mode, searchItem) {
+		return `${mode}-${searchItem}-${this.artist}-${ppt.lbUserMix}-${ppt.lfmMixTag}-${ppt.lfmMixTrack }-${ppt.lfmUserLibSpan}-${ppt.lfmTopTrackSpan}-${this.chartDate}`;
+	}
+
+	getIndex(list, listLength) {
+		let ind = Math.floor(listLength * Math.random());
+		let j = 0;
+		while ((this.loaded.artists.includes($.strip(list[ind].artist)) || this.loaded.tracks.includes($.strip(list[ind].title))) && j < listLength) {
+			ind = Math.floor(listLength * Math.random());
+			j++;
+		}
+		return ind;
+	}
+
+	getList(list, arr) {
+		this.loaded.artists = [];
+		this.loaded.tracks = [];
+		list.some(() => {
+			const t_ind = this.getIndex(list, list.length);
+			arr.push(list[t_ind]);
+			this.loaded.artists.push($.strip(list[t_ind].artist));
+			this.loaded.tracks.push($.strip(list[t_ind].title));
+			if (this.loaded.artists.length > 6) this.loaded.artists.splice(0, 1);
+			return arr.length > 99;
+		});
+		return arr;
 	}
 
 	getMbReleases(p_alb_id, p_rg_mbid, p_album_artist, p_album, p_prime, p_extra, p_date, p_add, p_mTags) {
@@ -828,26 +1012,44 @@ class Albums {
 		mb_releases.search(p_alb_id, p_rg_mbid, p_album_artist, p_album, p_prime, p_extra, p_date, p_add, p_mTags);
 	}
 
+	getMode() {
+		return [ppt.lfmReleaseType, 6, 5][ppt.mb];
+	}
+
 	getReleases(m, r) {
 		switch (m) {
 			case 'lfm':
 				ppt.lfmReleaseType = r;
-				this.searchForAlbumNames(2, r, r == 2 ? this.artist_title : this.artist, this.ar_mbid);
+				this.calcText();
+				this.searchForAlbumNames(2, r, this.getSearchItem(r), this.ar_mbid);
 				this.names.name.w = this.names.lfm_track.w;
 				break;
 			case 'mb':
 				ppt.mbReleaseType = r;
-				this.names.name.w = this.w - this.names.item.w.date - this.names.mb_rel.w[r] - this.img.sp;
-				for (let i = 0; i < 5; i++)
-					if (ppt.mbReleaseType == i) {
-						if (this.names.mb[i].length) {
-							this.setNames(this.names.mb[i]);
-						} else this.analyse('', 4);
-						this.calcRowsNames();
-						txt.paint();
-					} break;
+				if (r < 5) {
+					this.calcText();
+					this.names.name.w = this.w - this.names.item.w.date - this.names.mb_rel.w[r] - this.img.sp;
+					ppt.mbReleaseType == r;
+					if (this.done(this.artist, 6)) {
+						if (this.names.mb[r].length) {
+							this.setNames(this.names.mb[r]);
+						} else {
+							this.analyse('', 6);
+						}
+					} else {
+						search.setText();
+						this.searchForAlbumNames(2, 6, this.getSearchItem(6), this.ar_mbid);
+					}
+					this.calcRowsNames();
+					txt.paint();
+				} else {
+					this.calcText();
+					this.searchForAlbumNames(2, 6, this.getSearchItem(6), this.ar_mbid);
+					this.names.name.w = ppt.lbUserType > 4 ? this.names.lfm_track.w : this.names.lfm_chart.w;
+				}
+				break;
 			case 'chart':
-				this.searchForAlbumNames(2, r, this.artist, this.ar_mbid);
+				this.searchForAlbumNames(2, r, 'chart', this.ar_mbid);
 				this.names.name.w = this.names.lfm_chart.w;
 				break;
 		}
@@ -858,11 +1060,15 @@ class Albums {
 		return Math.round((y - this.names.y - this.row.h * 0.5) / this.row.h);
 	}
 
+	getSearchItem(mode) {
+		return [this.artist, this.artist, this.tag[this.curTag()], 'chart', this.userType(), 'chart', ppt.mbReleaseType < 5 ? this.artist : this.lbType()][mode];
+	}
+
 	getTracks(alb_id, index, refresh, add, remove, showTracks, mTags) {
 		let i_n = this.names.list[index].name.replace(/^(x |> |>> )/, '');
 		if (ppt.mb == 1) {
 			const relType = this.names.list[index].releaseType;
-			if (relType != 'Album' && relType != 'Compilation') {
+			if (relType != 'Album' && relType != 'Compilation' && relType != 'EP') {
 				i_n += ' [' + relType + ']';
 			}
 		}
@@ -884,7 +1090,7 @@ class Albums {
 		let handleList = new FbMetadbHandleList();
 		v.fullAlbum = false;
 		switch (true) {
-			case v.releaseType == 'Single' && ppt.mb != 1:
+			case v.releaseType == 'Single' && (ppt.mb != 1 || ppt.mb == 1 && ppt.mbReleaseType == 5):
 				if (ppt.libAlb) {
 					handleList = lib.inLibrary(v.artist, v.title, i, true, true, libHandles);
 					if (handleList.Count) {
@@ -911,7 +1117,7 @@ class Albums {
 				v.handleList = new FbMetadbHandleList();
 				return;
 			default:
-				if (v.releaseType != 'Album' && v.releaseType != 'Compilation' && !v.title.endsWith(' [' + v.releaseType + ']')) {
+				if (v.releaseType != 'Album' && v.releaseType != 'Compilation' && v.releaseType != 'EP' && !v.title.endsWith(' [' + v.releaseType + ']')) {
 					v.title += ' [' + v.releaseType + ']';
 				}
 				if (ppt.libAlb) {
@@ -944,13 +1150,97 @@ class Albums {
 	}
 
 	isAlbum() {
-		return ppt.mb == 1 || !ppt.mb && !ppt.lfmReleaseType;
+		return (ppt.mb == 1 && ppt.mbReleaseType != 5) || !ppt.mb && !ppt.lfmReleaseType;
 	}
 
 	isFullAlbum(handle) {
 		const track = tf.title_0.EvalWithMetadb(handle);
 		if (track.includes('(Full Album)')) return true;
 		return false;
+	}
+
+	itemRecognised() {
+		switch (true) {
+			case ppt.mb == 2:
+				return this.artist && !this.names.done[5] ? 'Searching...' : (!filter.text ? 'Error retrieving this chart, please try again later.' : 'Search List: Nothing Found');
+			case !ppt.mb && ppt.lfmReleaseType == 2:
+				return this.tag[this.curTag()] && this.tag[this.curTag()] !== 'N/A' && !this.names.done[2] ? 'Searching...' : this.tag[this.curTag()] == 'N/A' ? 'Nothing Found: No Tag' : 'Nothing Found';
+			case !ppt.mb && ppt.lfmReleaseType == 3:
+				return !this.names.done[3] ? 'Searching...' : 'Nothing Found';
+			case !ppt.mb && ppt.lfmReleaseType == 4 || ppt.mb == 1 && ppt.mbReleaseType == 5:
+				return !this.names.done[4] ? 'Searching...' : 'Nothing Found';
+			default:
+				return this.artist && !this.names.done[ppt.mb ? 6 : ppt.lfmReleaseType] ? 'Searching...' : !filter.text ? !this.ar_mbid || this.songsMode() ? 'Unrecognised ' + (!this.songsMode() ? 'Artist' : 'Song') : ppt.mb == 1 && (ppt.showLive ? !this.names.data.length : !this.names.validPrime) || !ppt.mb ? 'Nothing Found' : 'Nothing Found For Release Type:\n' + this.type.mb[ppt.mbReleaseType] : 'Search List: Nothing Found';
+		}
+	}
+
+	lbDisplay() {
+		return [
+			'Tracks You May Like: Recommendations',
+			'Tracks You May Like: Similar Artists',
+			'Tracks You May Like: Artists',
+			'Loved',
+			'Hated',
+			'User Listens: This Week',
+			'User Listens: This Month',
+			'User Listens: This Quarter',
+			'User Listens: This Year',
+			'User Listens: All Time',
+			'Site-Wide Listens: This Week',
+			'Site-Wide Listens: This Month',
+			'Site-Wide Listens: This Quarter',
+			'Site-Wide Listens: This Year',
+			'Site-Wide Listens: All Time'
+		][ppt.lbUserType] + (ppt.lbUserMix ? ': Mix' : ppt.lbUserType > 2 ? ': Top Tracks' : '');
+	}
+
+	lbPlName() {
+		return 'ListenBrainz' + (ppt.lbUserMix ? ' Mix: ' : ppt.lbUserType > 4 ? ' Top Tracks: ' : '') + [
+			`Tracks You May Like: Recommendations`,
+			`Tracks You May Like: Similar Artists`,
+			`Tracks You May Like: Artists`,
+			
+			`Loved`,
+			`Hated`,
+
+			`Listens This Week (${ppt.lbUserName})`,
+			`Listens This Month (${ppt.lbUserName})`,
+			`Listens This Quarter (${ppt.lbUserName})`,
+			`Listens This Year (${ppt.lbUserName})`,
+			`Listens All Time (${ppt.lbUserName})`,
+			
+			`Listens This Week (Site-Wide)`,
+			`Listens This Month (Site-Wide)`,
+			`Listens This Quarter (Site-Wide)`,
+			`Listens This Year (Site-Wide)`,
+			`Listens All Time (Site-Wide)`
+		][ppt.lbUserType];
+	}
+
+	lbType() {
+		return [
+			`cf/recommendation/user/${ppt.lbUserName}/recording?artist_type=raw`,
+			`cf/recommendation/user/${ppt.lbUserName}/recording?artist_type=similar`,
+			`cf/recommendation/user/${ppt.lbUserName}/recording?artist_type=top`,
+
+			`feedback/user/${ppt.lbUserName}/get-feedback?score=1&metadata=true`,
+			`feedback/user/${ppt.lbUserName}/get-feedback?score=-1&metadata=true`,
+
+			`stats/user/${ppt.lbUserName}/recordings?range=this_week`,
+			`stats/user/${ppt.lbUserName}/recordings?range=this_month`,
+			`stats/user/${ppt.lbUserName}/recordings?range=quarter`,
+			`stats/user/${ppt.lbUserName}/recordings?range=this_year`,
+			`stats/user/${ppt.lbUserName}/recordings?range=all_time`,
+			`stats/sitewide/recordings?range=this_week`,
+			`stats/sitewide/recordings?range=this_month`,
+			`stats/sitewide/recordings?range=quarter`,
+			`stats/sitewide/recordings?range=this_year`,
+			`stats/sitewide/recordings?range=all_time`
+		][ppt.lbUserType];
+	}
+
+	lfmType(mode) {
+		return ['album', this.curTrackSpan(), this.curTag() + ppt.lfmMixTag, 'chart', this.userType()][mode];
 	}
 
 	leave() {
@@ -1010,9 +1300,9 @@ class Albums {
 						if (ppt.showSimilar) this.art.similar.forEach(v => v.name = v.name.replace(/^(x |>> )/, ''));
 						else if (this.art.related.length) this.art.related.forEach(v => v.name = v.name.replace(/^(x |>> )/, ''));
 						const item = this.artists.list[i];
-						if ((this.songsMode() || ppt.mb == 2) && item) {
+						if ((ppt.mb == 2 || ppt.mb == 1 && ppt.mbReleaseType == 5 || !ppt.mb && ppt.lfmReleaseType > 1) && item) {
 							const n = item.name;
-							item.name = this.songsMode() ? 'x N/A In Similar Songs Mode' : 'x N/A In Chart Mode';
+							item.name = ppt.mb == 2 ? 'x N/A In Chart Mode' : ppt.mb == 1 && ppt.mbReleaseType == 5 ? 'x N/A In User Mode' : ['', '', 'x N/A In Tag Mode', 'x N/A In Chart Mode', 'x N/A In User Mode'][ppt.lfmReleaseType];
 							txt.paint();
 							if (!timer.artist.id)
 								timer.artist.id = setTimeout(() => {
@@ -1024,7 +1314,9 @@ class Albums {
 							if (!item || this.artists.list.length == 1 && item.name.includes('Artists N/A')) return;
 							this.artist = i == 0 ? item.name.replace(/( \[Similar\]:| \[Related\]:)/g, '') : item.name;
 							search.setText();
-							this.searchForAlbumNames(1, [ppt.lfmReleaseType, 4, 3][ppt.mb], this.artist, item.id ? item.id : '');
+							this.calcText();
+							this.names.name.w = this.siteNameWidth();
+							this.searchForAlbumNames(1, [ppt.lfmReleaseType, 6, 5][ppt.mb], ppt.mbReleaseType < 5 ? this.artist : this.lbType(), item.id ? item.id : '');
 							const alb_artist = this.artists.list[0].name.replace(/( \[Related\]:)/g, '');
 							if (!ppt.showSimilar && alb_artist.length) {
 								const related_artists = $.file(this.art.relatedCustom) ? $.jsonParse(this.art.relatedCustom, {}, 'file') : {};
@@ -1049,7 +1341,7 @@ class Albums {
 							const item = this.artists.list[i];
 							item.alb_id = 'track' + ++this.alb_id;
 							if (!item.source) {
-								alb.setRow(item.alb_id, 0);
+								this.setRow(item.alb_id, 0);
 								return;
 							}
 							if (this.loadExisting(item, true, refresh, add, remove)) {
@@ -1069,13 +1361,13 @@ class Albums {
 				if (i >= this.names.list.length) return;
 				this.deactivateTooltip();
 				const item = this.names.list[i];
-				if (ppt.mb == 1 || !ppt.mb && ppt.lfmReleaseType == 0) {
+				if (ppt.mb == 1 && ppt.mbReleaseType != 5 || !ppt.mb && ppt.lfmReleaseType == 0) {
 					this.setRow(item.alb_id, 4);
 					if (x < this.x + this.icon_w) {
 						if (item.expanded) {
 							item.expanded = false;
 							this.expanded = 0;
-							if (timer.artist.id || ppt.showArtists && (ppt.showSimilar && i >= this.art.similar.length || !ppt.showSimilar && i >= this.art.related.length)) return;
+							if (timer.artist.id || ppt.showArtists && (ppt.showSimilar && !this.art.similar.length || !ppt.showSimilar && !this.art.related.length)) return;
 							this.artists.list = ppt.showSimilar ? this.art.similar : this.art.related;
 							this.calcRows(true);
 							txt.paint();
@@ -1092,7 +1384,7 @@ class Albums {
 						}
 					} else {
 						if (!item.source) {
-							alb.setRow(item.alb_id, 0);
+							this.setRow(item.alb_id, 0);
 							return;
 						}
 						if (!full_alb || (ppt.mb == 1 && !item.releaseType.includes('Album') && !item.releaseType.includes('Compilation'))) { // stndAlb
@@ -1115,9 +1407,9 @@ class Albums {
 						}
 						txt.paint();
 					}
-				} else if (!ppt.mb) {
+				} else if (!ppt.mb || ppt.mb == 1 && ppt.mbReleaseType == 5) {
 					if (!item.source) {
-						alb.setRow(item.alb_id, 0);
+						this.setRow(item.alb_id, 0);
 						return;
 					}
 					this.setRow(item.alb_id, 4);
@@ -1126,10 +1418,10 @@ class Albums {
 						return;
 					}
 					if (remove) return;
-					yt_dj.do_youtube_search(item.alb_id, ppt.lfmReleaseType == 1 ? this.artist : item.artist, ppt.lfmReleaseType == 1 ? $.stripRemaster(this.names.lfm[1][i].name) : ppt.lfmReleaseType == 2 ? $.stripRemaster(this.names.lfm[2][i].title) : this.names.lfm[3][i].title, item.alb_id, 1, pl.cache(), !add ? 1 : 2, true);
+					yt_dj.do_youtube_search(item.alb_id, ppt.lfmReleaseType == 1 && !ppt.mb ? this.artist : item.artist, ppt.lfmReleaseType == 1 && !ppt.mb ? $.stripRemaster(this.names.list[i].name) : ppt.lfmReleaseType > 1 && !ppt.mb ? $.stripRemaster(this.names.list[i].title) : this.names.list[i].title, item.alb_id, 1, pl.cache(), !add ? 1 : 2, true, item.vid, item.length, item.thumbnail);
 				} else if (ppt.mb == 2) {
 					if (!item.source) {
-						alb.setRow(item.alb_id, 0);
+						this.setRow(item.alb_id, 0);
 						return;
 					}
 					this.setRow(item.alb_id, 4);
@@ -1138,7 +1430,7 @@ class Albums {
 						return;
 					}
 					if (remove) return;
-					yt_dj.do_youtube_search(item.alb_id, item.artist, item.title, item.alb_id, 1, pl.cache(), !add ? 1 : 2, true);
+					yt_dj.do_youtube_search(item.alb_id, item.artist, item.title, item.alb_id, 1, pl.cache(), !add ? 1 : 2, true, item.vid, item.length, item.thumbnail);
 				}
 				break;
 			}
@@ -1160,7 +1452,7 @@ class Albums {
 					source: 3
 				}));
 				this.artists.list.unshift({
-					name: `${v.artist} - ${v.title}`
+					name: `${v.artist} - ${v.name}`
 				});
 				this.calcRows(true);
 				txt.paint();
@@ -1192,10 +1484,12 @@ class Albums {
 		return false;
 	}
 
-	loadHandleList() {
+	loadHandleList(libraryOnly) {
+		const list = !libraryOnly ? this.handleList : this.libHandleList;
+		if (!list.Count) return;
 		const pn = pl.selection();
 		pl.clear(pn);
-		plman.InsertPlaylistItems(pn, 0, this.handleList);
+		plman.InsertPlaylistItems(pn, 0, list);
 		plman.ActivePlaylist = pn;
 		plman.SetPlaylistFocusItem(pn, 0);
 		plman.ClearPlaylistSelection(pn);
@@ -1204,15 +1498,22 @@ class Albums {
 	lockArtist() {
 		ppt.lock = !ppt.lock;
 		ppt.lockArtist = this.artist;
-		ppt.lockTrack = this.artist_title;
+		ppt.lockDecade = this.tag.decade;
+		ppt.lockGenre = this.tag.genre;
+		ppt.lockLocale = this.tag.locale;
+		ppt.lockMood = this.tag.mood;
+		ppt.lockSong = this.tag.song;
+		ppt.lockTheme = this.tag.theme;
+		ppt.lockYear = this.tag.year;
 		if (ppt.lock) return;
-		this.orig_artist = this.artist = name.artist();
-		this.artist_title = name.artist_title();
+		this.setTags();
 		search.setText();
-		this.searchForAlbumNames(0, [ppt.lfmReleaseType, 4, 3][ppt.mb]);
+		const mode = this.getMode();
+		this.searchForAlbumNames(0, mode, this.getSearchItem(mode));
 	}
 
 	mbSort() {
+		if (ppt.mbReleaseType == 5) return;
 		if (!ppt.mbReleaseType) {
 			if (!ppt.mbGroup) {
 				$.sort(this.names.mb[0], 'releaseType');
@@ -1227,6 +1528,10 @@ class Albums {
 	mbtn_dn(x, y) {
 		if (!ppt.showAlb || panel.halt()) return;
 		if (ppt.touchControl) ui.touch_dn_id = this.get_ix(x, y);
+	}
+
+	mbtn_up(x, y) {
+		pMenu.load(x, y);
 	}
 
 	move(x, y) {
@@ -1279,23 +1584,33 @@ class Albums {
 		}
 	}
 
-	on_albums_search_done(list, mbid, rec, mode) {
+	on_albums_search_done(list, mbid, rec, mode, searchItem, lfmTopTrackSpan, lfmMixTrack, lfmMixTag) {
 		this.ar_mbid = mbid;
 		this.ar_mbid_done = this.artist;
-		if (mode == 3 && this.done(this.artist)) {
+		this.names.done[mode] = rec;
+		if (searchItem === undefined) {
 			/*only_mbid*/
-			txt.repaint();
+			txt.paint();
 			return;
 		}
-		this.names.done[mode] = rec;
-		if (mode == 4) this.names.data = list;
+
+		const curMode = this.getMode();
+		if (mode != curMode) return;
+
+		if (mode == 1 && (ppt.lfmMixTrack != lfmMixTrack || ppt.lfmTopTrackSpan != lfmTopTrackSpan)) {txt.paint(); return;}
+		if (mode == 2 && ppt.lfmMixTag != lfmMixTag) {txt.paint(); return;}
+		if (searchItem.toLowerCase() != this.getSearchItem(mode).toLowerCase()) {txt.paint(); return;}
+
+		if (mode == 6 && ppt.mbReleaseType != 5) this.names.data = list;
 		this.analyse(list, mode);
 		this.calcRowsNames();
 		txt.paint();
 	}
 
 	on_key_down(vkey) {
-		if (!ppt.showAlb || panel.halt()) return;
+		if (panel.halt()) return;
+		if (vkey == vk.refresh) window.Reload(); 
+		if (!ppt.showAlb) return;
 		switch (vkey) {
 			case vk.pgUp:
 				if (!this.scrollbarType()) break;
@@ -1313,22 +1628,37 @@ class Albums {
 		txt.paint();
 	}
 
-	on_playback_new_track() {
+	on_playback_new_track(on_metadb_changed) {
 		if (dj.pss)
 			if (window.IsVisible) dj.force_refresh = 1;
 			else dj.force_refresh = 0;
 		this.art.search = false;
-		if (!ppt.showAlb || (ppt.lock && (this.artist || this.init)) || panel.block()) { // block
+		const mode = this.getMode();
+		let searchItem = this.getSearchItem(mode); // initial check
+		if (!ppt.showAlb || (ppt.lock && (searchItem || this.init)) || panel.block()) { // block
 			this.get = true;
-			txt.repaint();
+			txt.paint();
 			return;
 		}
-		this.artist_title = name.artist_title();
-		search.setText();
+		if (!$.handle(ppt.focus)) this.tagSet(on_metadb_changed);
+		else {
+			this.setTags(on_metadb_changed);
+			this.tagSet.cancel();
+		}
+		searchItem = this.getSearchItem(mode);
 		if (dj.pss) dj.force_refresh = 2;
 		filter.clearTimer(filter.timer);
 		search.clearTimer(search.timer);
-		this.searchForAlbumNames(0, [ppt.lfmReleaseType, 4, 3][ppt.mb]);
+		if (!searchItem) this.clearAlb();
+		else {
+			search.setText();
+			this.clearAlb.cancel();
+		}
+		const newItemId = this.getId(mode, searchItem); // deals with unwanted refreshes caused by on_metadb_changed (mainly from foo_youtube) before done state set
+		if (newItemId != this.lastItemId) {
+			this.lastItemId = newItemId;
+			this.searchForAlbumNames(0, mode, searchItem);
+		}
 	}
 
 	on_similar_search_done(list, n) {
@@ -1389,43 +1719,41 @@ class Albums {
 	}
 
 	reset(lock) {
+		const mode = this.getMode();
 		if (!lock) {
 			search.offset = search.start = search.end = search.cx = 0;
-			this.orig_artist = this.artist = name.artist();
-			this.artist_title = name.artist_title();
-			search.text = this.songsMode() ? this.artist_title : ppt.mb == 2 ? `${this.chartDate}` : this.artist;
+			this.setTags();
+			search.text = this.searchText();
 			this.art.cur_sim = '';
 		}
-		this.names.cur = [];
-		this.searchForAlbumNames(0, [ppt.lfmReleaseType, 4, 3][ppt.mb]);
+		this.searchForAlbumNames(0, mode, this.getSearchItem(mode));
 	}
 
 	resetAlbum(mode) {
 		this.names.done[mode] = false;
-		if (mode == 4) {
-			this.names.mb = [
-				[],
-				[],
-				[],
-				[],
-				[]
-			];
-			this.names.data = [];
-		} else this.names.lfm[mode] = [];
+		if (mode == 6) {
+			if (ppt.mbReleaseType < 5) {
+				for (let i = 0; i < 5; i++) {
+					this.names.mb[i] = [];
+					this.names.data = [];
+				}
+			} else {
+				this.names.mb[this.lbType() + ppt.lbUserMix] = [];
+			}
+		} else this.names.lfm[this.lfmType(mode)] = [];
 		this.names.list = [];
 	}
 
-	resetAlbums(new_artist, mode, bypass) {
+	resetAlbums(mode, bypass) {
 		this.names.list = [];
 		this.handleList = new FbMetadbHandleList();
+		this.libHandleList = new FbMetadbHandleList();
 		this.topTracksAvailable = false;
 		this.resetAlbum(mode);
 		if (ppt.showAlb) window.Repaint(true);
 		if (!bypass) {
 			this.ar_mbid_done = this.ar_mbid = false;
 		}
-		if (mode == 4) this.names.cur[4] = new_artist;
-		else this.names.cur[mode] = (mode < 2 ? new_artist : mode == 2 ? this.artist_title : `Singles Chart ${this.chartDate}`);
 		this.names.validPrime = false;
 	}
 
@@ -1433,25 +1761,27 @@ class Albums {
 		return this.type.active == 1 ? art_scrollbar : this.type.active == 2 ? alb_scrollbar : 0;
 	}
 
-	searchForAlbumNames(type, mode, new_artist, ar_id) {
+	searchForAlbumNames(type, mode, item, ar_id) {
 		switch (type) {
 			case 0: { // new track or reset
-				if (!new_artist) new_artist = this.artist;
 				this.get = false;
-				if (!new_artist && mode != 3) return;
+				if (!item) return;
 				this.art.sim_done = true;
 				const albums = new DldAlbumNames(this.on_albums_search_done.bind(this));
-				if (ppt.showArtists && ppt.showSimilar && this.art.cur_sim != new_artist || !new_artist) {
+				if (ppt.showArtists && ppt.showSimilar && this.art.cur_sim != this.artist || !this.artist) {
 					if (this.expanded) {
 						this.expanded = 0;
 						this.calcRows();
 						
 					}
-					this.searchForSimilarArtists(new_artist);
+					this.searchForSimilarArtists(this.artist);
 				}
-				const only_mbid = ppt.mb == 2 && new_artist != this.ar_mbid_done;
-				if (only_mbid) this.ar_mbid_done = new_artist;
-				if (this.done(new_artist) && !only_mbid) return;
+
+				const done = this.done(item, mode); // item is the search item & used for done check
+				const only_mbid = done && this.artist != this.ar_mbid_done && (mode == 3 || mode == 4 || mode == 5 || mode == 6 && ppt.mbReleaseType == 5);
+				
+				if (only_mbid) this.ar_mbid_done = this.artist;
+				if (done && !only_mbid) return; 
 				if (!ppt.showSimilar) {
 					this.artists.list = [];
 					this.art.related = [];
@@ -1461,21 +1791,21 @@ class Albums {
 					};
 					this.calcRowsArtists();
 				}
-				if (!only_mbid) this.resetAlbums(new_artist, mode);
-				albums.execute(new_artist,only_mbid, '', mode);
+				if (!only_mbid) this.resetAlbums(mode);
+				albums.execute(this.artist, '', mode, item, only_mbid);
 				break;
 			}
 			case 1: // mouse click similar or related artist
 				if (ppt.showSimilar) this.art.related = [];
 				else this.art.similar = [];
-				this.resetAlbums(new_artist, mode);
+				this.resetAlbums(mode);
 				if (ar_id) { // get album names
 					const albums = new DldMoreAlbumNames(this.on_albums_search_done.bind(this));
-					albums.execute(ar_id, mode);
+					albums.execute(ar_id, mode, item);
 				}
-				else { // get mbid then album names
+				else { // get / check mbid then album names
 					const albums = new DldAlbumNames(this.on_albums_search_done.bind(this));
-					albums.execute(new_artist, false, ppt.showSimilar ? false : true, mode);
+					albums.execute(item, ppt.showSimilar ? false : true, mode, item);
 				}
 				if (ppt.showArtists && !ppt.showSimilar) {
 					this.art.similar[0] = {
@@ -1485,11 +1815,11 @@ class Albums {
 					this.art.cur_sim = '';
 					this.art.sim_done = false;
 				}
-				this.art.cur = new_artist;
+				this.art.cur = item;
 				break;
 			case 2: // but actions mostly
 				timer.clear(timer.artist);
-				if (!this.ar_mbid_done) {
+				if (this.ar_mbid_done != this.artist) {
 					this.resetAlbum(mode);
 					txt.paint(); /*immediate reset*/
 					return timer.artist.id = setTimeout(() => {
@@ -1497,22 +1827,22 @@ class Albums {
 						timer.artist.id = null;
 					}, 1500);
 				}
-				if (this.done(new_artist)) {
-					this.setNames([this.names.lfm[mode], this.names.mb[ppt.mbReleaseType], this.names.chart][ppt.mb]);
+				if (this.done(item, mode)) {
+					this.setNames([this.names.lfm[this.lfmType(mode)], ppt.mbReleaseType < 5 ? this.names.mb[ppt.mbReleaseType] : this.names.mb[this.lbType() + ppt.lbUserMix], this.names.chart][ppt.mb]);
 					this.calcRowsNames();
 					txt.paint();
 					return;
 				} else { // get album names if no data
 					const albums = new DldMoreAlbumNames(this.on_albums_search_done.bind(this));
-					this.resetAlbums(new_artist, mode, true);
-					albums.execute(ar_id, mode);
+					this.resetAlbums(mode, true);
+					albums.execute(ar_id, mode, item);
 				}
 				break;
 		}
 	}
 
 	searchForSimilarArtists(n) {
-		if (!n) {
+		if (!n && !this.art.similar.length) { // !this.art.similar.length stops dropping similarArtists when empty playlist & play recommendations
 			this.artists.list = [];
 			this.art.similar = [];
 			return this.on_similar_search_done([], '');
@@ -1532,11 +1862,15 @@ class Albums {
 		similar.search(n);
 	}
 
+	searchText() {
+		return [this.artist, this.artist, this.tag[this.curTag()], 'Real Time', '', this.chartDate, ppt.mbReleaseType != 5 ? this.artist : ''][this.getMode()];
+	}
+
 	setFilter(ns) {
 		filter.text = ns || '';
 		if (!ppt.mb) this.sortLfm();
-		if (ppt.showAlb) this.setNames([this.names.lfm[ppt.lfmReleaseType], this.names.mb[ppt.mbReleaseType], this.names.chart][ppt.mb]);
-		if (!ppt.mb) this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount));
+		if (ppt.showAlb) this.setNames([this.names.lfm[this.lfmType(ppt.lfmReleaseType)], this.names.mb[ppt.mbReleaseType], this.names.chart][ppt.mb]);
+		if (this.statistics.show(ppt.lfmReleaseType)) this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount));
 	}
 
 	setNames(li) {
@@ -1562,7 +1896,10 @@ class Albums {
 		if (ix != -1) { // set display item
 			const o = list[ix];
 			name = o.name = o.name.replace(/^(x |> |>> )/, '');
-			if (style == 4) return;
+			if (style == 4) {
+				txt.paint();
+				return;
+			}
 			switch (style) {
 				case 0:
 					name = 'x ' + name;
@@ -1578,13 +1915,15 @@ class Albums {
 					break;
 			}
 			o.name = name;
-			if (pane == 'lower') return;
-			const baseType = o.type; // set original list item
-			const mb = baseType < 6 ? 1 : baseType == 9 ? 2 : 0;
-			const j = mb == 1 ? baseType : baseType - 6;
-			const base = [this.names.lfm[j] || [], this.names.mb[j] || [], this.names.chart || []][mb];
-			const base_ix = base.findIndex(v => v.alb_id == alb_id);
-			if (base_ix != -1) base[base_ix].name = name;
+			if (pane == 'lower') {
+				txt.paint();
+				return;
+			}
+			const mb = Number(o.type) ? 1 : o.type == 'officialChart' ? 2 : 0;
+			const base = [this.names.lfm[o.type] || [], this.names.mb[o.type] || [], this.names.chart || []][mb];
+			const index = base.findIndex(v => v.alb_id == alb_id);
+			if (index != -1) base[index].name = name;
+			txt.paint();
 		}
 	}
 
@@ -1605,7 +1944,7 @@ class Albums {
 				}
 			} else {
 				this.artists.name.w = this.w * 2 / 3 - this.names.item.w.sp;
-				this.	artists.item.w = this.w / 3;
+				this.artists.item.w = this.w / 3;
 				this.artists.list = this.art.related;
 				this.calcRowsArtists();
 				txt.paint();
@@ -1613,55 +1952,158 @@ class Albums {
 		}
 	}
 
+	setSiteDefaults() {
+		this.names.chart = [];
+		this.names.lfm = {
+			album: [],
+			track0: [], // 0 top tracks; 1 last.fm mix
+			track1: [],
+			similar0: [],
+			similar1: [],
+			song0: [],
+			song1: [],
+			genre0: [],
+			genre1: [],
+			mood0: [],
+			mood1: [],
+			theme0: [],
+			theme1: [],
+			decade0: [],
+			decade1: [],
+			year0: [],
+			year1: [],
+			locale0: [],
+			locale1: [],
+			chart: [],
+			mix: [],
+			recommendations: [],
+			neighbours: [],
+			library: [],
+			loved: [],
+			topTracks: []
+		};
+
+		this.names.mb = [
+			[],
+			[],
+			[],
+			[],
+			[],
+			{
+			raw0: [],
+			raw1: [],
+			similar0: [],
+			similar1: [],
+			top0: [],
+			top1: [],
+			loved0: [],
+			loved1: [],
+			hated0: [],
+			hated1: [],
+			userweek0: [],
+			userweek1: [],
+			usermonth0: [],
+			usermonth1: [],
+			userquarter0: [],
+			userquarter1: [],
+			useryear0: [],
+			useryear1: [],
+			useralltime0: [],
+			useralltime1: [],
+
+			siteweek0: [],
+			siteweek1: [],
+			sitemonth0: [],
+			sitemonth1: [],
+			sitequarter0: [],
+			sitequarter1: [],
+			siteyear0: [],
+			siteyear1: [],
+			sitealltime0: [],
+			sitealltime1: []
+			}
+		];
+	}
+
+	setTags(on_metadb_changed) {
+		if (!on_metadb_changed) {
+			name.curAlbumId = ''; // reset so update on track change, but block on_metadb_changed here else unwanted change part-way through track
+			name.curArtistId = '';
+			if (ppt.integrateBio) window.NotifyOthers('bio_syncTags', ppt.focus); // call bio with current focus: bio will ignore if item done
+		}
+		this.tag.similar = this.orig_artist = this.artist = name.artist();
+		this.tag.decade = name.decade();
+		this.tag.genre = name.genre();
+		this.tag.locale = name.locale();
+		this.tag.mood = name.mood();
+		this.tag.song = name.artist_title();
+		this.tag.theme = name.theme();
+		this.tag.year = name.year();
+		this.checkLfmTagType();
+	}
+
 	siteNameWidth() {
-		return [this.names.lfm_track.w, this.w - this.names.item.w.date - this.names.mb_rel.w[ppt.mbReleaseType] - this.img.sp, this.names.lfm_chart.w][ppt.mb];
+		return [this.names.lfm_track.w, ppt.mbReleaseType != 5 ? this.w - (this.names.item.w.date + this.names.mb_rel.w[ppt.mbReleaseType] + this.img.sp) : (ppt.lbUserType > 4 ? this.names.lfm_track.w : this.names.lfm_chart.w), this.names.lfm_chart.w][ppt.mb];
 	}
 
 	songsMode() {
-		return !ppt.mb && ppt.lfmReleaseType == 2;
+		return !ppt.mb && ppt.lfmReleaseType == 2 && this.lfmTagType == 1;
 	}
 
 	sortLfm() {
-		if (!this.names.lfm[ppt.lfmReleaseType].length) return;
-		this.names.lfm[ppt.lfmReleaseType].forEach(v => {
+		const type = this.lfmType(ppt.lfmReleaseType);
+		if (!this.names.lfm[type].length) return;
+		this.names.lfm[type].forEach(v => {
 			v.playcount = String(v.playcount).replace(/,/g, '');
 		});
 		if (ppt.lfmSortPC) {
-			$.sort(this.names.lfm[ppt.lfmReleaseType], 'playcount', 'numRev');
+			$.sort(this.names.lfm[type], 'playcount', 'numRev');
 		} else {
-			$.sort(this.names.lfm[ppt.lfmReleaseType], 'rank', 'num');
+			$.sort(this.names.lfm[type], 'rank', 'num');
 		}
 	}
 
+	tagMode() {
+		return !ppt.mb && ppt.lfmReleaseType == 2;
+	}
+
 	tipText(item, lowerPane) {
-		const tipTxt = ['Not Found in Library', 'Load from Youtube', (!ppt.mb && !ppt.lfmReleaseType || ppt.mb == 1) && !item.fullAlbum && !lowerPane ? 'Load Cached Tracks' : 'Load from Cache', 'Load from Library', 'Not Available [foo_youtube not Installed]'][item.source];
+		const tipTxt = ['Not Found in Library', !ppt.showYouTubeLinkSource ? 'Load from Youtube' : item.releaseType !=  'Album' || lowerPane ? (!item.vid ? 'Load from Youtube (search youtube for link)' : 'Load from Youtube (last.fm link)') : 'Load from Youtube (expand for link source)', 
+		(!ppt.mb && !ppt.lfmReleaseType || ppt.mb == 1) && !item.fullAlbum && !lowerPane ? 'Load Cached Tracks' : 'Load from Youtube Cache', 'Load from Library', 'Not Available [foo_youtube not Installed]'][item.source];
 		if (lowerPane) return tipTxt;
 		else return tipTxt + (item.fullAlbum ? ' (Full Album)' : '');
 	}
 
 	toggle(n) {
 		switch (n) {
-			case 'lfmSortPC':
+			case 'lfmSortPC': {
 				ppt.toggle('lfmSortPC');
-				if (!this.names.lfm[ppt.lfmReleaseType].length) return;
+				const type = this.lfmType(ppt.lfmReleaseType);
+				if (!this.names.lfm[type].length) return;
 				this.sortLfm();
 				if (ppt.mb == 1) return;
-				this.setNames(this.names.lfm[ppt.lfmReleaseType]);
-				if (!ppt.mb) this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount));
+				this.setNames(this.names.lfm[type]);
+				this.names.list.forEach(v => v.playcount = this.numFormat(v.playcount)); // should only be called if sortable
 				break;
+			}
 			case 'mbGroup':
+				if (ppt.mbReleaseType == 5) break;
 				ppt.toggle('mbGroup');
 				if (!this.names.mb[0].length) return;
 				this.mbSort();
 				if (!ppt.mb || ppt.mbReleaseType) return;
 				this.setNames(this.names.mb[0]);
 				break;
-			case 'mode':
+			case 'mode': {
+				this.calcText();
 				this.names.name.w = this.siteNameWidth();
 				but.refresh(true);
+				search.metrics();
 				search.setText();
-				this.searchForAlbumNames(2, [ppt.lfmReleaseType, 4, 3][ppt.mb], this.songsMode() ? this.artist_title : ppt.mb == 2 ? `${this.chartDate}` : this.artist, this.ar_mbid);
+				const mode = this.getMode();
+				this.searchForAlbumNames(2, mode, this.getSearchItem(mode), this.ar_mbid);
 				break;
+			}
 			case 'showArtists':
 				ppt.toggle('showArtists');
 				if (ppt.showArtists) this.setSimilar();
@@ -1690,10 +2132,11 @@ class Albums {
 				if (ppt.showAlb && !panel.halt()) this.getAlbumsFallback();
 				if (!panel.image.show) return;
 				if (!fb.IsPlaying || ppt.focus && !panel.video.mode) on_item_focus_change();
-				if (!ppt.showAlb && ppt.artistView && ppt.cycPhoto) timer.image();
+				if ((!ppt.showAlb || ppt.imgBg) && ppt.artistView && ppt.cycPhoto) timer.image();
 				else timer.clear(timer.img);
 				break;
 			case 'showLive':
+				if (ppt.mbReleaseType == 5) break;
 				ppt.toggle('showLive');
 				this.type.mb[0] = (ppt.showLive ? 'All Releases' : 'Releases');
 				alb.calcText();
@@ -1712,6 +2155,21 @@ class Albums {
 
 	treeTooltipFont() {
 		return [ui.font.main.Name, ui.font.main.Size, ui.font.main.Style];
+	}
+	
+	userDisplay() {
+		return ['Mix', 'Recommendations', 'Neighbours', 'Library', 'Loved', 'Top Tracks: Library: ' + [' Last 7 Days', ' Last 30 Days', ' Last 90 Days', ' Last 180 Days', ' Last 365 Days', ' All Time'][ppt.lfmUserLibSpan]][ppt.lfmUserType];
+	}
+	
+	userType() {
+		return ['mix', 'recommended', 'neighbours', 'library', 'loved', [
+			'7day',
+			'1month',
+			'3month',
+			'6month',
+			'12month',
+			'overall'
+		][ppt.lfmUserLibSpan]][ppt.lfmUserType];
 	}
 
 	wheel() {

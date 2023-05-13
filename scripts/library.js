@@ -46,7 +46,7 @@ class Library {
 			trackTitle: false
 		}
 
-		ppt.libFilter = panel.id.local ? ppt.libFilter.replace('%rating%', '%_autorating%').trim() : ppt.libFilter.trim();
+		ppt.libFilter = ppt.libFilter.trim();
 		if (ppt.libFilterUse && ppt.libFilter.length) this.filter = ppt.libFilter;
 	}
 
@@ -162,12 +162,13 @@ class Library {
 	getAlbumMetadb(checkLib) {
 		this.db.cache = plman.GetPlaylistItems(pl.getCache());
 		this.db.lastUpd = 0;
-
-		alb.art.plHandleList = $.query(this.db.cache, 'artist IS ' + alb.artist);
+		
+		const a = alb.artist.toLowerCase();
+		alb.art.plHandleList = $.query(this.db.cache, 'artist IS ' + a);
 		alb.art.plHandleList.OrderByFormat(tf.albumSortOrder, 1);
 		if (checkLib) {
 			const q = this.partialMatch.artist && this.partialMatch.type[1] != 0 ? ' HAS ' : ' IS ';
-			const query = q == ' IS ' ? name.field.artist + q + alb.artist : $.queryArtist(alb.artist);
+			const query = q == ' IS ' ? name.field.artist + q + a : $.queryArtist(a);
 			alb.art.libHandleList = $.query(lib.getLibItems(), query);
 			alb.art.libHandleList.OrderByFormat(tf.albumSortOrder, 1);
 		}
@@ -186,7 +187,8 @@ class Library {
 	getArtistTracks(p_album_artist) {
 		if (this.truncateMatch.albArtist) p_album_artist = this.cut(p_album_artist).trim();
 		const q = this.partialMatch.artist && this.partialMatch.type[1] != 0 ? ' HAS ' : ' IS ';
-		const query = q == ' IS ' ? name.field.artist + q + p_album_artist : $.queryArtist(p_album_artist);
+		const a = p_album_artist.toLowerCase();
+		const query = q == ' IS ' ? name.field.artist + q + a : $.queryArtist(a);
 		if (this.partialMatch.artist && this.partialMatch.verbose) $.trace('MATCH ARTIST [ALBUM]: QUERY:' + q + p_album_artist);
 		if (!p_album_artist) {
 			this.artist.tracks = new FbMetadbHandleList();
@@ -244,10 +246,10 @@ class Library {
 		this.truncateMatch.artist = this.partialMatch.artist && ((p_alb_set && (this.partialMatch.type[5] == 2 || this.partialMatch.type[5] == 3)) || (!p_alb_set && (this.partialMatch.type[3] == 2 || this.partialMatch.type[3] == 3)));
 		this.truncateMatch.trackTitle = this.partialMatch.title && this.partialMatch.validRegEx && ((p_alb_set && (this.partialMatch.type[5] == 2 || this.partialMatch.type[5] == 3)) || (!p_alb_set && (this.partialMatch.type[3] == 2 || this.partialMatch.type[3] == 3)));
 		if (this.truncateMatch.artist) p_artist = this.cut(p_artist).trim();
-
 		let query = '';
+		const a = p_artist.toLowerCase();
 		if (p_artist != this.cur_artist || Date.now() - this.db.lastUpdate > 2000) {
-			query = q == ' IS ' ? name.field.artist + q + p_artist : $.queryArtist(p_artist);
+			query = q == ' IS ' ? name.field.artist + q + a : $.queryArtist(a);
 			this.db.artist = $.query(p_handles || this.getLibItems(), '(' + query + ') AND (NOT %path% HAS !!.tags)');
 			this.db.artist.OrderByFormat(tf.randomize, 1);
 			if (!ml.sort_rand) this.db.artist.OrderByFormat(ml.item_sort, ml.dir);
@@ -289,7 +291,8 @@ class Library {
 
 	inPlaylist(p_artist, p_title, i, p_refresh, p_load, p_alb_present, p_handles) {
 		if (!p_artist || !p_title) return false;
-		const q = !p_alb_present ? 'album MISSING AND artist IS ' + p_artist : 'artist IS ' + p_artist;
+		const a = p_artist.toLowerCase();
+		const q = 'artist IS ' + a;
 		if (p_artist != this.cur_artiste || Date.now() - this.db.lastUpd > 2000) {
 			this.db.artiste = $.query(p_handles || this.db.cache, q);
 			this.db.artiste.OrderByFormat(tf.randomize, 1);
@@ -433,7 +436,7 @@ class Library {
 
 	inLibraryArt(p_artist) {
 		if (!p_artist) return false;
-		return this.getLibArtists().some(v => v == p_artist.toLowerCase());
+		return this.getLibArtists().some(v => v == p_artist);
 	}
 
 	load_dj(orig_artist, p_title, handle, id, p_lfm_pc) {

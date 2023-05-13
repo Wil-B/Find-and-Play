@@ -105,7 +105,7 @@ class MTags {
 
 				for (let i = 0; i < handles.Count; i++) {
 					pl_mtags[i] = {
-						'@': urls[i].replace('https:', '3dydfy:') || '/' + (ml.referencedFile(handles[i]) || tf_path.EvalWithMetadb(handles[i]).replace(/\\/g, '/')),
+						'@': urls[i].replace('https:', 'fy+https:') || '/' + (ml.referencedFile(handles[i]) || tf_path.EvalWithMetadb(handles[i]).replace(/\\/g, '/')),
 						'ALBUM': album,
 						'ARTIST': artists[i],
 						'DURATION': durations[i] || [],
@@ -283,7 +283,7 @@ class MTags {
 
 		for (this.m.ix[ix] = 0; this.m.ix[ix] < this.alb.done[ix]; this.m.ix[ix]++) {
 			this.m.location[ix] = this.getValue(ix, this.m.ix[ix], '@');
-			if (this.m.location[ix].startsWith('3dydfy:')) this.video[ix] = true;
+			if (this.m.location[ix].startsWith('fy+') || this.m.location[ix].startsWith('3dydfy:')) this.video[ix] = true;
 			if (this.m.location[ix].charAt() == '/' || this.m.location[ix].charAt() == '.') this.m.lib[ix] = true;
 		}
 
@@ -338,10 +338,24 @@ class MTags {
 		p_artist = $.titlecase(p_artist);
 		panel.add_loc.mtags[p_alb_id].forEach(v => this.format(v));
 
+		panel.add_loc.mtags[p_alb_id].some((v, i, arr) => {
+			if (v !== arr[0]) {
+				p_artist = 'Various Artists';
+				return true;
+			}
+		});
+
+		if (p_artist == 'Various Artists') panel.add_loc.mtags[p_alb_id].forEach(v => v['ALBUM ARTIST'] = 'Various Artists');
+
 		const album = panel.add_loc.mtags[p_alb_id][0].ALBUM || '';
 
 		const a = ($.clean(p_artist) + ' - ' + $.clean(album)).trim();
-		const fns = `${panel.cachePath}albums\\${a.substr(0, 1).toLowerCase()}\\`;
+		let fns = !ppt.mtagsSaveFolder ? `${panel.cachePath}albums\\${a.substr(0, 1).toLowerCase()}\\` : ppt.mtagsSaveFolder;;
+
+		if (ppt.mtagsSaveFolder) {
+			fns = panel.cleanPth(fns, '', true);
+			$.buildPth(fns);
+		}
 
 		let fna = `${fns + a}\\`;
 		$.create(fns);

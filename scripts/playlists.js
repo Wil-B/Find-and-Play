@@ -2,11 +2,15 @@
 
 class Playlists {
 	constructor() {
-		this.dj_tracks = [];
 		this.enabled = [];
 		this.menu = [];
+		this.saveName = '';
 
 		this.playlists_changed();
+
+		this.saveDjTracks = $.debounce((playlistIndex) => {
+			this.saveAutoDjTracks(playlistIndex);
+		}, 1500);
 	}
 
 	// Methods
@@ -25,7 +29,7 @@ class Playlists {
 	}
 	
 	getCache() {
-		return plman.FindPlaylist(ppt.playlistCache); // added to stop creating
+		return plman.FindPlaylist(ppt.playlistCache);
 	}
 
 	getDJ() {
@@ -53,6 +57,7 @@ class Playlists {
 			plman.UndoBackup(loved);
 			plman.InsertPlaylistItems(loved, plman.PlaylistItemCount(loved), plman.GetPlaylistSelectedItems(pn), false);
 		} else {
+			plman.UndoBackup(loved);
 			plman.RemovePlaylistSelection(loved, false);
 		}
 	}
@@ -70,25 +75,45 @@ class Playlists {
 		});
 	}
 
-	saveAutoDjTracks(playlistIndex, np) {
-		if (playlistIndex != this.dj() || !np || !index.cur_dj_source) return;
-		const dj_text = index.cur_dj_type == 2 ? ' And Similar Artists' : '';
-		const save_pl_index = plman.FindOrCreatePlaylist(ppt.playlistDj + ' ' + ppt.playlistTracks + ' [' + index.cur_dj_source + dj_text + ']', false);
-		const items = new FbMetadbHandleList();
-		const save_pl_count = plman.PlaylistItemCount(save_pl_index);
-		const sav_list = plman.GetPlaylistItems(save_pl_index);
+	saveAutoDjTracks(playlistIndex) {
+		const savePl = ppt.playTracks ? ppt.albSavePlaylists : ppt.djSaveTracks;
+		if (playlistIndex != this.dj() || !savePl) return;
 
-		for (let i = 0; i < np.Count; i++)
-			if (!this.dj_tracks.includes(np[i].Path)) {
-				let found = false;
-				for (let j = 0; j < sav_list.Count; j++)
-					if (np[i].Path == sav_list[j].Path) found = true;
-				if (!found) items.Add(np[i]);
-				this.dj_tracks.push(np[i].Path);
-			}
+		switch (true) {
+			case ppt.playTracks:
+				if ((!ppt.mb && ppt.lfmReleaseType != 4 || ppt.mb == 1 && ppt.mbReleaseType == 5 || ppt.mb == 2) && !search.text) return;
+				break;
+			case !ppt.playTracks:
+				if (!index.cur_dj_source) return;
+				this.saveName = ppt.playlistDj + ' ' + ppt.playlistTracks + ': ' + index.cur_dj_source + (index.cur_dj_type == 2 ? ' and Similar Artists' : '');
+				break;
+		}
+
+		let djTracks = [];
+		const save_pl_index = plman.FindOrCreatePlaylist(this.saveName, false);
+		const existingTracks = plman.GetPlaylistItems(save_pl_index);
+		
+		for (let i = 0; i < existingTracks.Count; i++) {
+			const v = existingTracks[i];
+			djTracks.push({id: v.Path + v.SubSong, handle: v});
+		}
+
+		const newTracks = plman.GetPlaylistItems(playlistIndex);
+		for (let i = 0; i < newTracks.Count; i++) {
+			const v = newTracks[i];
+			djTracks.push({id: v.Path + v.SubSong, handle: v});
+		}
+
+		djTracks = Object.values(djTracks.reduce((a, c) => (a[`${c.id}`] = c, a), {}));
+		if (!djTracks.length)  return;
+		
+		const items = new FbMetadbHandleList();
 		plman.UndoBackup(save_pl_index);
-		plman.InsertPlaylistItems(save_pl_index, save_pl_count, items);
-		if (this.dj_tracks.length > dj.limit * 2) this.dj_tracks.splice(0, 1);
+		for (let i = 0; i < djTracks.length; i++) {
+			items.Add(djTracks[i].handle)
+		}
+		plman.ClearPlaylist(save_pl_index);
+		plman.InsertPlaylistItems(save_pl_index, 0, items);
 	}
 
 	selection() {

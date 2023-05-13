@@ -54,7 +54,7 @@ class Tagger {
 		const caption = 'Tag Files with Last.fm Track Statistics';
 		const prompt = ppt.v ? `Update ${list.Count} ${list.Count > 1 ? 'tracks' : 'track'}.\n\nObtains top 1000 tracks per artist and tags matching tracks.\n\nWrites last.fm playcount, listeners & a combined score (1-100) as a multi-value tag.\n\nTag name: '${ppt.lfmTrackStatsTagName}' (change in panel properties 'Tagger...').\n\nRuns at 1 artist every 3 seconds to allow time for downloading & processing.\n\nContinue?` :
 							`Update ${list.Count} ${list.Count > 1 ? 'tracks' : 'track'}.\n\nObtains top 1000 tracks per artist and tags matching tracks.\n\nWrites last.fm playcount, listeners & a combined score (1-100) as a multi-value tag.\n\nTHIS FEATURE REQUIRES YOUR OWN LAST.FM API KEY. PLEASE PASTE IN MAINTENANCE TAB AND TRY AGAIN.`
-		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'OK', 'Cancel', continue_confirmation) : true;
+		const wsh = popUpBox.isHtmlDialogSupported() ? popUpBox.confirm(caption, prompt, 'OK', 'Cancel', '', '', continue_confirmation) : true;
 		if (wsh) continue_confirmation('ok', $.wshPopup(prompt, caption));
 	}
 
@@ -70,7 +70,7 @@ class Tagger {
 		this.prog = 0;
 		this.timer = setInterval(() => {
 			if (j < artists.length) {
-				const handles = $.query(list, 'artist IS ' + artists[j]);
+				const handles = $.query(list, 'artist IS ' + artists[j].toLowerCase());
 				const tagStatistics = new LastfmTrackStatistics(() => tagStatistics.onStateChange());
 				tagStatistics.search(artists[j], handles);
 				j++;
@@ -119,7 +119,6 @@ class LastfmTrackStatistics {
 		this.initial = false;
 		this.func = null;
 		this.xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
-		// workarounds applied as required to deal with occasional last.fm bug - list too short (doesn't start at beginning)
 		let URL = panel.url.lfm;
 		this.lmt = 980 + Math.floor(Math.random() * 5);
 		if (this.retry) this.lmt += 5 + Math.floor(Math.random() * 10);
