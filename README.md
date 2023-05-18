@@ -87,6 +87,9 @@ Feature rich media manager and browser for [foobar2000](https://www.foobar2000.o
 - [Spider Monkey Panel 1.5.2+](https://www.foobar2000.org/components)
 - IE9 or later
 - [FontAwesome](https://github.com/FortAwesome/Font-Awesome/blob/fa-4/fonts/fontawesome-webfont.ttf?raw=true)
+- Segoe UI Symbol
+    - should be present on most windows systems
+    - if you're on win7 and symbols don't render properly you can download an updated version that includes newer symbols [here](https://www.stephanpringle.com/corrupted-segoe-ui-symbol-font/)
 ##### Optional
 [foo_youtube: ](https://www.foobar2000.org/components)required for use of youtube functionality.
 
